@@ -58,7 +58,7 @@ async function endCard() {
       <circle cx="920" cy="690" r="210" fill="#f6a51c" opacity="0.24" filter="url(#glow)"/>
       <circle cx="80" cy="1170" r="9" fill="#fff"/><circle cx="940" cy="210" r="7" fill="#fff"/>
       <circle cx="840" cy="1280" r="5" fill="#fff"/><circle cx="250" cy="1450" r="6" fill="#fff"/>
-      <text x="540" y="1145" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial" font-size="108" font-weight="900" letter-spacing="-3">Bi’Dünya</text>
+      <text x="540" y="1145" text-anchor="middle" fill="#ffffff" font-family="Segoe UI, Arial" font-size="108" font-weight="900" letter-spacing="-3">Bi Alem</text>
       <text x="540" y="1230" text-anchor="middle" fill="#c3cee3" font-family="Segoe UI, Arial" font-size="46" font-weight="600">Senin dünyan. Senin topluluğun.</text>
       <rect x="285" y="1325" width="510" height="116" rx="58" fill="#f6a51c"/>
       <text x="540" y="1400" text-anchor="middle" fill="#0a1833" font-family="Segoe UI, Arial" font-size="42" font-weight="900" letter-spacing="2">ŞİMDİ KEŞFET</text>

@@ -23,7 +23,7 @@ begin
     is_active
   )
   values (
-    'bidunya-kurucusu',
+    'bialem-kurucusu',
     'Bialem Kurucusu',
     'Bialem platformunu hayata geçiren kurucu hesabıdır.',
     'special',

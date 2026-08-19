@@ -61,7 +61,7 @@ Keep DB column names snake_case in Liquibase for easier data import, use JPA `@C
 | 0001 | roles seed |
 | 0012, 0015, 0029 | example communities |
 | 0017 | honor badge definitions |
-| 0040 | founder badge (code `bidunya-kurucusu` → rename in data migration) |
+| 0040 | founder badge (code `bialem-kurucusu`) |
 
 ## auth schema triggers → Java
 

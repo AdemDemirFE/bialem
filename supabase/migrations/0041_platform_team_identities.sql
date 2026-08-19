@@ -117,11 +117,11 @@ set role_code = 'founder', updated_at = now();
 delete from public.user_honor_badges assignment
 using public.honor_badges badge
 where assignment.badge_id = badge.id
-  and badge.code = 'bidunya-kurucusu';
+  and badge.code = 'bialem-kurucusu';
 
 update public.honor_badges
 set is_active = false
-where code = 'bidunya-kurucusu';
+where code = 'bialem-kurucusu';
 
 revoke all on table public.platform_team_members from anon;
 revoke insert, update, delete on table public.platform_team_members from authenticated;

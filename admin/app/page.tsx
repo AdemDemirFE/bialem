@@ -49,7 +49,7 @@ export default function HomePage() {
       <nav className={styles.nav} aria-label="Ana menü">
         <a className={styles.logo} href="#top" aria-label="Bialem ana sayfa">
           <Image src="/brand/app-icon.png" alt="" width={46} height={46} priority />
-          <span>BİDÜNYA</span>
+          <span>BİALEM</span>
         </a>
         <div className={styles.navLinks}>
           <a href="#neden">Neden Bialem?</a>
@@ -94,7 +94,7 @@ export default function HomePage() {
       </section>
 
       <section className={styles.manifesto} id="neden">
-        <p className={styles.sectionLabel}>NEDEN BİDÜNYA?</p>
+        <p className={styles.sectionLabel}>NEDEN BİALEM?</p>
         <div className={styles.manifestoGrid}>
           <h2>Sosyal medya değil.<br /><span>Sosyal hayat.</span></h2>
           <div>
@@ -189,7 +189,7 @@ export default function HomePage() {
         <div className={styles.footerBrand}>
           <a className={styles.logo} href="#top">
             <Image src="/brand/app-icon.png" alt="" width={40} height={40} />
-            <span>BİDÜNYA</span>
+            <span>BİALEM</span>
           </a>
           <p>Birlikte keşfet. Birlikte katıl.</p>
         </div>

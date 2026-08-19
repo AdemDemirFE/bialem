@@ -50,10 +50,10 @@ async function createCards() {
     <rect width="1080" height="1920" fill="url(#bg)"/>
     <circle cx="145" cy="300" r="5" fill="#f4f1ea"/><circle cx="920" cy="460" r="7" fill="#f4f1ea"/><circle cx="850" cy="1280" r="4" fill="#f4f1ea"/>
     <g filter="url(#shadow)">
-      <text x="540" y="1130" text-anchor="middle" fill="#f4f1ea" font-family="Arial" font-size="90" font-weight="900">Bi’Dünya</text>
+      <text x="540" y="1130" text-anchor="middle" fill="#f4f1ea" font-family="Arial" font-size="90" font-weight="900">Bi Alem</text>
       <text x="540" y="1245" text-anchor="middle" fill="#f4f1ea" font-family="Segoe UI" font-size="52" font-weight="350">Birbirimizi bulmanın zamanı.</text>
       <rect x="278" y="1350" width="524" height="110" rx="55" fill="#f6a51c"/>
-      <text x="540" y="1421" text-anchor="middle" fill="#07132e" font-family="Segoe UI" font-size="39" font-weight="800" letter-spacing="2">DÜNYANI KEŞFET</text>
+      <text x="540" y="1421" text-anchor="middle" fill="#07132e" font-family="Segoe UI" font-size="39" font-weight="800" letter-spacing="2">ALEMİNİ KEŞFET</text>
     </g>
   </svg>`);
   await sharp({ create: { width, height, channels: 4, background: "#07132e" } })

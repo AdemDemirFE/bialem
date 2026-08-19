@@ -1,3 +1,4 @@
+-- Bi Alem partner advantage schema
 create table if not exists public.partner_venues (
   id uuid primary key default gen_random_uuid(),
   name text not null,

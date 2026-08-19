@@ -6,7 +6,7 @@
 ## Repository layout
 
 ```text
-bialem/  (repo root: bidunya)
+bialem/
 ├── mobile/          Expo SDK 54 + React Native 0.81 + expo-router
 ├── admin/           Next.js 15 admin + public legal/deep-link pages
 ├── supabase/        54 SQL migrations + 3–4 edge functions
@@ -71,11 +71,10 @@ Mobile uses **54 distinct RPC names**; admin uses service role + 3 RPCs (`is_adm
 
 ## Branding
 
-- Product name: **Bialem** (`Bi'Alem` in app.json)
+- Product name: **Bi Alem** (`Bialem` / `BIALEM` in identifiers)
 - Android package: `com.bialem.app`
 - Deep link scheme: `bialem://`
 - Web: `https://bialem.app`
-- Residual Bidünya references documented in `12_BIDUNYA_TO_BIALEM_AUDIT.md`
 
 ## Target architecture (planned, not built)
 

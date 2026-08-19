@@ -191,7 +191,7 @@ export default async function AdvantagesAdminPage() {
       <AdminSessionControls />
       <header style={styles.hero}>
         <div>
-          <p style={styles.kicker}>BİDÜNYA AVANTAJ</p>
+          <p style={styles.kicker}>BİALEM AVANTAJ</p>
           <h1 style={styles.title}>Anlaşmalı kurum ve indirim yönetimi</h1>
           <p style={styles.lead}>
             Kurumları, kampanyaları ve kasa doğrulama akışını buradan yönetin.

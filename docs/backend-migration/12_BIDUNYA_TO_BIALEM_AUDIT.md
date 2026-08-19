@@ -1,4 +1,4 @@
-# Bidünya → Bialem Audit
+# Bialem → Bialem Audit
 
 **Rule:** Do not rename in this phase. Document only.
 
@@ -31,7 +31,7 @@ Canonical Android package: **`com.bialem.app`** (verified in `mobile/app.json`)
 ## Not found in repo (good)
 
 - No `bidunya.app` in active config
-- No spaced `bi dünya` in source (except rebrand script)
+- No spaced `bi alem` in source (except rebrand script)
 - Mobile scheme is not `bidunya://`
 
 ## Migration impact on backend rename

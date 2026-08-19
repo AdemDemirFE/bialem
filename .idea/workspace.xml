@@ -465,7 +465,7 @@
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/09_DATABASE_POST_GENERATION.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/10_FEATURE_PARITY_CHECKLIST.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/11_EXPO_DEPENDENCY_INVENTORY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/backend-migration/12_BIDUNYA_TO_BIALEM_AUDIT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/backend-migration/12_BIALEM_REBRAND_AUDIT.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/13_JHIPSTER_SETUP.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/14_DATA_MIGRATION_STRATEGY.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/backend-migration/15_OPEN_QUESTIONS.md" afterDir="false" />
@@ -497,7 +497,7 @@
       <change beforePath="$PROJECT_DIR$/docs/AI_ASSISTANT_SETUP_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/AI_ASSISTANT_SETUP_TR.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/ANDROID_DEVICE_E2E_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/ANDROID_DEVICE_E2E_TR.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/AUTH_EMAIL_DELIVERY_SETUP_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/AUTH_EMAIL_DELIVERY_SETUP_TR.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/BIDUNYA_ADVANTAGE_TR.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/BIALEM_ADVANTAGE_TR.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/FIREBASE_PUSH_SETUP_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/FIREBASE_PUSH_SETUP_TR.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/GROWTH_CHANNELS_SETUP_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/GROWTH_CHANNELS_SETUP_TR.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/OPERATIONS_RUNBOOK_TR.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/OPERATIONS_RUNBOOK_TR.md" afterDir="false" />
@@ -522,11 +522,11 @@
       <change beforePath="$PROJECT_DIR$/mobile/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/app/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/app/legal/[document].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/app/legal/[document].tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/app/people/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/app/people/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile/assets/bidunya-logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/assets/bialem-logo.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/assets/bialem-logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/assets/bialem-logo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/eas.json" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/eas.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/google-services.json" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/google-services.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mobile/plugins/withBidunyaAndroidTheme.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/plugins/withBialemAndroidTheme.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/public/.well-known/apple-app-site-association.template" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/public/.well-known/apple-app-site-association.template" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/public/.well-known/assetlinks.json.template" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/public/.well-known/assetlinks.json.template" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mobile/src/lib/auth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/src/lib/auth.tsx" afterDir="false" />
@@ -536,13 +536,13 @@
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/fix-turkish-ui.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/fix-turkish-ui.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/generate-bidunya-narration.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/generate-bidunya-narration.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/generate-bialem-narration.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/generate-bialem-narration.ps1" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/production-smoke.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/production-smoke.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/release-check.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/release-check.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/render-bidunya-real-film.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/render-bidunya-real-film.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/render-bialem-real-film.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/render-bialem-real-film.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/render-reels-ad.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/render-reels-ad.mjs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/test-supabase-restore.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/test-supabase-restore.ps1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/functions/bidunya-assistant/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/functions/bialem-assistant/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/supabase/functions/bialem-assistant/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/functions/bialem-assistant/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -566,7 +566,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/ADEM/GITHUB/bidunya"
+    "last_opened_file_path": "C:/ADEM/GITHUB/bialem"
   }
 }]]></component>
   <component name="TaskManager">

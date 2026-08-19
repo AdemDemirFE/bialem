@@ -12,7 +12,7 @@ const replacements = [
   ["Aydinlatma", "Aydınlatma"],
   ["Baslangic", "Başlangıç"],
   ["Basvuru", "Başvuru"],
-  ["Bi'Alem", "Bialem"],
+  ["Bi'Alem", "Bi Alem"],
   ["Degerlendirme", "Değerlendirme"],
   ["Degerlendirmeyi", "Değerlendirmeyi"],
   ["Degistirmek", "Değiştirmek"],

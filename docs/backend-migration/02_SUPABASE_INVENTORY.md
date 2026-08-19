@@ -11,7 +11,7 @@
 | Triggers | 35+ |
 | RLS policies | 74+ |
 | Storage buckets | 5 |
-| Edge functions | 3 active (+1 legacy `bidunya-assistant`) |
+| Edge functions | 3 active (`bialem-assistant` and related) |
 | pg_cron in migrations | 0 (external scheduler documented) |
 | PostgreSQL ENUM types | 0 (text + CHECK) |
 

@@ -1,52 +1,28 @@
-import { copyFileSync, existsSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const skipDirs = new Set(["node_modules", ".git", ".expo", ".next", "dist", "build"]);
-const skipFiles = new Set(["package-lock.json"]);
+const skipDirs = new Set(["node_modules", ".git", ".expo", ".next", "dist", "build", "target"]);
+const skipFiles = new Set(["package-lock.json", "rebrand-to-bialem.mjs"]);
 const textExtensions = new Set([
-  ".ts", ".tsx", ".js", ".mjs", ".json", ".md", ".bat", ".cmd", ".ps1", ".sql", ".template", ".example", ".xml", ".html", ".css"
+  ".ts", ".tsx", ".js", ".mjs", ".json", ".md", ".bat", ".cmd", ".ps1", ".sql", ".template", ".example", ".xml", ".html", ".css", ".java", ".yml", ".yaml", ".properties", ".gradle"
 ]);
 
 const replacements = [
   ["BİDÜNYA", "BİALEM"],
-  ["Bidünya", "Bi'Alem"],
+  ["Bi Dünya", "Bi Alem"],
+  ["bi dünya", "bi alem"],
+  ["Bidünya", "Bialem"],
+  ["bidünya", "bialem"],
   ["BIDUNYA", "BIALEM"],
   ["Bidunya", "Bialem"],
-  ["bidunya-logo", "bialem-logo"],
-  ["withBidunyaAndroidTheme", "withBialemAndroidTheme"],
-  ["bidunya_colors.xml", "bialem_colors.xml"],
-  ["bidunya-assistant", "bialem-assistant"],
-  ["bidunya-checkin", "bialem-checkin"],
-  ["bidunya://", "bialem://"],
-  ["bidunya.", "bialem."],
-  ["bidunya:", "bialem:"],
-  ["bidunya_", "bialem_"],
-  ["--bidunya-", "--bialem-"],
-  ["@color/bidunya_", "@color/bialem_"],
-  ["com.bidunya.app", "com.bialem.app"],
-  ["bidunya.app", "bialem.app"],
-  ["destek@bialem.app", "destek@bialem.app"],
-  ["noreply@bialem.app", "noreply@bialem.app"],
-  ["bidunya-26b91", "bialem-app"],
-  ["\"bidunya\"", "\"bialem\""],
-  ["'bidunya'", "'bialem'"],
-  ["projects/bidunya/", "projects/bialem/"],
-  ["Bidunya Admin", "Bialem Admin"],
-  ["Bidunya Mobile", "Bialem Mobile"],
-  ["BIDUNYA -", "BIALEM -"],
-  ["# Bidünya", "# Bi'Alem"],
-  ["# Bidunya", "# Bialem"],
-  ["name\": \"bidunya\"", "name\": \"bialem\""],
-  ["bidunya-admin", "bialem-admin"],
-  ["bidunya-mobile", "bialem-mobile"],
-  ["BIDUNYA_STAGING", "BIALEM_STAGING"],
-  ["generate-bidunya-", "generate-bialem-"],
-  ["render-bidunya-", "render-bialem-"],
-  ["BIDUNYA_ADVANTAGE", "BIALEM_ADVANTAGE"],
-  ["0032_bidunya_advantage", "0032_bialem_advantage"]
+  ["bidunya", "bialem"],
+  ["Bi’Dünya", "Bi Alem"],
+  ["Bi'Dünya", "Bi Alem"],
+  ["Bi'Alem", "Bi Alem"],
+  ["BiAlem", "Bi Alem"]
 ];
 
 function walk(dir, files = []) {
@@ -65,7 +41,6 @@ function shouldProcess(file) {
   if (skipFiles.has(base)) return false;
   const ext = base.includes(".") ? base.slice(base.lastIndexOf(".")) : "";
   if (!textExtensions.has(ext)) return false;
-  if (base.endsWith(".png") || base.endsWith(".jpg")) return false;
   return true;
 }
 
@@ -85,14 +60,11 @@ for (const file of walk(root)) {
 }
 
 const renames = [
-  ["bidunya.bat", "bialem.bat"],
-  ["mobile/plugins/withBidunyaAndroidTheme.js", "mobile/plugins/withBialemAndroidTheme.js"],
-  ["docs/BIDUNYA_ADVANTAGE_TR.md", "docs/BIALEM_ADVANTAGE_TR.md"],
   ["scripts/generate-bidunya-narration.ps1", "scripts/generate-bialem-narration.ps1"],
   ["scripts/render-bidunya-real-film.mjs", "scripts/render-bialem-real-film.mjs"],
-  ["supabase/functions/bidunya-assistant", "supabase/functions/bialem-assistant"],
   ["supabase/migrations/0032_bidunya_advantage.sql", "supabase/migrations/0032_bialem_advantage.sql"],
-  ["mobile/assets/bidunya-logo.png", "mobile/assets/bialem-logo.png"]
+  ["docs/backend-migration/12_BIDUNYA_TO_BIALEM_AUDIT.md", "docs/backend-migration/12_BIALEM_REBRAND_AUDIT.md"],
+  [".idea/bidunya.iml", ".idea/bialem.iml"]
 ];
 
 for (const [from, to] of renames) {
@@ -101,14 +73,7 @@ for (const [from, to] of renames) {
   if (existsSync(fromPath) && !existsSync(toPath)) {
     renameSync(fromPath, toPath);
     console.log("renamed:", from, "->", to);
-  } else if (existsSync(fromPath) && existsSync(toPath) && from.endsWith(".png")) {
-    console.log("asset exists:", to);
   }
-}
-
-if (existsSync(join(root, "mobile/assets/bidunya-logo.png")) && !existsSync(join(root, "mobile/assets/bialem-logo.png"))) {
-  copyFileSync(join(root, "mobile/assets/bidunya-logo.png"), join(root, "mobile/assets/bialem-logo.png"));
-  console.log("copied logo to bialem-logo.png");
 }
 
 console.log(`\nDone. ${changed} files updated.`);

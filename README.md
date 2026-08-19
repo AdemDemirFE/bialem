@@ -1,4 +1,4 @@
-# Bi'Alem
+# Bi Alem
 
 Topluluk, etkinlik ve yönetim paneli. Ürün arayüzü **Expo ve Supabase kullanmaz**; kendi Spring Boot backend'ine bağlanır.
 
@@ -48,3 +48,8 @@ cd admin && npm install && npm run dev
 - Uygulama kullanıcısı: kayıt ol, sonra giriş yap.
 - Admin: JHipster varsayılanı `admin` / `admin` (`ROLE_ADMIN`).
 - Env: `mobile/.env` içinde `VITE_API_BASE_URL=http://localhost:8080`, `admin/.env.local` içinde `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`.
+
+Android:
+npm run build
+npx cap sync android
+npx cap open android 
