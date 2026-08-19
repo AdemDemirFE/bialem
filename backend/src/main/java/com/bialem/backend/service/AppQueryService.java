@@ -1,5 +1,6 @@
 package com.bialem.backend.service;
 
+import com.bialem.backend.domain.Story;
 import com.bialem.backend.web.rest.vm.AppQueryRequest;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppFilter;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
@@ -142,8 +143,18 @@ public class AppQueryService {
 
     private AppQueryResponse delete(Class<?> type, AppQueryRequest request) {
         List<?> matches = loadMatches(type, request.getFilters());
-        matches.forEach(em::remove);
-        return new AppQueryResponse(List.of(), null, (long) matches.size());
+        List<Map<String, Object>> deleted = matches.stream().map(support::toMap).toList();
+        for (Object entity : matches) {
+            if (entity instanceof Story story && story.getId() != null) {
+                em.createQuery("delete from StoryView v where v.story.id = :id").setParameter("id", story.getId()).executeUpdate();
+                em.createQuery("delete from StoryCommunityTarget t where t.story.id = :id")
+                    .setParameter("id", story.getId())
+                    .executeUpdate();
+            }
+            em.remove(em.contains(entity) ? entity : em.merge(entity));
+        }
+        em.flush();
+        return new AppQueryResponse(deleted, null, (long) deleted.size());
     }
 
     private List<?> loadMatches(Class<?> type, List<AppFilter> filters) {

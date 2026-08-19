@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-19T16:30:53+0300",
+    date = "2026-08-19T16:45:32+0300",
     comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
@@ -66,28 +66,28 @@ public class StoryViewMapperImpl implements StoryViewMapper {
     }
 
     @Override
-    public void partialUpdate(StoryView entity, StoryViewDTO dto) {
-        if ( dto == null ) {
+    public void partialUpdate(StoryView arg0, StoryViewDTO arg1) {
+        if ( arg1 == null ) {
             return;
         }
 
-        if ( dto.getId() != null ) {
-            entity.setId( dto.getId() );
+        if ( arg1.getId() != null ) {
+            arg0.setId( arg1.getId() );
         }
-        if ( dto.getViewedAt() != null ) {
-            entity.setViewedAt( dto.getViewedAt() );
+        if ( arg1.getViewedAt() != null ) {
+            arg0.setViewedAt( arg1.getViewedAt() );
         }
-        if ( dto.getStory() != null ) {
-            if ( entity.getStory() == null ) {
-                entity.story( new Story() );
+        if ( arg1.getStory() != null ) {
+            if ( arg0.getStory() == null ) {
+                arg0.story( new Story() );
             }
-            storyDTOToStory1( dto.getStory(), entity.getStory() );
+            storyDTOToStory1( arg1.getStory(), arg0.getStory() );
         }
-        if ( dto.getViewer() != null ) {
-            if ( entity.getViewer() == null ) {
-                entity.viewer( new Profile() );
+        if ( arg1.getViewer() != null ) {
+            if ( arg0.getViewer() == null ) {
+                arg0.viewer( new Profile() );
             }
-            profileDTOToProfile1( dto.getViewer(), entity.getViewer() );
+            profileDTOToProfile1( arg1.getViewer(), arg0.getViewer() );
         }
     }
 

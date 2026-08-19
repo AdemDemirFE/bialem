@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-19T16:30:54+0300",
+    date = "2026-08-19T16:45:32+0300",
     comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
@@ -68,28 +68,28 @@ public class StoryCommunityTargetMapperImpl implements StoryCommunityTargetMappe
     }
 
     @Override
-    public void partialUpdate(StoryCommunityTarget entity, StoryCommunityTargetDTO dto) {
-        if ( dto == null ) {
+    public void partialUpdate(StoryCommunityTarget arg0, StoryCommunityTargetDTO arg1) {
+        if ( arg1 == null ) {
             return;
         }
 
-        if ( dto.getId() != null ) {
-            entity.setId( dto.getId() );
+        if ( arg1.getId() != null ) {
+            arg0.setId( arg1.getId() );
         }
-        if ( dto.getCreatedAt() != null ) {
-            entity.setCreatedAt( dto.getCreatedAt() );
+        if ( arg1.getCreatedAt() != null ) {
+            arg0.setCreatedAt( arg1.getCreatedAt() );
         }
-        if ( dto.getStory() != null ) {
-            if ( entity.getStory() == null ) {
-                entity.story( new Story() );
+        if ( arg1.getStory() != null ) {
+            if ( arg0.getStory() == null ) {
+                arg0.story( new Story() );
             }
-            storyDTOToStory1( dto.getStory(), entity.getStory() );
+            storyDTOToStory1( arg1.getStory(), arg0.getStory() );
         }
-        if ( dto.getCommunity() != null ) {
-            if ( entity.getCommunity() == null ) {
-                entity.community( new Community() );
+        if ( arg1.getCommunity() != null ) {
+            if ( arg0.getCommunity() == null ) {
+                arg0.community( new Community() );
             }
-            communityDTOToCommunity1( dto.getCommunity(), entity.getCommunity() );
+            communityDTOToCommunity1( arg1.getCommunity(), arg0.getCommunity() );
         }
     }
 

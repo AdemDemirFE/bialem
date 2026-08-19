@@ -1,7 +1,9 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.domain.Story;
+import com.bialem.backend.repository.StoryCommunityTargetRepository;
 import com.bialem.backend.repository.StoryRepository;
+import com.bialem.backend.repository.StoryViewRepository;
 import com.bialem.backend.service.dto.StoryDTO;
 import com.bialem.backend.service.mapper.StoryMapper;
 import java.util.LinkedList;
@@ -23,11 +25,19 @@ public class StoryService {
     private static final Logger LOG = LoggerFactory.getLogger(StoryService.class);
 
     private final StoryRepository storyRepository;
-
+    private final StoryViewRepository storyViewRepository;
+    private final StoryCommunityTargetRepository storyCommunityTargetRepository;
     private final StoryMapper storyMapper;
 
-    public StoryService(StoryRepository storyRepository, StoryMapper storyMapper) {
+    public StoryService(
+        StoryRepository storyRepository,
+        StoryViewRepository storyViewRepository,
+        StoryCommunityTargetRepository storyCommunityTargetRepository,
+        StoryMapper storyMapper
+    ) {
         this.storyRepository = storyRepository;
+        this.storyViewRepository = storyViewRepository;
+        this.storyCommunityTargetRepository = storyCommunityTargetRepository;
         this.storyMapper = storyMapper;
     }
 
@@ -107,6 +117,8 @@ public class StoryService {
      */
     public void delete(Long id) {
         LOG.debug("Request to delete Story : {}", id);
+        storyViewRepository.deleteByStory_Id(id);
+        storyCommunityTargetRepository.deleteByStory_Id(id);
         storyRepository.deleteById(id);
     }
 }

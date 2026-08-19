@@ -123,7 +123,7 @@ export default function NotificationsScreen() {
         ) : null}
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+      <View style={styles.filters}>
         {notificationFilters.map((item) => {
           const selected = filter === item.value;
           return (
@@ -132,7 +132,7 @@ export default function NotificationsScreen() {
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {loading ? (
@@ -216,8 +216,18 @@ const styles = StyleSheet.create({
   readAllButton: { alignSelf: "flex-start", backgroundColor: colors.action, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 11 },
   readAllText: { color: colors.actionText, fontSize: 13, fontWeight: "800" },
   error: { color: colors.danger, fontSize: 14, fontWeight: "600" },
-  filters: { gap: 8, paddingRight: 12 },
-  filter: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  filters: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, flexGrow: 0, flexShrink: 0 },
+  filter: {
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "flex-start"
+  },
   filterActive: { borderColor: colors.brandInk, backgroundColor: colors.brandInk },
   filterText: { color: colors.ink, fontSize: 12, fontWeight: "800" },
   filterTextActive: { color: "#fff" },

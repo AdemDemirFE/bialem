@@ -61,12 +61,12 @@ public class Story implements Serializable {
     @JsonIgnoreProperties(value = { "user", "preferences" }, allowSetters = true)
     private Profile author;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "story", "viewer" }, allowSetters = true)
     private Set<StoryView> views = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story")
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "story", "community" }, allowSetters = true)
     private Set<StoryCommunityTarget> communityTargets = new HashSet<>();

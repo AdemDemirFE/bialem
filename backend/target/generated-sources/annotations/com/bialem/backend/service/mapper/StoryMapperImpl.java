@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-08-19T16:30:50+0300",
+    date = "2026-08-19T16:45:32+0300",
     comments = "version: 1.6.3, compiler: Eclipse JDT (IDE) 3.46.100.v20260624-0231, environment: Java 21.0.11 (Eclipse Adoptium)"
 )
 @Component
@@ -69,40 +69,40 @@ public class StoryMapperImpl implements StoryMapper {
     }
 
     @Override
-    public void partialUpdate(Story entity, StoryDTO dto) {
-        if ( dto == null ) {
+    public void partialUpdate(Story arg0, StoryDTO arg1) {
+        if ( arg1 == null ) {
             return;
         }
 
-        if ( dto.getId() != null ) {
-            entity.setId( dto.getId() );
+        if ( arg1.getId() != null ) {
+            arg0.setId( arg1.getId() );
         }
-        if ( dto.getContentType() != null ) {
-            entity.setContentType( dto.getContentType() );
+        if ( arg1.getContentType() != null ) {
+            arg0.setContentType( arg1.getContentType() );
         }
-        if ( dto.getBody() != null ) {
-            entity.setBody( dto.getBody() );
+        if ( arg1.getBody() != null ) {
+            arg0.setBody( arg1.getBody() );
         }
-        if ( dto.getMediaUrl() != null ) {
-            entity.setMediaUrl( dto.getMediaUrl() );
+        if ( arg1.getMediaUrl() != null ) {
+            arg0.setMediaUrl( arg1.getMediaUrl() );
         }
-        if ( dto.getIsPublic() != null ) {
-            entity.setIsPublic( dto.getIsPublic() );
+        if ( arg1.getIsPublic() != null ) {
+            arg0.setIsPublic( arg1.getIsPublic() );
         }
-        if ( dto.getShareWithFollowers() != null ) {
-            entity.setShareWithFollowers( dto.getShareWithFollowers() );
+        if ( arg1.getShareWithFollowers() != null ) {
+            arg0.setShareWithFollowers( arg1.getShareWithFollowers() );
         }
-        if ( dto.getCreatedAt() != null ) {
-            entity.setCreatedAt( dto.getCreatedAt() );
+        if ( arg1.getCreatedAt() != null ) {
+            arg0.setCreatedAt( arg1.getCreatedAt() );
         }
-        if ( dto.getExpiresAt() != null ) {
-            entity.setExpiresAt( dto.getExpiresAt() );
+        if ( arg1.getExpiresAt() != null ) {
+            arg0.setExpiresAt( arg1.getExpiresAt() );
         }
-        if ( dto.getAuthor() != null ) {
-            if ( entity.getAuthor() == null ) {
-                entity.author( new Profile() );
+        if ( arg1.getAuthor() != null ) {
+            if ( arg0.getAuthor() == null ) {
+                arg0.author( new Profile() );
             }
-            profileDTOToProfile1( dto.getAuthor(), entity.getAuthor() );
+            profileDTOToProfile1( arg1.getAuthor(), arg0.getAuthor() );
         }
     }
 

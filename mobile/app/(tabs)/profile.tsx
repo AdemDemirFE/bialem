@@ -260,14 +260,14 @@ export default function ProfileScreen() {
 
       <View style={styles.socialPanel}>
         <View style={styles.sectionTitleRow}>
-          <View>
-            <Text style={styles.panelTitle}>Sosyal çevren</Text>
-            <Text style={styles.socialHint}>Takip ettiklerinin anlıklarını ve planlarını keşfet.</Text>
+          <View style={styles.sectionTitleCopy}>
+            <Text style={styles.panelTitle} numberOfLines={1}>Sosyal çevren</Text>
+            <Text style={styles.socialHint} numberOfLines={2}>Takip ettiklerinin anlıklarını ve planlarını keşfet.</Text>
           </View>
           <Link href={"/people" as never} asChild>
             <Pressable style={styles.findPeopleButton}>
-              <Ionicons name="person-add-outline" size={17} color={colors.actionText} />
-              <Text style={styles.findPeopleText}>Kişi bul</Text>
+              <Ionicons name="person-add-outline" size={15} color={colors.actionText} />
+              <Text style={styles.findPeopleText} numberOfLines={1}>Kişi bul</Text>
             </Pressable>
           </Link>
         </View>
@@ -547,8 +547,9 @@ function formatDate(dateString: string) {
   }
 }
 
-function maskUser(userId: string) {
-  return `Üye ${userId.slice(0, 6)}`;
+function maskUser(userId: string | null | undefined) {
+  if (!userId) return "Üye";
+  return `Üye ${String(userId).slice(0, 6)}`;
 }
 
 const styles = StyleSheet.create({
@@ -637,6 +638,7 @@ const styles = StyleSheet.create({
     gap: 14
   },
   socialPanel: {
+    overflow: "hidden",
     backgroundColor: colors.surface,
     borderRadius: 28,
     borderWidth: 1,
@@ -645,18 +647,18 @@ const styles = StyleSheet.create({
     gap: 16
   },
   socialHint: {
-    maxWidth: 210,
-    marginTop: 4,
     color: colors.muted,
     fontSize: 12,
     lineHeight: 17
   },
   findPeopleButton: {
+    flexShrink: 0,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    alignSelf: "flex-start",
+    height: 34,
+    gap: 5,
+    paddingHorizontal: 10,
     borderRadius: 999,
     backgroundColor: colors.action
   },
@@ -746,14 +748,20 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     color: colors.ink,
-    fontSize: 23,
+    fontSize: 20,
+    lineHeight: 24,
     fontWeight: "800"
   },
   sectionTitleRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 12
+    gap: 10
+  },
+  sectionTitleCopy: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 4
   },
   editProfileButton: {
     flexDirection: "row",

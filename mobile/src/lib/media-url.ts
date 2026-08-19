@@ -1,6 +1,6 @@
 import { getApiBaseUrl } from "./backend-config";
 
-const PROXY_HOSTS = ["ticketm.net", "ticketmaster.com", "ticketmaster.com.tr"];
+const PROXY_HOSTS = ["ticketm.net", "ticketmaster.com", "ticketmaster.com.tr", "ticketmaster.eu", "tmol.io"];
 
 export function normalizeImageUrl(value: string) {
   const httpsUrl = value.trim().replace(/^http:/i, "https:");

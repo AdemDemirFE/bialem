@@ -117,7 +117,10 @@ export default function UserProfileDetailScreen() {
     if (reviewsResult.error) {
       setReviews([]);
     } else {
-      const nextReviews = (reviewsResult.data ?? []) as UserReviewRecord[];
+      const nextReviews = ((reviewsResult.data ?? []) as Array<UserReviewRecord & { reviewer?: string | { id?: string } }>).map((review) => ({
+        ...review,
+        reviewer_id: review.reviewer_id ?? (typeof review.reviewer === "string" ? review.reviewer : review.reviewer?.id) ?? ""
+      }));
       setReviews(nextReviews);
       setReviewTeamRoles(await getPlatformTeamIdentityMap(nextReviews.map((review) => review.reviewer_id)));
     }
@@ -442,8 +445,9 @@ function formatDate(dateString: string) {
   }
 }
 
-function maskUser(userId: string) {
-  return `Üye ${userId.slice(0, 6)}`;
+function maskUser(userId: string | null | undefined) {
+  if (!userId) return "Üye";
+  return `Üye ${String(userId).slice(0, 6)}`;
 }
 
 const styles = StyleSheet.create({

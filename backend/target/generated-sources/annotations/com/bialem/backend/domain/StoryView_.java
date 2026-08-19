@@ -1,13 +1,11 @@
 package com.bialem.backend.domain;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.StaticMetamodel;
 import java.time.Instant;
 
 @StaticMetamodel(StoryView.class)
-@Generated("org.hibernate.processor.HibernateProcessor")
 public abstract class StoryView_ {
 
 	public static final String VIEWER = "viewer";

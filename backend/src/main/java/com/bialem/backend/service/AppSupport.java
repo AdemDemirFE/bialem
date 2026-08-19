@@ -142,6 +142,9 @@ public class AppSupport {
                     String key = camelToSnake(field.getName());
                     if (value == null) {
                         out.put(key, null);
+                        if (field.getType().getName().startsWith("com.bialem.backend.domain.")) {
+                            out.put(key + "_id", null);
+                        }
                     } else if (value instanceof Enum<?> enumerated) {
                         out.put(key, enumerated.name().toLowerCase(Locale.ROOT));
                     } else if (value instanceof Instant instant) {
@@ -198,8 +201,9 @@ public class AppSupport {
             out.put("follower", profileEmbed(follow.getFollower()));
             out.put("followed", profileEmbed(follow.getFollowed()));
         }
-        if (entity instanceof Notification notification) {
-            out.put("profiles", profileEmbed(notification.getUser()));
+        if (entity instanceof UserReview review) {
+            out.put("reviewer_id", review.getReviewer() == null ? null : stringify(review.getReviewer().getId()));
+            out.put("reviewed_user_id", review.getReviewedUser() == null ? null : stringify(review.getReviewedUser().getId()));
         }
         if (entity instanceof CommunityModeratorAssistant assistant) {
             out.put("profiles", profileEmbed(assistant.getUser()));

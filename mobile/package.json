@@ -27,6 +27,7 @@
     "sweetalert2": "^11.22.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.4.2",
     "@types/react": "~19.1.10",
     "@types/react-dom": "~19.1.7",

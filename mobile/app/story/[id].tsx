@@ -1,6 +1,7 @@
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { removeStoryImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
@@ -18,55 +19,144 @@ type StoryDetail = {
   created_at: string;
 };
 
+const STORY_MS = 6000;
+
 export default function StoryViewerScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
-  const [story, setStory] = useState<StoryDetail | null>(null);
+  const [queue, setQueue] = useState<StoryDetail[]>([]);
+  const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const pausedRef = useRef(false);
+  const holdPausedRef = useRef(false);
+  const buttonPausedRef = useRef(false);
+  const elapsedRef = useRef(0);
+  const lastTickRef = useRef<number | null>(null);
+  const goNextRef = useRef<() => void>(() => undefined);
+  const story = queue[index] ?? null;
 
   useEffect(() => {
-    const loadStory = async () => {
-      if (!id) return;
-      const result = await api.rpc("get_story_detail", { target_story_id: id });
+    pausedRef.current = paused;
+  }, [paused]);
 
-      if (result.error || !result.data?.[0]) {
-        setError(result.error?.message || "Bu anlık artık görüntülenemiyor.");
+  useEffect(() => {
+    const loadStories = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      const feed = await api.rpc("get_story_feed");
+      const items = Array.isArray(feed.data) ? (feed.data as StoryDetail[]) : [];
+      let nextQueue = items.filter((item) => item.story_id);
+      if (!nextQueue.some((item) => item.story_id === id)) {
+        const detail = await api.rpc("get_story_detail", { target_story_id: id });
+        if (detail.data?.[0]) nextQueue = [detail.data[0] as StoryDetail, ...nextQueue];
+      }
+      const start = Math.max(0, nextQueue.findIndex((item) => item.story_id === id));
+      if (!nextQueue.length) {
+        setError("Bu anlık artık görüntülenemiyor.");
+        setQueue([]);
       } else {
-        setStory(result.data[0] as StoryDetail);
-        await api.rpc("mark_story_viewed", { target_story_id: id });
+        setQueue(nextQueue);
+        setIndex(start < 0 ? 0 : start);
       }
       setLoading(false);
     };
-
-    void loadStory();
+    void loadStories();
   }, [id]);
 
-  const deleteStory = () => {
-    if (!story || !user || story.author_id !== user.id || deleting) return;
+  useEffect(() => {
+    if (!story?.story_id) return;
+    void api.rpc("mark_story_viewed", { target_story_id: story.story_id });
+  }, [story?.story_id]);
 
-    Alert.alert(
-      "Anını kaldır",
-      "Bu anı hemen kaldırılacak ve artık hiç kimse tarafından görüntülenemeyecek.",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Anıyı sil",
-          style: "destructive",
-          onPress: () => void confirmDeleteStory()
-        }
-      ]
-    );
+  const closeViewer = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) router.back();
+    else router.replace("/(tabs)/feed");
+  };
+
+  const goPrev = () => {
+    if (index <= 0) {
+      closeViewer();
+      return;
+    }
+    setIndex((current) => current - 1);
+  };
+
+  const goNext = () => {
+    if (index >= queue.length - 1) {
+      closeViewer();
+      return;
+    }
+    setIndex((current) => current + 1);
+  };
+
+  goNextRef.current = goNext;
+
+  useEffect(() => {
+    if (!story || loading || confirmDelete) return;
+    elapsedRef.current = 0;
+    lastTickRef.current = null;
+    setProgress(0);
+    let frame = 0;
+    const tick = (now: number) => {
+      if (lastTickRef.current == null) lastTickRef.current = now;
+      if (!pausedRef.current) elapsedRef.current += now - lastTickRef.current;
+      lastTickRef.current = now;
+      const ratio = Math.min(1, elapsedRef.current / STORY_MS);
+      setProgress(ratio);
+      if (ratio >= 1) {
+        goNextRef.current();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [story?.story_id, loading, confirmDelete]);
+
+  const syncPaused = () => {
+    const next = holdPausedRef.current || buttonPausedRef.current;
+    setPaused(next);
+  };
+
+  const onHoldStart = () => {
+    holdPausedRef.current = true;
+    syncPaused();
+  };
+
+  const onHoldEnd = () => {
+    holdPausedRef.current = false;
+    syncPaused();
+  };
+
+  const togglePause = () => {
+    buttonPausedRef.current = !buttonPausedRef.current;
+    syncPaused();
+  };
+
+  const requestDelete = () => {
+    if (!story || !user || story.author_id !== user.id || deleting) return;
+    buttonPausedRef.current = true;
+    syncPaused();
+    setConfirmDelete(true);
+  };
+
+  const cancelDelete = () => {
+    setConfirmDelete(false);
+    buttonPausedRef.current = false;
+    syncPaused();
   };
 
   const confirmDeleteStory = async () => {
     if (!story || !user || story.author_id !== user.id) return;
-
     setDeleting(true);
     setError(null);
-
     const result = await api
       .from("stories")
       .delete()
@@ -84,22 +174,38 @@ export default function StoryViewerScreen() {
       try {
         await removeStoryImage(story.media_url);
       } catch {
-        // The story is already inaccessible; an orphaned file can be cleaned up later.
+        // Story is already gone; leftover media can be cleaned later.
       }
     }
 
-    router.replace("/(tabs)/feed");
+    const remaining = queue.filter((item) => item.story_id !== story.story_id);
+    if (!remaining.length) {
+      router.replace("/(tabs)/feed");
+      return;
+    }
+    setQueue(remaining);
+    setIndex((current) => Math.min(current, remaining.length - 1));
+    setConfirmDelete(false);
+    buttonPausedRef.current = false;
+    setDeleting(false);
+    syncPaused();
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.action} /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.action} />
+      </View>
+    );
   }
 
   if (!story) {
     return (
       <View style={styles.center}>
         <Text style={styles.error}>{error}</Text>
-        <Link href="/(tabs)/feed" asChild><Pressable style={styles.closeButton}><Text style={styles.closeText}>Keşfet'e dön</Text></Pressable></Link>
+        <Pressable style={styles.closeButton} onPress={closeViewer}>
+          <Text style={styles.closeText}>Keşfet'e dön</Text>
+        </Pressable>
       </View>
     );
   }
@@ -107,34 +213,107 @@ export default function StoryViewerScreen() {
   return (
     <View style={styles.page}>
       {story.content_type === "image" && story.media_url ? (
-        <Image source={{ uri: story.media_url }} style={styles.backgroundImage} resizeMode="cover" />
-      ) : <View style={styles.textBackground} />}
-      <View style={styles.scrim} />
+        <Image source={{ uri: story.media_url }} style={styles.backgroundImage} resizeMode="cover" pointerEvents="none" />
+      ) : (
+        <View style={styles.textBackground} pointerEvents="none" />
+      )}
+      <View style={styles.scrim} pointerEvents="none" />
 
-      <View style={styles.progress}><View style={styles.progressFill} /></View>
-      <View style={styles.header}>
+      <View style={styles.tapRow}>
+        <Pressable
+          style={styles.tapZone}
+          onPress={goPrev}
+          onLongPress={onHoldStart}
+          delayLongPress={180}
+          onPressOut={onHoldEnd}
+          accessibilityLabel="Önceki anlık"
+        />
+        <Pressable
+          style={[styles.tapZone, styles.tapZoneNext]}
+          onPress={goNext}
+          onLongPress={onHoldStart}
+          delayLongPress={180}
+          onPressOut={onHoldEnd}
+          accessibilityLabel="Sonraki anlık"
+        />
+      </View>
+
+      <View style={styles.progressRow} pointerEvents="none">
+        {queue.map((item, itemIndex) => (
+          <View key={item.story_id} style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width:
+                    itemIndex < index ? "100%" : itemIndex === index ? `${Math.round(progress * 100)}%` : "0%"
+                }
+              ]}
+            />
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.header} pointerEvents="box-none">
         <View style={styles.avatar}>
-          {story.avatar_url ? <Image source={{ uri: story.avatar_url }} style={styles.avatarImage} /> : <Text style={styles.avatarText}>{story.display_name.slice(0, 1).toUpperCase()}</Text>}
+          {story.avatar_url ? (
+            <Image source={{ uri: story.avatar_url }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{story.display_name.slice(0, 1).toUpperCase()}</Text>
+          )}
         </View>
-        <View style={styles.authorCopy}>
+        <View style={styles.authorCopy} pointerEvents="none">
           <Text style={styles.author}>{story.display_name}</Text>
-          <Text style={styles.meta}>{story.community_name || "Takipçileriyle paylaştı"} · {formatAge(story.created_at)}</Text>
+          <Text style={styles.meta}>
+            {story.community_name || "Takipçileriyle paylaştı"} · {formatAge(story.created_at)}
+          </Text>
         </View>
         <View style={styles.headerActions}>
+          <Pressable style={styles.iconButton} onPress={togglePause} accessibilityLabel={paused ? "Başlat" : "Durdur"}>
+            <Ionicons name={paused ? "play" : "pause"} size={18} color={colors.onBrand} />
+          </Pressable>
           {story.author_id === user?.id ? (
-            <Pressable style={styles.deleteButton} onPress={deleteStory} disabled={deleting}>
-              {deleting ? <ActivityIndicator size="small" color={colors.onBrand} /> : <Text style={styles.deleteText}>Sil</Text>}
+            <Pressable style={styles.deleteButton} onPress={requestDelete} disabled={deleting} accessibilityLabel="Sil">
+              {deleting ? <ActivityIndicator size="small" color={colors.onBrand} /> : <Ionicons name="trash-outline" size={16} color={colors.onBrand} />}
             </Pressable>
           ) : null}
-          <Link href="/(tabs)/feed" asChild><Pressable style={styles.close}><Text style={styles.closeSymbol}>×</Text></Pressable></Link>
+          <Pressable style={styles.iconButton} onPress={closeViewer} accessibilityLabel="Kapat">
+            <Ionicons name="close" size={22} color={colors.onBrand} />
+          </Pressable>
         </View>
       </View>
 
-      <View style={styles.content}>
-        {story.body ? <Text style={[styles.body, story.content_type === "text" && styles.textStoryBody]}>{story.body}</Text> : null}
+      <View style={styles.content} pointerEvents="none">
+        {story.body ? (
+          <Text style={[styles.body, story.content_type === "text" && styles.textStoryBody]}>{story.body}</Text>
+        ) : null}
         {error ? <Text style={styles.inlineError}>{error}</Text> : null}
       </View>
-      <Text style={styles.expiry}>Bu anlık 24 saat sonra kaybolur.</Text>
+
+      <View style={styles.sideHints} pointerEvents="none">
+        <Text style={styles.sideHint}>{index > 0 ? "‹" : ""}</Text>
+        <Text style={styles.sideHint}>{index < queue.length - 1 ? "›" : ""}</Text>
+      </View>
+      <Text style={styles.expiry} pointerEvents="none">
+        {paused ? "Duraklatıldı" : "Bu anlık 24 saat sonra kaybolur."}
+      </Text>
+
+      {confirmDelete ? (
+        <View style={styles.confirmScrim}>
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmTitle}>Anını kaldır</Text>
+            <Text style={styles.confirmBody}>Bu anı hemen kaldırılacak ve artık hiç kimse tarafından görüntülenemeyecek.</Text>
+            <View style={styles.confirmRow}>
+              <Pressable style={styles.confirmCancel} onPress={cancelDelete}>
+                <Text style={styles.confirmCancelText}>Vazgeç</Text>
+              </Pressable>
+              <Pressable style={styles.confirmDelete} onPress={() => void confirmDeleteStory()} disabled={deleting}>
+                <Text style={styles.confirmDeleteText}>{deleting ? "Siliniyor..." : "Anıyı sil"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -151,9 +330,13 @@ const styles = StyleSheet.create({
   backgroundImage: { ...StyleSheet.absoluteFillObject },
   textBackground: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.accent },
   scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(3,12,35,0.35)" },
-  progress: { position: "absolute", top: 52, left: 18, right: 18, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.35)" },
-  progressFill: { width: "100%", height: "100%", borderRadius: 2, backgroundColor: colors.surface },
-  header: { position: "absolute", top: 66, left: 18, right: 18, flexDirection: "row", alignItems: "center", gap: 10 },
+  tapRow: { position: "absolute", top: 118, left: 0, right: 0, bottom: 0, zIndex: 1, flexDirection: "row" },
+  tapZone: { flex: 1 },
+  tapZoneNext: { flex: 2 },
+  progressRow: { position: "absolute", top: 52, left: 14, right: 14, zIndex: 4, flexDirection: "row", gap: 4 },
+  progressTrack: { flex: 1, height: 3, borderRadius: 2, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.35)" },
+  progressFill: { height: "100%", borderRadius: 2, backgroundColor: colors.surface },
+  header: { position: "absolute", top: 66, left: 14, right: 14, zIndex: 5, flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: colors.action, borderWidth: 2, borderColor: colors.surface },
   avatarImage: { width: "100%", height: "100%" },
   avatarText: { color: colors.actionText, fontSize: 17, fontWeight: "900" },
@@ -161,16 +344,25 @@ const styles = StyleSheet.create({
   author: { color: colors.onBrand, fontSize: 15, fontWeight: "900" },
   meta: { color: "rgba(255,255,255,0.78)", fontSize: 11, fontWeight: "700" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
-  deleteButton: { minWidth: 48, height: 38, paddingHorizontal: 13, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(196,45,74,0.88)" },
-  deleteText: { color: colors.onBrand, fontSize: 12, fontWeight: "900" },
-  close: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.25)" },
-  closeSymbol: { color: colors.onBrand, fontSize: 28, lineHeight: 31 },
-  content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingTop: 130, paddingBottom: 90 },
+  iconButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.45)" },
+  deleteButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(196,45,74,0.88)" },
+  content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingTop: 130, paddingBottom: 90, zIndex: 0 },
   body: { color: colors.onBrand, fontSize: 18, lineHeight: 25, fontWeight: "800", textAlign: "center", padding: 14, borderRadius: 18, backgroundColor: "rgba(3,12,35,0.48)" },
   textStoryBody: { fontSize: 30, lineHeight: 38, backgroundColor: "transparent" },
   inlineError: { marginTop: 14, color: colors.onBrand, textAlign: "center", fontSize: 13, fontWeight: "800", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: "rgba(196,45,74,0.88)" },
-  expiry: { position: "absolute", bottom: 34, left: 20, right: 20, color: "rgba(255,255,255,0.7)", fontSize: 11, textAlign: "center", fontWeight: "700" },
+  sideHints: { position: "absolute", left: 10, right: 10, top: "48%", zIndex: 2, flexDirection: "row", justifyContent: "space-between" },
+  sideHint: { color: "rgba(255,255,255,0.35)", fontSize: 36, fontWeight: "200" },
+  expiry: { position: "absolute", bottom: 34, left: 20, right: 20, zIndex: 2, color: "rgba(255,255,255,0.7)", fontSize: 11, textAlign: "center", fontWeight: "700" },
   error: { color: colors.onBrand, textAlign: "center", fontSize: 16, lineHeight: 23 },
   closeButton: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, backgroundColor: colors.action },
-  closeText: { color: colors.actionText, fontWeight: "900" }
+  closeText: { color: colors.actionText, fontWeight: "900" },
+  confirmScrim: { ...StyleSheet.absoluteFillObject, zIndex: 20, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(3,12,35,0.72)" },
+  confirmCard: { width: "100%", maxWidth: 360, borderRadius: 22, padding: 20, gap: 12, backgroundColor: colors.surface },
+  confirmTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
+  confirmBody: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: "600" },
+  confirmRow: { flexDirection: "row", gap: 10, marginTop: 8 },
+  confirmCancel: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.page },
+  confirmCancelText: { color: colors.ink, fontWeight: "800" },
+  confirmDelete: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#c42d4a" },
+  confirmDeleteText: { color: colors.onBrand, fontWeight: "800" }
 });
