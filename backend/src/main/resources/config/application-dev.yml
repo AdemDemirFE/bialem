@@ -40,6 +40,7 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
+    # Local Docker Postgres only (host 15432). Never point this at production.
     url: jdbc:postgresql://localhost:15432/bialem
     username: bialem
     password:

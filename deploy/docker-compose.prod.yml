@@ -1,0 +1,87 @@
+name: bialem
+
+services:
+  db:
+    image: postgres:17.4
+    container_name: bialem-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - bialem-postgres-data:/var/lib/postgresql/data
+    networks:
+      - bialem-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # No host ports. Reachable only as bialem-db:5432 on bialem-network.
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: bialem-backend:latest
+    container_name: bialem-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://bialem-db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_LIQUIBASE_URL: jdbc:postgresql://bialem-db:5432/${POSTGRES_DB}
+      SPRING_LIQUIBASE_USER: ${POSTGRES_USER}
+      SPRING_LIQUIBASE_PASSWORD: ${POSTGRES_PASSWORD}
+      JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      JHIPSTER_MAIL_BASE_URL: ${JHIPSTER_MAIL_BASE_URL:-https://bialem.app}
+      JHIPSTER_CORS_ALLOWED_ORIGINS: ${JHIPSTER_CORS_ALLOWED_ORIGINS:-https://bialem.app,https://www.bialem.app}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-localhost}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-25}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+    ports:
+      - "127.0.0.1:8184:8080"
+    networks:
+      - bialem-network
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/management/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+
+  frontend:
+    build:
+      context: ../mobile
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.bialem.app}
+    image: bialem-frontend:latest
+    container_name: bialem-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4174:80"
+    networks:
+      - bialem-network
+
+networks:
+  bialem-network:
+    name: bialem-network
+    driver: bridge
+
+volumes:
+  bialem-postgres-data:
+    name: bialem-postgres-data

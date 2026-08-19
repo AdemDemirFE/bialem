@@ -20,12 +20,23 @@ logging:
     com.bialem.backend: INFO
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
   prometheus:
     metrics:
       export:
         enabled: false
 
 spring:
+  docker:
+    compose:
+      enabled: false
   devtools:
     restart:
       enabled: false
@@ -33,20 +44,23 @@ spring:
       enabled: false
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://localhost:5432/bialem
-    username: bialem
-    password:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bialem}
+    username: ${SPRING_DATASOURCE_USERNAME:bialem}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     hikari:
       poolName: Hikari
       auto-commit: false
-  # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
+  # Liquibase applies schema. Never use create / create-drop in production.
   liquibase:
     contexts: prod
+    url: ${SPRING_LIQUIBASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bialem}}
+    user: ${SPRING_LIQUIBASE_USER:${SPRING_DATASOURCE_USERNAME:bialem}}
+    password: ${SPRING_LIQUIBASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:25}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
   thymeleaf:
     cache: true
 
@@ -99,12 +113,19 @@ jhipster:
         # - In the Consul configserver
         # - In a separate `application-prod.yml` file, in the same folder as your executable JAR file
         # - In the `JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET` environment variable
-        base64-secret: ODQ2MThkMjk3ZjJkMzFiYTBjZmU5ZjNmZDAxMTNjYzVjMjg1ZjI2NTRmYjgyNWE2NGU4MzcyOTJlNmUyNmQ2NzU4ZWEwOWU5ZWRkNDNkZGQ1MWYwMmMzZDQ5MDY2NzU3N2ZkMzE4MGM1ZmVjNzU4M2M5M2Y2MDkxZjgwNWVkNjI=
+        base64-secret: ${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET:${JWT_SECRET:}}
         # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
+  cors:
+    allowed-origins: ${JHIPSTER_CORS_ALLOWED_ORIGINS:https://bialem.app,https://www.bialem.app}
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+    allow-credentials: true
+    max-age: 1800
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://my-server-url-to-change # Modify according to your server's URL
+    base-url: ${JHIPSTER_MAIL_BASE_URL:https://bialem.app}
   logging:
     use-json-format: false # By default, logs are not in Json format
     logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration

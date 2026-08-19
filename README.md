@@ -49,6 +49,8 @@ cd admin && npm install && npm run dev
 - Admin: JHipster varsayılanı `admin` / `admin` (`ROLE_ADMIN`).
 - Env: `mobile/.env` içinde `VITE_API_BASE_URL=http://localhost:8080`, `admin/.env.local` içinde `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`.
 
+Yerel ve canlı ortamlar ayrıdır: geliştirme DB `localhost:15432`, production `bialem-db` (VPS). Ayrıntı: [DEPLOYMENT.md](DEPLOYMENT.md).
+
 Android:
 npm run build
 npx cap sync android
