@@ -1,5 +1,6 @@
 package com.bialem.backend.web.rest;
 
+import com.bialem.backend.service.AppAiChatService;
 import com.bialem.backend.service.AppMediaService;
 import com.bialem.backend.service.AppQueryService;
 import com.bialem.backend.service.AppRpcService;
@@ -23,17 +24,20 @@ public class AppFacadeResource {
     private final AppQueryService queryService;
     private final AppRpcService rpcService;
     private final AppMediaService mediaService;
+    private final AppAiChatService aiChatService;
     private final AppSupport support;
 
     public AppFacadeResource(
         AppQueryService queryService,
         AppRpcService rpcService,
         AppMediaService mediaService,
+        AppAiChatService aiChatService,
         AppSupport support
     ) {
         this.queryService = queryService;
         this.rpcService = rpcService;
         this.mediaService = mediaService;
+        this.aiChatService = aiChatService;
         this.support = support;
     }
 
@@ -62,10 +66,7 @@ public class AppFacadeResource {
 
     @PostMapping("/ai/chat")
     public Map<String, Object> chat(@RequestBody Map<String, Object> body) {
-        return Map.of(
-            "reply",
-            "Bialem Asistan artık kendi backend'iniz üzerinden çalışıyor. Topluluk, etkinlik ve keşif ekranlarından devam edebilirsiniz."
-        );
+        return aiChatService.chat(body);
     }
 
     @PostMapping(path = "/media/{bucket}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

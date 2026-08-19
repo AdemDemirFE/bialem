@@ -1,6 +1,7 @@
 package com.bialem.backend.domain;
 
 import com.bialem.backend.domain.enumeration.StoryContentType;
+import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -8,6 +9,7 @@ import jakarta.persistence.metamodel.StaticMetamodel;
 import java.time.Instant;
 
 @StaticMetamodel(Story.class)
+@Generated("org.hibernate.processor.HibernateProcessor")
 public abstract class Story_ {
 
 	public static final String CREATED_AT = "createdAt";

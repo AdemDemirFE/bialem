@@ -6,7 +6,7 @@
     "description": "Toplulukları, etkinlikleri ve yeni insanları bir araya getiren sosyal keşif uygulaması.",
     "scheme": "bialem",
     "version": "1.0.2",
-    "icon": "./assets/app-icon.png",
+    "icon": "./resources/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -24,8 +24,8 @@
       "googleServicesFile": "./google-services.json",
       "allowBackup": false,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./resources/icon.png",
+        "backgroundColor": "#2A1878"
       },
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -84,15 +84,6 @@
         {
           "cameraPermission": "Etkinlik giriş QR kodlarını tarayabilmek için kameraya erişim gereklidir.",
           "recordAudioAndroid": false
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/bialem-logo.png",
-          "imageWidth": 260,
-          "resizeMode": "contain"
         }
       ],
       "expo-font",

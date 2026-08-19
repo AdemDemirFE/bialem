@@ -50,7 +50,8 @@ export default function AssistantScreen() {
       }
     });
 
-    if (functionError || !data?.answer) {
+    const answer = data?.answer || data?.reply;
+    if (functionError || !answer) {
       setError(data?.error || functionError?.message || "Asistan yanıt veremedi.");
       setSending(false);
       return;
@@ -58,7 +59,7 @@ export default function AssistantScreen() {
 
     setMessages((current) => [
       ...current,
-      { id: `${Date.now()}-assistant`, role: "assistant", content: data.answer }
+      { id: `${Date.now()}-assistant`, role: "assistant", content: answer }
     ]);
     setSending(false);
   };

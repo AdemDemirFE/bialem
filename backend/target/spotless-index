@@ -79,7 +79,7 @@ src\main\java\com\bialem\backend\domain\Profile.java 2026-08-19T02:34:26.4512965
 src\main\java\com\bialem\backend\domain\PushToken.java 2026-08-19T02:34:26.461586300Z
 src\main\java\com\bialem\backend\domain\Report.java 2026-08-19T11:02:47.951771300Z
 src\main\java\com\bialem\backend\domain\Role.java 2026-08-19T07:26:30.939504200Z
-src\main\java\com\bialem\backend\domain\Story.java 2026-08-19T02:34:26.472696800Z
+src\main\java\com\bialem\backend\domain\Story.java 2026-08-19T13:45:30.301273100Z
 src\main\java\com\bialem\backend\domain\StoryCommunityTarget.java 2026-08-19T02:34:26.486333900Z
 src\main\java\com\bialem\backend\domain\StoryView.java 2026-08-19T02:34:26.493198700Z
 src\main\java\com\bialem\backend\domain\User.java 2026-08-19T02:34:26.502131400Z
@@ -91,7 +91,7 @@ src\main\java\com\bialem\backend\management\package-info.java 2026-08-19T02:34:2
 src\main\java\com\bialem\backend\management\SecurityMetersService.java 2026-08-19T02:34:26.550133100Z
 src\main\java\com\bialem\backend\package-info.java 2026-08-19T02:34:26.556146100Z
 src\main\java\com\bialem\backend\repository\AccountPreferencesRepository.java 2026-08-19T03:45:45.042478600Z
-src\main\java\com\bialem\backend\repository\AiUsageLogRepository.java 2026-08-19T02:34:26.572803500Z
+src\main\java\com\bialem\backend\repository\AiUsageLogRepository.java 2026-08-19T14:01:52.518257100Z
 src\main\java\com\bialem\backend\repository\AuthorityRepository.java 2026-08-19T02:34:26.578403600Z
 src\main\java\com\bialem\backend\repository\BlockRepository.java 2026-08-19T02:34:26.612911400Z
 src\main\java\com\bialem\backend\repository\CityEventInterestRepository.java 2026-08-19T02:34:26.621165800Z
@@ -122,9 +122,9 @@ src\main\java\com\bialem\backend\repository\ProfileRepository.java 2026-08-19T03
 src\main\java\com\bialem\backend\repository\PushTokenRepository.java 2026-08-19T02:34:26.821849900Z
 src\main\java\com\bialem\backend\repository\ReportRepository.java 2026-08-19T02:34:26.834012700Z
 src\main\java\com\bialem\backend\repository\RoleRepository.java 2026-08-19T07:26:47.949088500Z
-src\main\java\com\bialem\backend\repository\StoryCommunityTargetRepository.java 2026-08-19T02:34:26.841421300Z
+src\main\java\com\bialem\backend\repository\StoryCommunityTargetRepository.java 2026-08-19T13:45:54.883216900Z
 src\main\java\com\bialem\backend\repository\StoryRepository.java 2026-08-19T02:34:26.849613700Z
-src\main\java\com\bialem\backend\repository\StoryViewRepository.java 2026-08-19T02:34:26.852135700Z
+src\main\java\com\bialem\backend\repository\StoryViewRepository.java 2026-08-19T13:45:52.728192600Z
 src\main\java\com\bialem\backend\repository\UserHonorBadgeRepository.java 2026-08-19T02:34:26.864725400Z
 src\main\java\com\bialem\backend\repository\UserRepository.java 2026-08-19T02:34:26.869420400Z
 src\main\java\com\bialem\backend\repository\UserReviewRepository.java 2026-08-19T02:34:26.880370800Z
@@ -137,10 +137,11 @@ src\main\java\com\bialem\backend\security\SpringSecurityAuditorAware.java 2026-0
 src\main\java\com\bialem\backend\security\UserNotActivatedException.java 2026-08-19T02:34:26.927705400Z
 src\main\java\com\bialem\backend\service\AccountPreferencesService.java 2026-08-19T02:34:26.939920200Z
 src\main\java\com\bialem\backend\service\AiUsageLogService.java 2026-08-19T02:34:26.948771900Z
-src\main\java\com\bialem\backend\service\AppMediaService.java 2026-08-19T12:01:35.219626800Z
-src\main\java\com\bialem\backend\service\AppQueryService.java 2026-08-19T12:11:01.537268500Z
+src\main\java\com\bialem\backend\service\AppAiChatService.java 2026-08-19T14:02:19.389495Z
+src\main\java\com\bialem\backend\service\AppMediaService.java 2026-08-19T13:44:27.104881800Z
+src\main\java\com\bialem\backend\service\AppQueryService.java 2026-08-19T13:45:57.162208200Z
 src\main\java\com\bialem\backend\service\AppRpcService.java 2026-08-19T11:03:29.936230800Z
-src\main\java\com\bialem\backend\service\AppSupport.java 2026-08-19T11:03:12.244764200Z
+src\main\java\com\bialem\backend\service\AppSupport.java 2026-08-19T13:57:36.044254200Z
 src\main\java\com\bialem\backend\service\BlockService.java 2026-08-19T02:34:26.960885700Z
 src\main\java\com\bialem\backend\service\CityEventInterestService.java 2026-08-19T02:34:26.964998900Z
 src\main\java\com\bialem\backend\service\CityEventService.java 2026-08-19T02:34:26.979195Z
@@ -267,7 +268,7 @@ src\main\java\com\bialem\backend\service\ReportQueryService.java 2026-08-19T02:3
 src\main\java\com\bialem\backend\service\ReportService.java 2026-08-19T02:34:28.183500Z
 src\main\java\com\bialem\backend\service\RoleService.java 2026-08-19T07:27:19.741932800Z
 src\main\java\com\bialem\backend\service\StoryCommunityTargetService.java 2026-08-19T02:34:28.191202Z
-src\main\java\com\bialem\backend\service\StoryService.java 2026-08-19T02:34:28.202035700Z
+src\main\java\com\bialem\backend\service\StoryService.java 2026-08-19T13:45:57.162208200Z
 src\main\java\com\bialem\backend\service\StoryViewService.java 2026-08-19T02:34:28.210319400Z
 src\main\java\com\bialem\backend\service\UserHonorBadgeService.java 2026-08-19T02:34:28.219520400Z
 src\main\java\com\bialem\backend\service\UsernameAlreadyUsedException.java 2026-08-19T02:34:28.228674200Z
@@ -279,7 +280,7 @@ src\main\java\com\bialem\backend\web\filter\SpaWebFilter.java 2026-08-19T02:34:2
 src\main\java\com\bialem\backend\web\rest\AccountPreferencesResource.java 2026-08-19T02:34:28.272985400Z
 src\main\java\com\bialem\backend\web\rest\AccountResource.java 2026-08-19T02:34:28.276233800Z
 src\main\java\com\bialem\backend\web\rest\AiUsageLogResource.java 2026-08-19T02:34:28.288601100Z
-src\main\java\com\bialem\backend\web\rest\AppFacadeResource.java 2026-08-19T12:01:04.368585100Z
+src\main\java\com\bialem\backend\web\rest\AppFacadeResource.java 2026-08-19T14:01:58.519720900Z
 src\main\java\com\bialem\backend\web\rest\AuthenticateController.java 2026-08-19T02:34:28.299034600Z
 src\main\java\com\bialem\backend\web\rest\AuthorityResource.java 2026-08-19T02:34:28.318741400Z
 src\main\java\com\bialem\backend\web\rest\BlockResource.java 2026-08-19T02:34:28.329067200Z

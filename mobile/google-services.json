@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "352525528919",
-    "project_id": "bialem-26b91",
-    "storage_bucket": "bialem-26b91.firebasestorage.app"
+    "project_number": "215569152354",
+    "project_id": "bialem-ac26c",
+    "storage_bucket": "bialem-ac26c.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:352525528919:android:d0926efcfb35bbbb939812",
+        "mobilesdk_app_id": "1:215569152354:android:67b358c8a66f540cb4543b",
         "android_client_info": {
           "package_name": "com.bialem.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDnH2WpAo57JiBL07OiNHe-MjnOIwsZGdQ"
+          "current_key": "AIzaSyDp7zRGSWgODXlw7Vfx3iuLIUjr-070Vbs"
         }
       ],
       "services": {

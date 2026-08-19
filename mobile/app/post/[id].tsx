@@ -1,6 +1,18 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from "react-native";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
@@ -10,12 +22,12 @@ import { colors } from "../../src/theme/colors";
 type PostRecord = {
   id: string;
   community_id: string | null;
-  author_id: string;
+  author_id: string | null;
   body: string | null;
   visibility: string;
   moderation_status: string;
   created_at: string;
-  post_media: {
+  post_media?: {
     id: string;
     media_type: string;
     storage_path: string;
@@ -31,19 +43,22 @@ type CommunityRecord = {
 
 type CommentRecord = {
   id: string;
-  author_id: string;
+  author_id: string | null;
   body: string;
   created_at: string;
+  profiles?: { display_name?: string | null } | null;
 };
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const commentInputRef = useRef<TextInput>(null);
   const [post, setPost] = useState<PostRecord | null>(null);
   const [community, setCommunity] = useState<CommunityRecord | null>(null);
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentTeamRoles, setCommentTeamRoles] = useState<Map<string, PlatformTeamRole>>(new Map());
   const [commentBody, setCommentBody] = useState("");
+  const [composerOpen, setComposerOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sendingComment, setSendingComment] = useState(false);
@@ -51,9 +66,15 @@ export default function PostDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const openComposer = () => {
+    setComposerOpen(true);
+    requestAnimationFrame(() => commentInputRef.current?.focus());
+  };
+
   const loadPost = async (mode: "initial" | "refresh" = "initial") => {
     if (!id) {
       setError("Paylaşım bulunamadı.");
+      setLoading(false);
       return;
     }
 
@@ -65,11 +86,7 @@ export default function PostDetailScreen() {
 
     setError(null);
 
-    const postResult = await api
-      .from("posts")
-      .select("id, community_id, author_id, body, visibility, moderation_status, created_at, post_media(id, media_type, storage_path, sort_order)")
-      .eq("id", id)
-      .maybeSingle<PostRecord>();
+    const postResult = await api.from("posts").select("*").eq("id", id).maybeSingle<PostRecord>();
 
     if (postResult.error) {
       setError(postResult.error.message);
@@ -95,7 +112,7 @@ export default function PostDetailScreen() {
         .from("comments")
         .select("id, author_id, body, created_at")
         .eq("target_type", "post")
-        .eq("target_id", nextPost.id)
+        .eq("target_id", String(nextPost.id))
         .order("created_at", { ascending: false })
     ]);
 
@@ -110,19 +127,27 @@ export default function PostDetailScreen() {
     } else {
       const nextComments = (commentsResult.data ?? []) as CommentRecord[];
       setComments(nextComments);
-      setCommentTeamRoles(await getPlatformTeamIdentityMap(nextComments.map((comment) => comment.author_id)));
+      try {
+        setCommentTeamRoles(await getPlatformTeamIdentityMap(nextComments.map((comment) => comment.author_id).filter(Boolean) as string[]));
+      } catch {
+        setCommentTeamRoles(new Map());
+      }
     }
 
-    if (mode === "initial") {
-      setLoading(false);
-    } else {
-      setRefreshing(false);
-    }
+    setLoading(false);
+    setRefreshing(false);
   };
 
   useEffect(() => {
     void loadPost();
   }, [id]);
+
+  useEffect(() => {
+    if (!loading && post) {
+      const timer = setTimeout(() => openComposer(), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, post?.id]);
 
   const handleCommentSubmit = async () => {
     if (!post || !user) {
@@ -131,7 +156,8 @@ export default function PostDetailScreen() {
     }
 
     if (!commentBody.trim()) {
-      setError("Yorum bos bırakılamaz.");
+      setError("Yorum boş bırakılamaz.");
+      openComposer();
       return;
     }
 
@@ -141,7 +167,7 @@ export default function PostDetailScreen() {
 
     const { error: commentError } = await api.from("comments").insert({
       target_type: "post",
-      target_id: post.id,
+      target_id: String(post.id),
       author_id: user.id,
       body: commentBody.trim()
     });
@@ -189,116 +215,134 @@ export default function PostDetailScreen() {
   const backHref = post?.community_id ? { pathname: "/community/[id]" as const, params: { id: post.community_id } } : "/(tabs)/feed";
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.page}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPost("refresh")} tintColor={colors.accent} />}
-    >
-      <Link href={backHref} asChild>
-        <Pressable style={styles.backButton}>
-          <Text style={styles.backButtonText}>Geri dön</Text>
-        </Pressable>
-      </Link>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.page}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPost("refresh")} tintColor={colors.accent} />}
+      >
+        <Link href={backHref} asChild>
+          <Pressable style={styles.backButton}>
+            <Text style={styles.backButtonText}>Geri dön</Text>
+          </Pressable>
+        </Link>
 
-      {loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.loadingText}>Paylaşım yükleniyor...</Text>
-        </View>
-      ) : !post ? (
-        <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Paylaşım bulunamadı</Text>
-          <Text style={styles.emptyText}>{error || "Bu paylaşım kaydı şu anda görüntülenemiyor."}</Text>
-        </View>
-      ) : (
-        <>
-          <View style={styles.hero}>
-            <Text style={styles.kicker}>Paylaşım Detayı</Text>
-            <Text style={styles.title}>{community?.name ?? "Topluluk paylaşımı"}</Text>
-            <Text style={styles.description}>
-              Topluluk akışı içindeki bu notun altına yorumlar bırakabilir, etkinlik sonrası deneyimleri konuşabilirsiniz.
-            </Text>
+        {loading ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={styles.loadingText}>Paylaşım yükleniyor...</Text>
           </View>
-
+        ) : !post ? (
           <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Paylaşım</Text>
-            <Text style={styles.metaText}>
-              {maskUser(post.author_id)}
-              {community?.name ? ` - ${community.name}` : ""}
-              {` - ${formatDate(post.created_at)}`}
-            </Text>
-            <Text style={styles.postBody}>{post.body || "Icerik eklenmedi."}</Text>
-            {post.post_media?.length ? (
-              <View style={styles.mediaStack}>
-                {post.post_media.map((media) => (
-                  <Image key={media.id} source={{ uri: media.storage_path }} style={styles.postImage} resizeMode="cover" />
-                ))}
-              </View>
-            ) : null}
-            <Text style={styles.helperText}>
-              Görünüm: {post.visibility} - Moderasyon: {post.moderation_status === "visible" ? "görünür" : post.moderation_status}
-            </Text>
-            <Pressable
-              style={[styles.reportButton, reportingTarget === post.id && styles.buttonDisabled]}
-              onPress={() => void handleReport("post", post.id, `Paylaşım raporu: ${(post.body || "").slice(0, 80)}`)}
-            >
-              <Text style={styles.reportButtonText}>
-                {reportingTarget === post.id ? "Raporlanıyor..." : "Paylasimi rapor et"}
+            <Text style={styles.panelTitle}>Paylaşım bulunamadı</Text>
+            <Text style={styles.emptyText}>{error || "Bu paylaşım kaydı şu anda görüntülenemiyor."}</Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.hero}>
+              <Text style={styles.kicker}>Paylaşım Detayı</Text>
+              <Text style={styles.title}>{community?.name ?? "Topluluk paylaşımı"}</Text>
+              <Text style={styles.description}>Altta yorum yazabilir, etkinlik sonrası deneyimleri konuşabilirsiniz.</Text>
+            </View>
+
+            <View style={styles.panel}>
+              <Text style={styles.panelTitle}>Paylaşım</Text>
+              <Text style={styles.metaText}>
+                {maskUser(post.author_id)}
+                {community?.name ? ` - ${community.name}` : ""}
+                {` - ${formatDate(post.created_at)}`}
               </Text>
-            </Pressable>
-          </View>
+              <Text style={styles.postBody}>{post.body || "İçerik eklenmedi."}</Text>
+              {post.post_media?.length ? (
+                <View style={styles.mediaStack}>
+                  {post.post_media.map((media) => (
+                    <Image key={media.id} source={{ uri: media.storage_path }} style={styles.postImage} resizeMode="cover" />
+                  ))}
+                </View>
+              ) : null}
+              <Pressable
+                style={[styles.reportButton, reportingTarget === post.id && styles.buttonDisabled]}
+                onPress={() => void handleReport("post", post.id, `Paylaşım raporu: ${(post.body || "").slice(0, 80)}`)}
+              >
+                <Text style={styles.reportButtonText}>{reportingTarget === post.id ? "Raporlanıyor..." : "Paylaşımı rapor et"}</Text>
+              </Pressable>
+            </View>
 
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Yorum yaz</Text>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
-            <TextInput
-              value={commentBody}
-              onChangeText={setCommentBody}
-              placeholder="Bu paylaşım hakkındaki düşünceni yaz"
-              placeholderTextColor="#7d877d"
-              multiline
-              style={styles.textArea}
-            />
-            <Pressable style={[styles.primaryButton, sendingComment && styles.buttonDisabled]} onPress={() => void handleCommentSubmit()}>
-              <Text style={styles.primaryButtonText}>{sendingComment ? "Gönderiliyor..." : "Yorum paylaş"}</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.panel}>
-            <Text style={styles.panelTitle}>Yorum akışı</Text>
-            {comments.length === 0 ? (
-              <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen bırakabilirsin.</Text>
-            ) : (
-              <View style={styles.stack}>
-                {comments.map((comment) => (
-                  <View key={comment.id} style={styles.commentCard}>
-                    <View style={styles.commentIdentity}>
-                      <Text style={styles.commentAuthor}>{maskUser(comment.author_id)}</Text>
-                      <TeamIdentityBadge role={commentTeamRoles.get(comment.author_id)} compact />
-                    </View>
-                    <Text style={styles.commentDate}>{formatDate(comment.created_at)}</Text>
-                    <Text style={styles.commentBody}>{comment.body}</Text>
-                    <Link href={{ pathname: "/user/[id]", params: { id: comment.author_id } }} asChild>
-                      <Pressable>
-                        <Text style={styles.inlineLinkText}>Kullanıcı profilini aç</Text>
-                      </Pressable>
-                    </Link>
-                    <Pressable
-                      style={styles.inlineReportButton}
-                      onPress={() => void handleReport("comment", comment.id, `Paylaşım yorumu raporu: ${comment.body.slice(0, 80)}`)}
-                    >
-                      <Text style={styles.inlineReportText}>
-                        {reportingTarget === comment.id ? "Raporlanıyor..." : "Yorumu rapor et"}
-                      </Text>
-                    </Pressable>
-                  </View>
-                ))}
+            <View style={styles.panel}>
+              <View style={styles.commentsHeader}>
+                <Text style={styles.panelTitle}>Yorumlar</Text>
+                <Pressable style={styles.openComposerChip} onPress={openComposer}>
+                  <Text style={styles.openComposerChipText}>Yorum yaz</Text>
+                </Pressable>
               </View>
-            )}
-          </View>
-        </>
-      )}
-    </ScrollView>
+              {comments.length === 0 ? (
+                <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen bırakabilirsin.</Text>
+              ) : (
+                <View style={styles.stack}>
+                  {comments.map((comment) => (
+                    <View key={comment.id} style={styles.commentCard}>
+                      <View style={styles.commentIdentity}>
+                        <Text style={styles.commentAuthor}>{comment.profiles?.display_name || maskUser(comment.author_id)}</Text>
+                        {comment.author_id ? <TeamIdentityBadge role={commentTeamRoles.get(comment.author_id)} compact /> : null}
+                      </View>
+                      <Text style={styles.commentDate}>{formatDate(comment.created_at)}</Text>
+                      <Text style={styles.commentBody}>{comment.body}</Text>
+                      {comment.author_id ? (
+                        <Link href={{ pathname: "/user/[id]", params: { id: comment.author_id } }} asChild>
+                          <Pressable>
+                            <Text style={styles.inlineLinkText}>Kullanıcı profilini aç</Text>
+                          </Pressable>
+                        </Link>
+                      ) : null}
+                      <Pressable
+                        style={styles.inlineReportButton}
+                        onPress={() => void handleReport("comment", comment.id, `Paylaşım yorumu raporu: ${comment.body.slice(0, 80)}`)}
+                      >
+                        <Text style={styles.inlineReportText}>
+                          {reportingTarget === comment.id ? "Raporlanıyor..." : "Yorumu rapor et"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          </>
+        )}
+      </ScrollView>
+
+      {post ? (
+        <View style={styles.composer}>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
+          {!composerOpen ? (
+            <Pressable style={styles.composerClosed} onPress={openComposer}>
+              <Text style={styles.composerClosedText}>Yorum yaz...</Text>
+            </Pressable>
+          ) : (
+            <>
+              <TextInput
+                ref={commentInputRef}
+                value={commentBody}
+                onChangeText={setCommentBody}
+                placeholder="Bu paylaşım hakkındaki düşünceni yaz"
+                placeholderTextColor={colors.muted as string}
+                multiline
+                autoFocus={Platform.OS === "web"}
+                editable
+                maxLength={4000}
+                style={styles.textArea}
+              />
+              <Pressable style={[styles.primaryButton, sendingComment && styles.buttonDisabled]} onPress={() => void handleCommentSubmit()}>
+                <Text style={styles.primaryButtonText}>{sendingComment ? "Gönderiliyor..." : "Yorum paylaş"}</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      ) : null}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -316,14 +360,18 @@ function formatDate(dateString: string) {
   }
 }
 
-function maskUser(userId: string) {
-  return `Üye ${userId.slice(0, 6)}`;
+function maskUser(userId?: string | null) {
+  if (!userId) return "Üye";
+  return `Üye ${String(userId).slice(0, 6)}`;
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.page },
+  scroll: { flex: 1 },
   page: {
     flexGrow: 1,
     padding: 24,
+    paddingBottom: 28,
     gap: 20,
     backgroundColor: colors.page
   },
@@ -384,6 +432,23 @@ const styles = StyleSheet.create({
     fontSize: 23,
     fontWeight: "800"
   },
+  commentsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  openComposerChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: colors.action
+  },
+  openComposerChipText: {
+    color: colors.actionText,
+    fontSize: 12,
+    fontWeight: "800"
+  },
   metaText: {
     color: colors.accent,
     fontSize: 13,
@@ -404,11 +469,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: colors.surfaceStrong
   },
-  helperText: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 19
-  },
   errorText: {
     color: colors.danger,
     fontSize: 14,
@@ -425,8 +485,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10
   },
+  composer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10
+  },
+  composerClosed: {
+    minHeight: 48,
+    justifyContent: "center",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceStrong,
+    paddingHorizontal: 14
+  },
+  composerClosedText: {
+    color: colors.muted,
+    fontSize: 15,
+    fontWeight: "700"
+  },
   textArea: {
-    minHeight: 110,
+    minHeight: 88,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,

@@ -1,8 +1,32 @@
 apply plugin: 'com.android.application'
 
+def bialemBrandRes = file("${buildDir}/generated/bialem-brand/res")
+
+tasks.register("syncBialemBrand") {
+    def brandDir = file("${projectDir}/../../resources")
+    inputs.dir(brandDir)
+    outputs.dir(bialemBrandRes)
+    doLast {
+        ["mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi"].each { dir ->
+            def dest = file("${bialemBrandRes}/${dir}")
+            dest.mkdirs()
+            ant.copy(file: "${brandDir}/icon.png", tofile: "${dest}/ic_launcher.png")
+            ant.copy(file: "${brandDir}/icon.png", tofile: "${dest}/ic_launcher_round.png")
+            ant.copy(file: "${brandDir}/icon.png", tofile: "${dest}/ic_launcher_foreground.png")
+        }
+    }
+}
+
+preBuild.dependsOn syncBialemBrand
+
 android {
     namespace "com.bialem.mobile"
     compileSdk rootProject.ext.compileSdkVersion
+    sourceSets {
+        main {
+            res.srcDirs += [bialemBrandRes]
+        }
+    }
     defaultConfig {
         applicationId "com.bialem.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
