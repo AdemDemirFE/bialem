@@ -1,0 +1,68 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153307"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "body",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "visibility",
+      "fieldType": "PostVisibility",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PUBLIC,COMMUNITY_ONLY,EVENT_ONLY"
+    },
+    {
+      "fieldName": "moderationStatus",
+      "fieldType": "ModerationStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "VISIBLE,HIDDEN,FLAGGED"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Post",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "posts",
+      "relationshipName": "community",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "event",
+      "otherEntityRelationshipName": "posts",
+      "relationshipName": "event",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "author",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "postMedia",
+      "otherEntityRelationshipName": "post",
+      "relationshipName": "media",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

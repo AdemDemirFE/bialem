@@ -1,0 +1,37 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153326"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "isActive",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "PartnerVenueStaff",
+  "relationships": [
+    {
+      "otherEntityName": "partnerVenue",
+      "otherEntityRelationshipName": "staff",
+      "relationshipName": "venue",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

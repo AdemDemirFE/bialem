@@ -1,0 +1,62 @@
+<div class="row">
+  <div class="col-md-3">
+    <span class="hipster img-fluid rounded"></span>
+  </div>
+
+  <div class="col-md-9">
+    <h1 class="display-4"><span>Merhaba, Java Hipster!</span> (Bialem)</h1>
+
+    <p class="lead">Burası Ana Sayfanız</p>
+
+    <div>
+      @if (account() !== null) {
+        <div class="alert alert-success">
+          @if (account(); as accountRef) {
+            <span id="home-logged-message">&quot;{{ accountRef.login }}&quot; olarak giriş yaptınız.</span>
+          }
+        </div>
+      } @else {
+        <div class="alert alert-warning">
+          <span></span>
+          <a class="alert-link" (click)="login()">Giriş</a
+          ><span>
+            yapmak istiyorsanız, varsayılan hesaplardan birini deneyebilirsiniz:<br />- Yönetici (kullanıcı adı=&quot;admin&quot; ve
+            şifre=&quot;admin&quot;) <br />- Kullanıcı (kullanıcı adı=&quot;user&quot; and şifre=&quot;user&quot;).</span
+          >
+        </div>
+
+        <div class="alert alert-warning">
+          <span>Henüz bir hesabınız yok mu?</span>&nbsp;
+          <a class="alert-link" routerLink="/account/register">Yeni hesap oluştur</a>
+        </div>
+      }
+    </div>
+
+    <p>JHipster hakkında sorularınız için:</p>
+
+    <ul>
+      <li><a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer">JHipster ana sayfa</a></li>
+      <li>
+        <a href="https://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer">Stack Overflow&apos;da JHipster</a>
+      </li>
+      <li>
+        <a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer"
+          >JHipster hata yönetimi</a
+        >
+      </li>
+      <li>
+        <a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">JHipster genel sohbet odası</a>
+      </li>
+      <li>
+        <a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer"
+          >Twitter&apos;da &#64;jhipster adresinden ulaşabilirsiniz</a
+        >
+      </li>
+    </ul>
+
+    <p>
+      <span>JHipster&apos;ı beğendiyseniz yıldız vermeyi unutmayın</span>
+      <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">GitHub</a>!
+    </p>
+  </div>
+</div>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260819101500-1" author="bialem">
+        <addColumn tableName="partner_offer">
+            <column name="valid_days" type="varchar(32)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="daily_start_time" type="${timeType}">
+                <constraints nullable="true"/>
+            </column>
+            <column name="daily_end_time" type="${timeType}">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

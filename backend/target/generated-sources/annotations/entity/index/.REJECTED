@@ -1,0 +1,1 @@
+com.bialem.backend.domain.enumeration.CommunityMemberStatus com.bialem.backend.domain.enumeration.EventParticipantStatus com.bialem.backend.domain.enumeration.EventStatus com.bialem.backend.domain.enumeration.GroupModerationStatus com.bialem.backend.domain.enumeration.PlatformModerationStatus 

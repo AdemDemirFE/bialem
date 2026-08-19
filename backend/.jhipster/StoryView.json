@@ -1,0 +1,32 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153311"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "viewedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "StoryView",
+  "relationships": [
+    {
+      "otherEntityName": "story",
+      "otherEntityRelationshipName": "views",
+      "relationshipName": "story",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "viewer",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

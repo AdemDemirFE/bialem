@@ -1,0 +1,42 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153331"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "roleCode",
+      "fieldType": "PlatformTeamRole",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "FOUNDER,TEAM,SUPPORT,EDITOR"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "PlatformTeamMember",
+  "relationships": [
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "assignedBy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

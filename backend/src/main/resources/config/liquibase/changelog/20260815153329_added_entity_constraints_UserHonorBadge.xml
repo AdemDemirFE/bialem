@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <!--
+        Added the constraints for entity UserHonorBadge.
+    -->
+    <changeSet id="20260815153329-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="user_honor_badge"
+                                 constraintName="fk_user_honor_badge__user_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="profile"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="badge_id"
+                                 baseTableName="user_honor_badge"
+                                 constraintName="fk_user_honor_badge__badge_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="honor_badge"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="awarded_by_id"
+                                 baseTableName="user_honor_badge"
+                                 constraintName="fk_user_honor_badge__awarded_by_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="profile"
+                                 />
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,3 @@
+id;discoverable;show_city;show_follow_connections;allow_follows;require_follow_approval;allow_messages_from;notify_events;notify_communities;notify_social;notify_advantages;notify_system;updated_at;profile_id
+1;false;true;false;false;true;NO_ONE;false;false;false;false;false;2026-08-15T08:33:59;1
+2;true;false;false;false;true;FOLLOWING;true;false;false;true;false;2026-08-15T03:25:32;2

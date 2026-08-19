@@ -1,0 +1,68 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153317"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "targetType",
+      "fieldType": "ReportTargetType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "POST,COMMENT,EVENT,USER,EVENT_MESSAGE"
+    },
+    {
+      "fieldName": "targetId",
+      "fieldType": "UUID",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "reason",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "500"
+    },
+    {
+      "fieldName": "details",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "ReportStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "OPEN,UNDER_REVIEW,RESOLVED,DISMISSED"
+    },
+    {
+      "fieldName": "resolvedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Report",
+  "relationships": [
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "reporter",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "resolvedBy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

@@ -1,0 +1,151 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153300"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "name",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "160"
+    },
+    {
+      "fieldName": "slug",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique", "maxlength"],
+      "fieldValidateRulesMaxlength": "80"
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "visibility",
+      "fieldType": "CommunityVisibility",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PUBLIC,PRIVATE,INVITE_ONLY"
+    },
+    {
+      "fieldName": "coverImageUrl",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "2048"
+    },
+    {
+      "fieldName": "communityType",
+      "fieldType": "CommunityType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "CATEGORY_HUB,PARTNER_HUB,GROUP"
+    },
+    {
+      "fieldName": "partnerTrustLevel",
+      "fieldType": "PartnerTrustLevel",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "NEW,VERIFIED,TRUSTED"
+    },
+    {
+      "fieldName": "isVerifiedPartner",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "isDiscoverable",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Community",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "children",
+      "relationshipName": "parent",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "categorizedGroups",
+      "relationshipName": "categoryHub",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "createdBy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "leadModerator",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "parent",
+      "relationshipName": "children",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "categoryHub",
+      "relationshipName": "categorizedGroups",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "communityMember",
+      "otherEntityRelationshipName": "community",
+      "relationshipName": "members",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "communityModeratorAssistant",
+      "otherEntityRelationshipName": "community",
+      "relationshipName": "assistants",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "event",
+      "otherEntityRelationshipName": "community",
+      "relationshipName": "events",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "post",
+      "otherEntityRelationshipName": "community",
+      "relationshipName": "posts",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "storyCommunityTarget",
+      "otherEntityRelationshipName": "community",
+      "relationshipName": "storyTargets",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

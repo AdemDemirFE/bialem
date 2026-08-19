@@ -1,0 +1,20 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: bialem
+services:
+  postgresql:
+    image: postgres:17.4
+    # volumes:
+    #   - ~/volumes/jhipster/bialem/postgresql/:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=bialem
+      - POSTGRES_DB=bialem
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Host 15432 avoids colliding with other local Postgres instances on 5432.
+    # Inside the container/network the service still listens on 5432.
+    ports:
+      - 127.0.0.1:15432:5432

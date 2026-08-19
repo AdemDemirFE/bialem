@@ -1,0 +1,44 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153301"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "role",
+      "fieldType": "CommunityMemberRole",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "MEMBER,MANAGER,OWNER"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "CommunityMemberStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PENDING,APPROVED,REJECTED,BLOCKED"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "CommunityMember",
+  "relationships": [
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "members",
+      "relationshipName": "community",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

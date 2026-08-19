@@ -1,0 +1,8 @@
+# Discovered automatically by Spring Boot from the module working directory.
+# Host port 15432 is used so other local Postgres instances on 5432 are not affected.
+name: bialem
+services:
+  postgresql:
+    extends:
+      file: src/main/docker/postgresql.yml
+      service: postgresql

@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "YOUR_APPLE_TEAM_ID.com.bialem.app"
+        ],
+        "components": [
+          {
+            "/": "/event-share/*",
+            "comment": "Bialem public event pages"
+          }
+        ]
+      }
+    ]
+  }
+}

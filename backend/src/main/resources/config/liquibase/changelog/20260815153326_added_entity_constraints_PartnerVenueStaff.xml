@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <!--
+        Added the constraints for entity PartnerVenueStaff.
+    -->
+    <changeSet id="20260815153326-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="venue_id"
+                                 baseTableName="partner_venue_staff"
+                                 constraintName="fk_partner_venue_staff__venue_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="partner_venue"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="partner_venue_staff"
+                                 constraintName="fk_partner_venue_staff__user_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="profile"
+                                 />
+    </changeSet>
+</databaseChangeLog>

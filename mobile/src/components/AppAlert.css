@@ -1,0 +1,42 @@
+.bialem-alert {
+  font-family: Inter, "Segoe UI", sans-serif;
+  border-radius: 22px !important;
+  padding: 28px 24px 22px !important;
+  box-shadow: 0 24px 60px rgba(10, 24, 51, 0.18) !important;
+}
+
+.bialem-alert-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #0a1833 !important;
+}
+
+.bialem-alert-text {
+  font-size: 15px !important;
+  color: #44516f !important;
+  line-height: 1.5 !important;
+}
+
+.bialem-alert-icon {
+  margin-bottom: 4px !important;
+}
+
+.bialem-alert-btn {
+  margin: 8px 6px 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 11px 18px !important;
+  font-weight: 700 !important;
+  background: #7047d7 !important;
+  color: #fff !important;
+}
+
+.bialem-alert-btn-ghost {
+  background: #eef1f6 !important;
+  color: #0a1833 !important;
+}
+
+.bialem-alert-btn-danger {
+  background: #c94568 !important;
+  color: #fff !important;
+}

@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"],
+    "types": ["vite/client"],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "react-native": ["node_modules/react-native-web"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

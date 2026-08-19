@@ -1,0 +1,21 @@
+{
+  "name": "bialem",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "admin"
+  ],
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "scripts": {
+    "postinstall": "node scripts/bootstrap-local-dev.mjs",
+    "dev:mobile": "npm --workspace mobile run dev",
+    "dev:admin": "npm --workspace admin run dev",
+    "dev:mobile:web": "npm --workspace mobile run dev",
+    "typecheck:mobile": "npm --workspace mobile run typecheck",
+    "typecheck:admin": "npm --workspace admin run typecheck",
+    "check": "npm run typecheck:mobile && npm run typecheck:admin && npm --workspace admin run build"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153309"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "targetType",
+      "fieldType": "CommentTargetType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "EVENT,POST,USER_REVIEW"
+    },
+    {
+      "fieldName": "targetId",
+      "fieldType": "UUID",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "body",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "4000"
+    },
+    {
+      "fieldName": "moderationStatus",
+      "fieldType": "ModerationStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "VISIBLE,HIDDEN,FLAGGED"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Comment",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "author",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

@@ -1,0 +1,173 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153303"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "title",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "200"
+    },
+    {
+      "fieldName": "description",
+      "fieldType": "TextBlob"
+    },
+    {
+      "fieldName": "startsAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "endsAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "locationName",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "200"
+    },
+    {
+      "fieldName": "addressText",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "500"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "BigDecimal"
+    },
+    {
+      "fieldName": "coverImageUrl",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "2048"
+    },
+    {
+      "fieldName": "capacity",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["min"],
+      "fieldValidateRulesMin": "1"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "EventStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "DRAFT,PENDING_APPROVAL,PUBLISHED,REJECTED,CANCELLED,COMPLETED"
+    },
+    {
+      "fieldName": "rejectionReason",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "1000"
+    },
+    {
+      "fieldName": "publishedAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "publishedToDiscovery",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "groupModerationStatus",
+      "fieldType": "GroupModerationStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "PENDING,APPROVED,REJECTED"
+    },
+    {
+      "fieldName": "platformModerationStatus",
+      "fieldType": "PlatformModerationStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "NOT_REQUIRED,PENDING,APPROVED,REJECTED"
+    },
+    {
+      "fieldName": "cancelledAt",
+      "fieldType": "Instant"
+    },
+    {
+      "fieldName": "cancellationReason",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "1000"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Event",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "events",
+      "relationshipName": "community",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "community",
+      "relationshipName": "category",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "createdBy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "cancelledBy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "eventParticipant",
+      "otherEntityRelationshipName": "event",
+      "relationshipName": "participants",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "eventMessage",
+      "otherEntityRelationshipName": "event",
+      "relationshipName": "messages",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "eventRating",
+      "otherEntityRelationshipName": "event",
+      "relationshipName": "ratings",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "post",
+      "otherEntityRelationshipName": "event",
+      "relationshipName": "posts",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

@@ -1,0 +1,72 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153310"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "contentType",
+      "fieldType": "StoryContentType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "TEXT,IMAGE"
+    },
+    {
+      "fieldName": "body",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "500"
+    },
+    {
+      "fieldName": "mediaUrl",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "2048"
+    },
+    {
+      "fieldName": "isPublic",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "shareWithFollowers",
+      "fieldType": "Boolean",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "expiresAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "Story",
+  "relationships": [
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "author",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "storyView",
+      "otherEntityRelationshipName": "story",
+      "relationshipName": "views",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "storyCommunityTarget",
+      "otherEntityRelationshipName": "story",
+      "relationshipName": "communityTargets",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

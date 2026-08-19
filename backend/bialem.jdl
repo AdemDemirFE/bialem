@@ -1,0 +1,473 @@
+/**
+ * Canonical Bialem JDL (Supabase dump + Spring/JHipster).
+ *
+ * Import into the existing backend only:
+ *   cd backend
+ *   jhipster import-jdl bialem.jdl --force --skip-install
+ *
+ * Do NOT re-run from a blank folder: this file matches baseName bialem / com.bialem.backend.
+ *
+ * Spring adaptations vs the raw Supabase JDL:
+ * - jhi_user / jhi_authority are built-in (not declared here). Profile.user links to User.
+ * - Profile.email omitted (lives on jhi_user.email).
+ * - Comment.authorId omitted (Comment.author relationship).
+ * - Role / UserRole kept as APP tables (member/organizer/...), not JWT authorities.
+ *   PostgreSQL table is app_role (role is reserved).
+ * - FollowRequest + requireFollowApproval kept (Supabase tables the dump missed).
+ * - Event cancellation fields kept (migration 0054).
+ * - Names aligned with generated Java: AccountPreferences, AllowMessagesFrom, EventParticipantStatus,
+ *   HonorBadgeType, PlatformTeamRole, TicketOfferAvailability, deviceToken, RedemptionStatus.REDEMED.
+ */
+
+application {
+  config {
+    baseName bialem
+    packageName com.bialem.backend
+    applicationType monolith
+    authenticationType jwt
+    databaseType sql
+    devDatabaseType postgresql
+    prodDatabaseType postgresql
+    buildTool maven
+    enableTranslation false
+    skipClient true
+    cacheProvider ehcache
+    enableHibernateCache true
+  }
+  entities *
+}
+
+enum ProfileStatus { ACTIVE PENDING_VERIFICATION SUSPENDED DELETED }
+enum CommunityVisibility { PUBLIC PRIVATE INVITE_ONLY }
+enum CommunityType { CATEGORY_HUB PARTNER_HUB GROUP }
+enum PartnerTrustLevel { NEW VERIFIED TRUSTED }
+enum CommunityMemberRole { MEMBER MANAGER OWNER }
+enum CommunityMemberStatus { PENDING APPROVED REJECTED BLOCKED }
+enum EventStatus { DRAFT PENDING_APPROVAL PUBLISHED REJECTED CANCELLED COMPLETED }
+enum GroupModerationStatus { PENDING APPROVED REJECTED }
+enum PlatformModerationStatus { NOT_REQUIRED PENDING APPROVED REJECTED }
+enum EventParticipantStatus { PENDING WAITLISTED APPROVED REJECTED CANCELLED CHECKED_IN NO_SHOW }
+enum ModerationStatus { VISIBLE HIDDEN FLAGGED }
+enum PostVisibility { PUBLIC COMMUNITY_ONLY EVENT_ONLY }
+enum CommentTargetType { EVENT POST USER_REVIEW }
+enum ReportTargetType { POST COMMENT EVENT USER EVENT_MESSAGE }
+enum ReportStatus { OPEN UNDER_REVIEW RESOLVED DISMISSED }
+enum CityEventStatus { DRAFT PUBLISHED CANCELLED }
+enum TicketOfferAvailability { AVAILABLE LIMITED SOLD_OUT UNKNOWN }
+enum PartnerVenueCategory { CAFE RESTAURANT SPORTS EDUCATION ENTERTAINMENT BEAUTY HEALTH SHOPPING OTHER }
+enum RedemptionStatus { ISSUED REDEMED EXPIRED CANCELLED }
+enum HonorBadgeType { COMMUNITY CITY CITY_COMMUNITY SPECIAL }
+enum PlatformTeamRole { FOUNDER TEAM SUPPORT EDITOR }
+enum PushPlatform { IOS ANDROID }
+enum AllowMessagesFrom { EVERYONE FOLLOWING NO_ONE }
+enum MediaType { IMAGE VIDEO }
+enum StoryContentType { TEXT IMAGE }
+
+entity Profile {
+  displayName String required maxlength(120)
+  username String required unique maxlength(50)
+  avatarUrl String maxlength(2048)
+  bio String maxlength(2000)
+  city String maxlength(100)
+  status ProfileStatus required
+  isVerified Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity AccountPreferences {
+  discoverable Boolean required
+  showCity Boolean required
+  showFollowConnections Boolean required
+  allowFollows Boolean required
+  requireFollowApproval Boolean required
+  allowMessagesFrom AllowMessagesFrom required
+  notifyEvents Boolean required
+  notifyCommunities Boolean required
+  notifySocial Boolean required
+  notifyAdvantages Boolean required
+  notifySystem Boolean required
+  updatedAt Instant required
+}
+
+entity Community {
+  name String required maxlength(160)
+  slug String required unique maxlength(80)
+  description TextBlob
+  visibility CommunityVisibility required
+  coverImageUrl String maxlength(2048)
+  communityType CommunityType required
+  partnerTrustLevel PartnerTrustLevel required
+  isVerifiedPartner Boolean required
+  isDiscoverable Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity CommunityMember {
+  role CommunityMemberRole required
+  status CommunityMemberStatus required
+  createdAt Instant required
+}
+
+entity CommunityModeratorAssistant {
+  canManageGroups Boolean required
+  canReviewEvents Boolean required
+  canManageParticipants Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Event {
+  title String required maxlength(200)
+  description TextBlob
+  startsAt Instant required
+  endsAt Instant
+  locationName String maxlength(200)
+  addressText String maxlength(500)
+  latitude BigDecimal
+  longitude BigDecimal
+  coverImageUrl String maxlength(2048)
+  capacity Integer min(1)
+  status EventStatus required
+  rejectionReason String maxlength(1000)
+  publishedAt Instant
+  publishedToDiscovery Boolean required
+  groupModerationStatus GroupModerationStatus required
+  platformModerationStatus PlatformModerationStatus required
+  cancelledAt Instant
+  cancellationReason String maxlength(1000)
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity EventParticipant {
+  status EventParticipantStatus required
+  note String maxlength(500)
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity EventMessage {
+  body String required minlength(1) maxlength(1000)
+  moderationStatus ModerationStatus required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity EventRating {
+  rating Integer required min(1) max(5)
+  reviewText String maxlength(2000)
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Post {
+  body TextBlob
+  visibility PostVisibility required
+  moderationStatus ModerationStatus required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity PostMedia {
+  mediaType MediaType required
+  storagePath String required maxlength(512)
+  sortOrder Integer required
+  createdAt Instant required
+}
+
+entity Comment {
+  targetType CommentTargetType required
+  targetId UUID required
+  body String required maxlength(4000)
+  moderationStatus ModerationStatus required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Story {
+  contentType StoryContentType required
+  body String maxlength(500)
+  mediaUrl String maxlength(2048)
+  isPublic Boolean required
+  shareWithFollowers Boolean required
+  createdAt Instant required
+  expiresAt Instant required
+}
+
+entity StoryView {
+  viewedAt Instant required
+}
+
+entity StoryCommunityTarget {
+  createdAt Instant required
+}
+
+entity Follow {
+  createdAt Instant required
+}
+
+entity FollowRequest {
+  createdAt Instant required
+}
+
+entity Block {
+  createdAt Instant required
+}
+
+entity UserReview {
+  rating Integer required min(1) max(5)
+  reviewText String maxlength(2000)
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Report {
+  targetType ReportTargetType required
+  targetId UUID required
+  reason String required maxlength(500)
+  details TextBlob
+  status ReportStatus required
+  resolvedAt Instant
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Notification {
+  type String required maxlength(80)
+  title String required maxlength(200)
+  body String maxlength(2000)
+  payload TextBlob
+  isRead Boolean required
+  createdAt Instant required
+}
+
+entity PushToken {
+  deviceToken String required unique maxlength(512)
+  platform PushPlatform required
+  deviceName String maxlength(120)
+  isActive Boolean required
+  lastSeenAt Instant required
+  createdAt Instant required
+}
+
+entity CityEvent {
+  title String required maxlength(160)
+  description TextBlob
+  category String required maxlength(80)
+  city String required maxlength(80)
+  venueName String maxlength(200)
+  addressText String maxlength(500)
+  startsAt Instant required
+  endsAt Instant
+  coverImageUrl String maxlength(2048)
+  priceLabel String maxlength(120)
+  sourceName String required maxlength(120)
+  sourceUrl String maxlength(2048)
+  ticketUrl String maxlength(2048)
+  status CityEventStatus required
+  providerCode String required maxlength(50)
+  externalId String maxlength(120)
+  lastSyncedAt Instant
+  rawPayload TextBlob
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity CityEventInterest {
+  lookingForCompany Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity CityEventTicketOffer {
+  providerCode String required maxlength(50)
+  externalOfferId String required maxlength(120)
+  sellerName String required maxlength(160)
+  purchaseUrl String required maxlength(2048)
+  currency String maxlength(8)
+  minPrice BigDecimal min(0)
+  maxPrice BigDecimal min(0)
+  priceLabel String maxlength(120)
+  availability TicketOfferAvailability required
+  feesIncluded Boolean
+  isOfficial Boolean required
+  lastCheckedAt Instant required
+  rawPayload TextBlob
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity CityEventSyncLog {
+  providerCode String required maxlength(50)
+  status String required maxlength(20)
+  importedCount Integer required
+  errorMessage TextBlob
+  startedAt Instant required
+  finishedAt Instant required
+}
+
+entity PartnerVenue {
+  name String required maxlength(160)
+  slug String required unique maxlength(80)
+  description TextBlob
+  category PartnerVenueCategory required
+  logoUrl String maxlength(2048)
+  coverImageUrl String maxlength(2048)
+  address String required maxlength(500)
+  city String required maxlength(80)
+  latitude BigDecimal
+  longitude BigDecimal
+  phone String maxlength(40)
+  websiteUrl String maxlength(2048)
+  instagramUrl String maxlength(2048)
+  isFeatured Boolean required
+  isActive Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity PartnerOffer {
+  title String required maxlength(160)
+  description TextBlob
+  discountPercent BigDecimal required min(0) max(100)
+  minimumSpend BigDecimal min(0)
+  maximumDiscount BigDecimal min(0)
+  validFrom Instant required
+  validUntil Instant
+  validDays String maxlength(32)
+  dailyStartTime LocalTime
+  dailyEndTime LocalTime
+  perUserLimit Integer min(1)
+  terms TextBlob
+  isActive Boolean required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity PartnerVenueStaff {
+  isActive Boolean required
+  createdAt Instant required
+}
+
+entity PartnerOfferRedemption {
+  token UUID required unique
+  redemptionCode String required unique maxlength(32)
+  status RedemptionStatus required
+  issuedAt Instant required
+  expiresAt Instant required
+  redeemedAt Instant
+  orderAmount BigDecimal min(0)
+  discountAmount BigDecimal min(0)
+}
+
+entity HonorBadge {
+  code String required unique maxlength(80)
+  nameTemplate String required maxlength(160)
+  description String required maxlength(500)
+  badgeType HonorBadgeType required
+  minimumCheckIns Integer required min(1)
+  isActive Boolean required
+  createdAt Instant required
+}
+
+entity UserHonorBadge {
+  reason String maxlength(500)
+  awardedAt Instant required
+}
+
+entity AiUsageLog {
+  createdAt Instant required
+}
+
+entity PlatformTeamMember {
+  roleCode PlatformTeamRole required
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity Role {
+  code String required unique maxlength(80)
+  name String required maxlength(160)
+  createdAt Instant required
+}
+
+entity UserRole {
+  createdAt Instant required
+}
+
+relationship OneToOne {
+  Profile{user(login) required} to User with builtInEntity
+  AccountPreferences{profile required} to Profile{preferences}
+}
+
+relationship ManyToOne {
+  Community{parent} to Community{children}
+  Community{categoryHub} to Community{categorizedGroups}
+  Community{createdBy} to Profile
+  Community{leadModerator} to Profile
+  CommunityMember{community} to Community{members}
+  CommunityMember{user} to Profile
+  CommunityModeratorAssistant{community} to Community{assistants}
+  CommunityModeratorAssistant{user} to Profile
+  CommunityModeratorAssistant{assignedBy} to Profile
+  Event{community} to Community{events}
+  Event{category} to Community
+  Event{createdBy} to Profile
+  Event{cancelledBy} to Profile
+  EventParticipant{event} to Event{participants}
+  EventParticipant{user} to Profile
+  EventMessage{event} to Event{messages}
+  EventMessage{author} to Profile
+  EventRating{event} to Event{ratings}
+  EventRating{user} to Profile
+  Post{community} to Community{posts}
+  Post{event} to Event{posts}
+  Post{author} to Profile
+  PostMedia{post} to Post{media}
+  Comment{author} to Profile
+  Story{author} to Profile
+  StoryView{story} to Story{views}
+  StoryView{viewer} to Profile
+  StoryCommunityTarget{story} to Story{communityTargets}
+  StoryCommunityTarget{community} to Community{storyTargets}
+  Follow{follower} to Profile
+  Follow{followed} to Profile
+  FollowRequest{requester} to Profile
+  FollowRequest{targetUser} to Profile
+  Block{blocker} to Profile
+  Block{blockedUser} to Profile
+  UserReview{reviewer} to Profile
+  UserReview{reviewedUser} to Profile
+  UserReview{event} to Event
+  Report{reporter} to Profile
+  Report{resolvedBy} to Profile
+  Notification{user} to Profile
+  PushToken{user} to Profile
+  CityEventInterest{cityEvent} to CityEvent{interests}
+  CityEventInterest{user} to Profile
+  CityEventTicketOffer{cityEvent} to CityEvent{ticketOffers}
+  PartnerOffer{venue} to PartnerVenue{offers}
+  PartnerVenueStaff{venue} to PartnerVenue{staff}
+  PartnerVenueStaff{user} to Profile
+  PartnerVenueStaff{assignedBy} to Profile
+  PartnerOfferRedemption{offer} to PartnerOffer{redemptions}
+  PartnerOfferRedemption{venue} to PartnerVenue
+  PartnerOfferRedemption{user} to Profile
+  PartnerOfferRedemption{redeemedBy} to Profile
+  HonorBadge{community} to Community
+  UserHonorBadge{user} to Profile
+  UserHonorBadge{badge} to HonorBadge
+  UserHonorBadge{awardedBy} to Profile
+  AiUsageLog{user} to Profile
+  PlatformTeamMember{user} to Profile
+  PlatformTeamMember{assignedBy} to Profile
+  UserRole{user} to Profile
+  UserRole{role} to Role
+}
+
+paginate Profile, Community, Event, Post, Story, PartnerVenue, PartnerOffer, CityEvent, Notification, Report, UserReview, Comment with pagination
+filter Event, Community, Profile, Notification, Report, PartnerVenue
+dto * with mapstruct
+service * with serviceClass

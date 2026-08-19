@@ -1,0 +1,56 @@
+:root {
+  --bg: #f6f8ff;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: #eef3ff;
+  --ink: #081a44;
+  --muted: #4d5c8a;
+  --accent: #7b35ff;
+  --accent-2: #ffa20f;
+  --aqua: #19c8ee;
+  --line: #d9e4ff;
+  --danger: #d64c71;
+  --success: #18a6d9;
+  --shadow: 0 24px 60px rgba(8, 26, 68, 0.12);
+  --font-body: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-display: "Arial Rounded MT Bold", "Avenir Next", "Trebuchet MS", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+h4,
+strong,
+b {
+  font-family: var(--font-display);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: #7b35ff;
+  color: #fff;
+}

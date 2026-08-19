@@ -1,0 +1,11 @@
+id;target_type;target_id;reason;details;status;resolved_at;created_at;updated_at
+1;EVENT_MESSAGE;92c81fb3-c183-406d-a936-58cd9063d3c9;sideboard foolish;../fake-data/blob/hipster.txt;OPEN;2026-08-15T06:22:45;2026-08-15T01:21:10;2026-08-15T11:27:46
+2;EVENT;b4458466-0d49-4502-803f-a0e4489b28c0;inasmuch;../fake-data/blob/hipster.txt;OPEN;2026-08-14T20:25:58;2026-08-15T01:40:14;2026-08-14T15:57:12
+3;EVENT_MESSAGE;f12c1017-df7f-4827-a11b-fe062b843b36;yippee;../fake-data/blob/hipster.txt;RESOLVED;2026-08-14T19:02:42;2026-08-15T05:11:47;2026-08-15T09:43:36
+4;EVENT_MESSAGE;a8afbe19-bd06-4644-9621-3604725477b6;exempt;../fake-data/blob/hipster.txt;OPEN;2026-08-14T18:35:40;2026-08-15T11:15:18;2026-08-15T04:58:58
+5;USER;1b8c098b-4b0a-4b5f-b652-ea237927d4ae;marketplace;../fake-data/blob/hipster.txt;OPEN;2026-08-15T01:41:28;2026-08-15T00:15:08;2026-08-15T04:51:42
+6;USER;4b737f14-44d2-4045-8d82-95d92c73f971;whenever;../fake-data/blob/hipster.txt;RESOLVED;2026-08-15T02:37:14;2026-08-14T22:51:08;2026-08-14T22:30:31
+7;EVENT_MESSAGE;b9deb5ca-8ccd-400e-9baa-4881a8a77810;rigidly;../fake-data/blob/hipster.txt;DISMISSED;2026-08-15T05:08:35;2026-08-14T21:59:13;2026-08-14T20:11:03
+8;EVENT;f78c70c0-0074-4c72-9457-4d25a40c4e7d;between yum unlike;../fake-data/blob/hipster.txt;DISMISSED;2026-08-15T10:19:26;2026-08-15T12:22:15;2026-08-14T21:47:14
+9;EVENT;d9d2b73f-7816-4596-bcff-f7d006467516;jealously indeed carefully;../fake-data/blob/hipster.txt;UNDER_REVIEW;2026-08-15T11:06:32;2026-08-15T03:08:10;2026-08-15T08:11:30
+10;POST;0470d3de-fe10-4e33-a701-8f38d6edfeb3;singe anxiously;../fake-data/blob/hipster.txt;RESOLVED;2026-08-14T19:32:57;2026-08-15T05:34:17;2026-08-15T06:48:46

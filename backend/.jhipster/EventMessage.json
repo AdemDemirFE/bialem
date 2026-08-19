@@ -1,0 +1,50 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153305"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "body",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "minlength", "maxlength"],
+      "fieldValidateRulesMaxlength": "1000",
+      "fieldValidateRulesMinlength": "1"
+    },
+    {
+      "fieldName": "moderationStatus",
+      "fieldType": "ModerationStatus",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "VISIBLE,HIDDEN,FLAGGED"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "updatedAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "EventMessage",
+  "relationships": [
+    {
+      "otherEntityName": "event",
+      "otherEntityRelationshipName": "messages",
+      "relationshipName": "event",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "author",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

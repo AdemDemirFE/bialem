@@ -1,0 +1,21 @@
+{
+  "name": "bialem-admin",
+  "private": true,
+  "scripts": {
+    "dev": "node ../scripts/run-next-dev.mjs dev",
+    "build": "node ../scripts/run-next-dev.mjs build",
+    "start": "node ../scripts/run-next-dev.mjs start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.5.20",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.0.4",
+    "typescript": "^5.9.2"
+  }
+}

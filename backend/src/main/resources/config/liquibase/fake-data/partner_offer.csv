@@ -1,0 +1,11 @@
+id;title;description;discount_percent;minimum_spend;maximum_discount;valid_from;valid_until;per_user_limit;terms;is_active;created_at;updated_at
+1;unwieldy phew;../fake-data/blob/hipster.txt;57.61;27328.6;24510.95;2026-08-14T22:16:27;2026-08-15T07:27:03;32339;../fake-data/blob/hipster.txt;false;2026-08-14T23:02:59;2026-08-14T21:58:56
+2;huzzah;../fake-data/blob/hipster.txt;30.4;25413.02;14233.59;2026-08-14T21:37:25;2026-08-14T16:22:59;27411;../fake-data/blob/hipster.txt;true;2026-08-15T05:14:31;2026-08-15T10:26:10
+3;blah miskey;../fake-data/blob/hipster.txt;6.31;18780.61;8207.2;2026-08-14T19:41:55;2026-08-14T22:45:46;32645;../fake-data/blob/hipster.txt;true;2026-08-15T09:13:34;2026-08-15T00:57:11
+4;frightfully impeccable motivate;../fake-data/blob/hipster.txt;53.84;885.44;13109.55;2026-08-15T13:30:12;2026-08-15T00:48:39;2992;../fake-data/blob/hipster.txt;true;2026-08-14T17:32:49;2026-08-15T11:23:27
+5;forenenst conceal mammoth;../fake-data/blob/hipster.txt;16.91;11307.75;18121.42;2026-08-15T09:41:20;2026-08-15T04:45:37;26981;../fake-data/blob/hipster.txt;false;2026-08-15T07:51:05;2026-08-15T01:36:31
+6;helplessly graduate;../fake-data/blob/hipster.txt;45.27;4083.9;20283.07;2026-08-15T04:59:38;2026-08-15T00:16:02;3052;../fake-data/blob/hipster.txt;false;2026-08-15T05:13:25;2026-08-15T01:04:06
+7;summer;../fake-data/blob/hipster.txt;78.08;28684.78;29707.07;2026-08-15T02:43:33;2026-08-15T08:02:38;15276;../fake-data/blob/hipster.txt;true;2026-08-15T13:37:08;2026-08-15T15:08:22
+8;aha red;../fake-data/blob/hipster.txt;93.54;8215.83;16521.24;2026-08-15T13:13:14;2026-08-15T11:51:36;8240;../fake-data/blob/hipster.txt;true;2026-08-14T20:25:17;2026-08-14T20:22:43
+9;psst fence;../fake-data/blob/hipster.txt;88.47;23904.58;30291.43;2026-08-14T15:40:18;2026-08-15T05:37:16;6544;../fake-data/blob/hipster.txt;false;2026-08-15T08:04:21;2026-08-15T05:53:04
+10;deflate ugh;../fake-data/blob/hipster.txt;79.68;15162.74;16509.55;2026-08-15T02:41:18;2026-08-15T11:15:02;28975;../fake-data/blob/hipster.txt;false;2026-08-15T13:56:36;2026-08-15T08:42:53

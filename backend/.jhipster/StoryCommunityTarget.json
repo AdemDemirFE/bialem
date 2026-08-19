@@ -1,0 +1,33 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153312"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "StoryCommunityTarget",
+  "relationships": [
+    {
+      "otherEntityName": "story",
+      "otherEntityRelationshipName": "communityTargets",
+      "relationshipName": "story",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "community",
+      "otherEntityRelationshipName": "storyTargets",
+      "relationshipName": "community",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

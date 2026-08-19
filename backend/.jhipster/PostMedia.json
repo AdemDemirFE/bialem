@@ -1,0 +1,43 @@
+{
+  "annotations": {
+    "changelogDate": "20260815153308"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "mediaType",
+      "fieldType": "MediaType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "IMAGE,VIDEO"
+    },
+    {
+      "fieldName": "storagePath",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "maxlength"],
+      "fieldValidateRulesMaxlength": "512"
+    },
+    {
+      "fieldName": "sortOrder",
+      "fieldType": "Integer",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "PostMedia",
+  "relationships": [
+    {
+      "otherEntityName": "post",
+      "otherEntityRelationshipName": "media",
+      "relationshipName": "post",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

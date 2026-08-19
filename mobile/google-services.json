@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "352525528919",
+    "project_id": "bidunya-26b91",
+    "storage_bucket": "bidunya-26b91.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:352525528919:android:d0926efcfb35bbbb939812",
+        "android_client_info": {
+          "package_name": "com.bialem.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnH2WpAo57JiBL07OiNHe-MjnOIwsZGdQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
