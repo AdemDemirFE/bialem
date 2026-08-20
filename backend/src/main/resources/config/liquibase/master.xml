@@ -86,4 +86,6 @@
     <include file="config/liquibase/changelog/20260819101502_added_entity_constraints_UserRole.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
     <include file="config/liquibase/changelog/20260820140000_widen_user_reset_key.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260820183000_push_notification_inbox.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260820200000_push_notification_tables.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

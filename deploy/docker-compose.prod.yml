@@ -51,6 +51,7 @@ services:
       SPRING_MAIL_FROM: ${SPRING_MAIL_FROM:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
     ports:
       - "191.215.36.29:8184:8080"
     networks:

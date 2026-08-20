@@ -45,9 +45,24 @@ public class Notification implements Serializable {
     @Column(name = "payload")
     private String payload;
 
+    @Size(max = 80)
+    @Column(name = "notification_type", length = 80)
+    private String notificationType;
+
+    @Size(max = 120)
+    @Column(name = "reference_id", length = 120)
+    private String referenceId;
+
+    @Size(max = 500)
+    @Column(name = "route", length = 500)
+    private String route;
+
     @NotNull
     @Column(name = "is_read", nullable = false)
     private Boolean isRead;
+
+    @Column(name = "read_at")
+    private Instant readAt;
 
     @NotNull
     @Column(name = "created_at", nullable = false)
@@ -135,6 +150,58 @@ public class Notification implements Serializable {
 
     public void setIsRead(Boolean isRead) {
         this.isRead = isRead;
+    }
+
+    public String getNotificationType() {
+        return this.notificationType;
+    }
+
+    public Notification notificationType(String notificationType) {
+        this.setNotificationType(notificationType);
+        return this;
+    }
+
+    public void setNotificationType(String notificationType) {
+        this.notificationType = notificationType;
+    }
+
+    public String getReferenceId() {
+        return this.referenceId;
+    }
+
+    public Notification referenceId(String referenceId) {
+        this.setReferenceId(referenceId);
+        return this;
+    }
+
+    public void setReferenceId(String referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public String getRoute() {
+        return this.route;
+    }
+
+    public Notification route(String route) {
+        this.setRoute(route);
+        return this;
+    }
+
+    public void setRoute(String route) {
+        this.route = route;
+    }
+
+    public Instant getReadAt() {
+        return this.readAt;
+    }
+
+    public Notification readAt(Instant readAt) {
+        this.setReadAt(readAt);
+        return this;
+    }
+
+    public void setReadAt(Instant readAt) {
+        this.readAt = readAt;
     }
 
     public Instant getCreatedAt() {

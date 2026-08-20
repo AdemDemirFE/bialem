@@ -19,6 +19,7 @@ public abstract class PushToken_ {
 	public static final String USER = "user";
 	public static final String PLATFORM = "platform";
 	public static final String DEVICE_TOKEN = "deviceToken";
+	public static final String UPDATED_AT = "updatedAt";
 
 	
 	/**
@@ -65,6 +66,11 @@ public abstract class PushToken_ {
 	 * @see com.bialem.backend.domain.PushToken#deviceToken
 	 **/
 	public static volatile SingularAttribute<PushToken, String> deviceToken;
+	
+	/**
+	 * @see com.bialem.backend.domain.PushToken#updatedAt
+	 **/
+	public static volatile SingularAttribute<PushToken, Instant> updatedAt;
 
 }
 

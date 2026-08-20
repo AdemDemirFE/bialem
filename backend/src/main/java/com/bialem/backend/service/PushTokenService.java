@@ -1,9 +1,12 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.domain.PushToken;
+import com.bialem.backend.domain.enumeration.PushPlatform;
 import com.bialem.backend.repository.PushTokenRepository;
+import com.bialem.backend.service.dto.PushDeviceTokenRequest;
 import com.bialem.backend.service.dto.PushTokenDTO;
 import com.bialem.backend.service.mapper.PushTokenMapper;
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +29,12 @@ public class PushTokenService {
 
     private final PushTokenMapper pushTokenMapper;
 
-    public PushTokenService(PushTokenRepository pushTokenRepository, PushTokenMapper pushTokenMapper) {
+    private final AppSupport appSupport;
+
+    public PushTokenService(PushTokenRepository pushTokenRepository, PushTokenMapper pushTokenMapper, AppSupport appSupport) {
         this.pushTokenRepository = pushTokenRepository;
         this.pushTokenMapper = pushTokenMapper;
+        this.appSupport = appSupport;
     }
 
     /**
@@ -108,5 +114,22 @@ public class PushTokenService {
     public void delete(Long id) {
         LOG.debug("Request to delete PushToken : {}", id);
         pushTokenRepository.deleteById(id);
+    }
+
+    public PushTokenDTO registerCurrentUser(PushDeviceTokenRequest request) {
+        var profile = appSupport.currentProfile();
+        Instant now = Instant.now();
+        PushPlatform platform = request.getPlatform() != null ? request.getPlatform() : PushPlatform.ANDROID;
+        PushToken pushToken = pushTokenRepository.findByDeviceToken(request.getToken()).orElseGet(PushToken::new);
+        if (pushToken.getCreatedAt() == null) {
+            pushToken.setCreatedAt(now);
+        }
+        pushToken.setDeviceToken(request.getToken());
+        pushToken.setPlatform(platform);
+        pushToken.setUser(profile);
+        pushToken.setIsActive(true);
+        pushToken.setLastSeenAt(now);
+        pushToken.setUpdatedAt(now);
+        return pushTokenMapper.toDto(pushTokenRepository.save(pushToken));
     }
 }

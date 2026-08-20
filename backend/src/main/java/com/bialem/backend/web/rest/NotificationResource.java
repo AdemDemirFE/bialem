@@ -4,7 +4,9 @@ import com.bialem.backend.repository.NotificationRepository;
 import com.bialem.backend.service.NotificationQueryService;
 import com.bialem.backend.service.NotificationService;
 import com.bialem.backend.service.criteria.NotificationCriteria;
+import com.bialem.backend.service.dto.AppNotificationDTO;
 import com.bialem.backend.service.dto.NotificationDTO;
+import com.bialem.backend.service.dto.UnreadCountDTO;
 import com.bialem.backend.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -54,6 +56,18 @@ public class NotificationResource {
         this.notificationService = notificationService;
         this.notificationRepository = notificationRepository;
         this.notificationQueryService = notificationQueryService;
+    }
+
+    @Deprecated
+    @PostMapping("/legacy-test")
+    public ResponseEntity<AppNotificationDTO> sendLegacyTestNotification() {
+        return ResponseEntity.ok(notificationService.sendTestToCurrentUser());
+    }
+
+    @Deprecated
+    @GetMapping("/legacy-inbox")
+    public List<AppNotificationDTO> getLegacyInbox() {
+        return notificationService.listCurrentUser();
     }
 
     /**

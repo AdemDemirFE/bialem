@@ -203,7 +203,18 @@ export function createSpringClient(options: SpringClientOptions) {
     }
   }
 
-  return {
+    return {
+    rest: {
+      get<T>(path: string) {
+        return request<T>(path);
+      },
+      post<T>(path: string, json?: unknown) {
+        return request<T>(path, { method: "POST", json });
+      },
+      put<T>(path: string, json?: unknown) {
+        return request<T>(path, { method: "PUT", json });
+      }
+    },
     from(table: string) {
       return new QueryBuilder(table);
     },
