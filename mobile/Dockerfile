@@ -8,14 +8,22 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-COPY tsconfig.base.json ./tsconfig.base.json
-COPY mobile/ ./mobile/
+# Vite build sırasında hata aldığın durumda tsconfig.json "/app/tsconfig.json" bekleniyor.
+# Bu yüzden mobile/ içeriğini /app'e alıyoruz:
+#   /app/tsconfig.json -> extends ../tsconfig.base.json -> /tsconfig.base.json
+COPY mobile/ ./
 
-# Override the mobile/package.json with a "web-only" dependency set.
-COPY mobile/package.web.json ./mobile/package.json
-COPY mobile/.npmrc ./mobile/.npmrc
+# Keep web-only dependency set.
+COPY mobile/package.web.json ./package.json
+COPY mobile/.npmrc ./.npmrc
 
-WORKDIR /app/mobile
+# Ensure the extended base tsconfig resolves from "/app/tsconfig.json".
+COPY tsconfig.base.json /tsconfig.base.json
+
+# Build-time guard: fail fast if tsconfig.base.json isn't where tsconfig.json expects it.
+RUN test -f /tsconfig.base.json \
+  && test -f /app/tsconfig.json \
+  && echo "tsconfig resolution OK: /app/tsconfig.json + /tsconfig.base.json"
 
 ARG VITE_API_BASE_URL=https://api.bialem.app
 ARG VITE_PUBLIC_WEB_URL=https://bialem.app
@@ -27,8 +35,8 @@ RUN npm install --legacy-peer-deps --no-audit --no-fund
 RUN npm run build
 
 FROM nginx:1.27-alpine
-COPY --from=build /app/mobile/dist /usr/share/nginx/html
-COPY mobile/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=5 \
     CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
