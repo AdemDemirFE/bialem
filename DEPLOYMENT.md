@@ -41,9 +41,10 @@ openssl rand -base64 64   # JWT_SECRET and JHIPSTER_SECURITY_AUTHENTICATION_JWT_
 ```
 
 ```bash
-chmod +x deploy.sh update.sh deploy/scripts/*.sh
-./deploy.sh
+bash deploy/scripts/deploy.sh
 ```
+
+(`./deploy.sh` also works if the file is executable; on a fresh clone use `bash` to avoid `Permission denied`.)
 
 Host bindings (loopback only):
 
@@ -72,20 +73,27 @@ sudo certbot --nginx \
 ## Day-to-day
 
 ```bash
-./update.sh                      # git pull --ff-only, rebuild, keep DB volume
-./deploy/scripts/status.sh
-./deploy/scripts/logs.sh backend
-./deploy/scripts/restart.sh
-./deploy/scripts/stop.sh         # does not delete volumes
-./deploy/scripts/backup-db.sh
-./deploy/scripts/restore-db.sh backups/bialem-YYYYMMDD-HHMMSS.sql.gz
+bash deploy/scripts/update.sh       # git pull --ff-only, rebuild, keep DB volume
+bash deploy/scripts/status.sh
+bash deploy/scripts/logs.sh backend
+bash deploy/scripts/restart.sh
+bash deploy/scripts/stop.sh         # does not delete volumes
+bash deploy/scripts/backup-db.sh
+bash deploy/scripts/restore-db.sh backups/bialem-YYYYMMDD-HHMMSS.sql.gz
+```
+
+Shorthand from repo root (same scripts):
+
+```bash
+bash update.sh
+bash deploy.sh
 ```
 
 `update.sh` stops if the git working tree is dirty. It never runs `git reset --hard`, `docker system prune`, or `docker compose down -v`.
 
 ## Troubleshooting: "Local changes detected"
 
-On the VPS, running `chmod +x deploy/scripts/*.sh` marks many files as **modified** in git (file mode only). `git pull` then fails.
+On the VPS, running `chmod +x deploy/scripts/*.sh` marks many files as **modified** in git (file mode only). `git pull` then fails. Prefer `bash deploy/scripts/update.sh` instead of `./update.sh` — no chmod needed.
 
 Reset tracked files to match GitHub (`.env.prod` is **not** touched):
 
@@ -95,10 +103,22 @@ git status
 git diff --stat
 git checkout -- .
 git pull --ff-only
-./update.sh
+bash deploy/scripts/update.sh
 ```
 
 Do **not** use `git reset --hard` unless you understand what it discards. Do **not** use `git clean -fd` (can remove untracked files).
+
+### Permission denied on `./update.sh`
+
+Scripts are not always executable after clone. Use bash:
+
+```bash
+bash update.sh
+# or
+bash deploy/scripts/update.sh
+```
+
+Do **not** run `chmod +x` on the VPS if you plan to `git pull` later (Git will show those files as modified).
 
 If you edited a file on purpose, back it up first:
 
