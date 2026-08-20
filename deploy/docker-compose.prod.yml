@@ -66,6 +66,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.bialem.app}
+        VITE_PUBLIC_WEB_URL: ${VITE_PUBLIC_WEB_URL:-https://bialem.app}
     image: bialem-frontend:latest
     container_name: bialem-frontend
     restart: unless-stopped

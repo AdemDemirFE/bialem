@@ -8,3 +8,8 @@ ios
 .env
 .env.*
 !/.env.example
+package.json
+package-lock.json
+app.json
+google-services.json
+capacitor.config.ts

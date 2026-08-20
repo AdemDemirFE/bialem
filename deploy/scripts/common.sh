@@ -39,6 +39,10 @@ assert_prod_env() {
     die ".env.prod contains local/dev hosts or port 15432. Production DB is bialem-db:5432 only."
   fi
 
+  if grep -Ei 'SUPABASE|EXPO_PUBLIC_SUPABASE|EXPO_PUBLIC_' "${ENV_FILE}" >/dev/null 2>&1; then
+    die ".env.prod must not contain Expo or Supabase variables. Production is Spring Boot + JWT + PostgreSQL."
+  fi
+
   case "${SPRING_DATASOURCE_URL:-}" in
     *bialem-db:5432*) ;;
     *) die "SPRING_DATASOURCE_URL must use jdbc:postgresql://bialem-db:5432/..." ;;

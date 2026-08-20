@@ -5,7 +5,7 @@ function env(name: string, fallback?: string) {
 }
 
 export function getApiBaseUrl() {
-  return (env("VITE_API_BASE_URL") || env("EXPO_PUBLIC_API_BASE_URL") || "http://localhost:8080").replace(/\/+$/, "");
+  return (env("VITE_API_BASE_URL") || "http://localhost:8080").replace(/\/+$/, "");
 }
 
 export function usesSpringBackend() {
