@@ -17,16 +17,23 @@ COPY mobile/ ./
 COPY mobile/package.web.json ./package.json
 COPY mobile/.npmrc ./.npmrc
 
+# Root env/version source used by vite.config.ts → scripts/bialem-env.mjs
+COPY package.json /package.json
+COPY scripts/bialem-env.mjs /scripts/bialem-env.mjs
+
 # Ensure the extended base tsconfig resolves from "/app/tsconfig.json".
 COPY tsconfig.base.json /tsconfig.base.json
 
 # Build-time guard: fail fast if tsconfig.base.json isn't where tsconfig.json expects it.
 RUN test -f /tsconfig.base.json \
   && test -f /app/tsconfig.json \
-  && echo "tsconfig resolution OK: /app/tsconfig.json + /tsconfig.base.json"
+  && test -f /package.json \
+  && test -f /scripts/bialem-env.mjs \
+  && echo "tsconfig + bialem-env resolution OK"
 
-ARG VITE_API_BASE_URL=https://api.bialem.app
-ARG VITE_PUBLIC_WEB_URL=https://bialem.app
+# Optional overrides (defaults come from /package.json bialem.environments.prod)
+ARG VITE_API_BASE_URL=
+ARG VITE_PUBLIC_WEB_URL=
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_PUBLIC_WEB_URL=$VITE_PUBLIC_WEB_URL

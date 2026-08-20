@@ -61,6 +61,12 @@ function mapErrorMessage(message: string) {
   if (normalized.includes("already used") || normalized.includes("already registered")) {
     return "Bu e-posta veya kullanıcı adı zaten kayıtlı.";
   }
+  if (normalized.includes("too many") || normalized.includes("çok fazla") || normalized.includes("rate limit")) {
+    return "Çok fazla şifre sıfırlama isteği gönderildi. Lütfen bir süre sonra tekrar deneyin.";
+  }
+  if (normalized.includes("passwordpolicy") || (normalized.includes("büyük harf") && normalized.includes("şifre"))) {
+    return "Şifre en az 8 karakter olmalı ve en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.";
+  }
   return message;
 }
 
@@ -133,8 +139,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signUp = async ({ email, password, displayName, username }: SignUpInput) => {
     const normalizedUsername = sanitizeUsername(username);
-    if (!email.includes("@") || password.length < 8 || displayName.trim().length < 2 || normalizedUsername.length < 3) {
-      setError("Geçerli e-posta, en az 8 karakter şifre, ad ve kullanıcı adı girin.");
+    const passwordOk =
+      password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /\d/.test(password);
+    if (!email.includes("@") || !passwordOk || displayName.trim().length < 2 || normalizedUsername.length < 3) {
+      setError(
+        !passwordOk
+          ? "Şifre en az 8 karakter olmalı ve en az bir büyük harf, bir küçük harf ve bir rakam içermelidir."
+          : "Geçerli e-posta, en az 8 karakter şifre, ad ve kullanıcı adı girin."
+      );
       return false;
     }
     setLoading(true);
@@ -164,7 +176,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setError(mapErrorMessage(resetError.message));
       return false;
     }
-    setNotice("Şifre yenileme bağlantısı gönderildi.");
+    setNotice("Eğer bu e-posta adresi sistemimizde kayıtlıysa şifre sıfırlama kodu gönderildi.");
     return true;
   };
 

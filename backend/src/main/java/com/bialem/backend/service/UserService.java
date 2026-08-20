@@ -6,6 +6,7 @@ import com.bialem.backend.domain.User;
 import com.bialem.backend.repository.AuthorityRepository;
 import com.bialem.backend.repository.UserRepository;
 import com.bialem.backend.security.AuthoritiesConstants;
+import com.bialem.backend.security.PasswordResetTokenHasher;
 import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.service.dto.AdminUserDTO;
 import com.bialem.backend.service.dto.UserDTO;
@@ -13,6 +14,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -32,6 +34,9 @@ import tech.jhipster.security.RandomUtil;
 public class UserService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+
+    /** Password-reset tokens expire after 30 minutes. */
+    public static final int PASSWORD_RESET_TOKEN_VALIDITY_MINUTES = 30;
 
     private final UserRepository userRepository;
 
@@ -72,14 +77,23 @@ public class UserService {
     }
 
     public Optional<User> completePasswordReset(String newPassword, String key) {
-        LOG.debug("Reset user password for reset key {}", key);
+        LOG.debug("Reset user password for reset key");
+        String normalized = PasswordResetTokenHasher.normalizeResetSecret(key);
+        if (StringUtils.isBlank(normalized)) {
+            return Optional.empty();
+        }
+        String tokenHash = PasswordResetTokenHasher.hashToken(normalized);
         return userRepository
-            .findOneByResetKey(key)
-            .filter(user -> user.getResetDate().isAfter(Instant.now().minus(1, ChronoUnit.DAYS)))
+            .findOneByResetKey(tokenHash)
+            .filter(user ->
+                user.getResetDate() != null &&
+                user.getResetDate().isAfter(Instant.now().minus(PASSWORD_RESET_TOKEN_VALIDITY_MINUTES, ChronoUnit.MINUTES))
+            )
             .map(user -> {
                 user.setPassword(passwordEncoder.encode(newPassword));
                 user.setResetKey(null);
                 user.setResetDate(null);
+                user.setClearResetKey(null);
                 this.clearUserCaches(user);
                 return user;
             });
@@ -90,8 +104,10 @@ public class UserService {
             .findOneByEmailIgnoreCase(mail)
             .filter(User::isActivated)
             .map(user -> {
-                user.setResetKey(RandomUtil.generateResetKey());
+                String rawToken = PasswordResetTokenHasher.generateResetCode();
+                user.setResetKey(PasswordResetTokenHasher.hashToken(rawToken));
                 user.setResetDate(Instant.now());
+                user.setClearResetKey(rawToken);
                 this.clearUserCaches(user);
                 return user;
             });
@@ -164,7 +180,9 @@ public class UserService {
         }
         String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
         user.setPassword(encryptedPassword);
-        user.setResetKey(RandomUtil.generateResetKey());
+        String rawResetToken = PasswordResetTokenHasher.generateRawToken();
+        user.setResetKey(PasswordResetTokenHasher.hashToken(rawResetToken));
+        user.setClearResetKey(rawResetToken);
         user.setResetDate(Instant.now());
         user.setActivated(true);
         if (userDTO.getAuthorities() != null) {

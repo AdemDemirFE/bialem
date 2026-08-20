@@ -8,9 +8,9 @@ import jakarta.validation.constraints.Size;
  */
 public class ManagedUserVM extends AdminUserDTO {
 
-    public static final int PASSWORD_MIN_LENGTH = 4;
+    public static final int PASSWORD_MIN_LENGTH = com.bialem.backend.security.PasswordPolicy.MIN_LENGTH;
 
-    public static final int PASSWORD_MAX_LENGTH = 100;
+    public static final int PASSWORD_MAX_LENGTH = com.bialem.backend.security.PasswordPolicy.MAX_LENGTH;
 
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String password;

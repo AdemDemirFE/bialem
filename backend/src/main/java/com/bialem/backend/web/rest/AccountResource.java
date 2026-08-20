@@ -2,14 +2,18 @@ package com.bialem.backend.web.rest;
 
 import com.bialem.backend.domain.User;
 import com.bialem.backend.repository.UserRepository;
+import com.bialem.backend.security.PasswordPolicy;
 import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.service.MailService;
+import com.bialem.backend.service.PasswordResetRateLimiter;
 import com.bialem.backend.service.UserService;
 import com.bialem.backend.service.dto.AdminUserDTO;
 import com.bialem.backend.service.dto.PasswordChangeDTO;
 import com.bialem.backend.web.rest.errors.*;
 import com.bialem.backend.web.rest.vm.KeyAndPasswordVM;
 import com.bialem.backend.web.rest.vm.ManagedUserVM;
+import com.bialem.backend.web.rest.vm.PasswordResetMessageVM;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
@@ -40,10 +44,18 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final PasswordResetRateLimiter passwordResetRateLimiter;
+
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        PasswordResetRateLimiter passwordResetRateLimiter
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.passwordResetRateLimiter = passwordResetRateLimiter;
     }
 
     /**
@@ -57,8 +69,8 @@ public class AccountResource {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
-        if (isPasswordLengthInvalid(managedUserVM.getPassword())) {
-            throw new InvalidPasswordException();
+        if (!PasswordPolicy.isValid(managedUserVM.getPassword())) {
+            throw new PasswordPolicyException();
         }
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
         mailService.sendActivationEmail(user);
@@ -128,8 +140,8 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/change-password")
     public void changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
-        if (isPasswordLengthInvalid(passwordChangeDto.getNewPassword())) {
-            throw new InvalidPasswordException();
+        if (!PasswordPolicy.isValid(passwordChangeDto.getNewPassword())) {
+            throw new PasswordPolicyException();
         }
         userService.changePassword(passwordChangeDto.getCurrentPassword(), passwordChangeDto.getNewPassword());
     }
@@ -140,8 +152,11 @@ public class AccountResource {
      * @param mail the mail of the user.
      */
     @PostMapping(path = "/account/reset-password/init")
-    public void requestPasswordReset(@RequestBody String mail) {
-        Optional<User> user = userService.requestPasswordReset(mail);
+    public PasswordResetMessageVM requestPasswordReset(@RequestBody String mail, HttpServletRequest request) {
+        String email = normalizeEmailPayload(mail);
+        passwordResetRateLimiter.checkAllowed(email, resolveClientIp(request));
+
+        Optional<User> user = userService.requestPasswordReset(email);
         if (user.isPresent()) {
             mailService.sendPasswordResetMail(user.orElseThrow());
         } else {
@@ -149,32 +164,50 @@ public class AccountResource {
             // but log that an invalid attempt has been made
             LOG.warn("Password reset requested for non existing mail");
         }
+        return PasswordResetMessageVM.accepted();
     }
 
     /**
      * {@code POST   /account/reset-password/finish} : Finish to reset the password of the user.
      *
      * @param keyAndPassword the generated key and the new password.
-     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the password could not be reset.
+     * @throws PasswordPolicyException {@code 400 (Bad Request)} if the password policy fails.
+     * @throws InvalidResetKeyException {@code 400 (Bad Request)} if the reset key is invalid or expired.
      */
     @PostMapping(path = "/account/reset-password/finish")
     public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
-        if (isPasswordLengthInvalid(keyAndPassword.getNewPassword())) {
-            throw new InvalidPasswordException();
+        if (!PasswordPolicy.isValid(keyAndPassword.getNewPassword())) {
+            throw new PasswordPolicyException();
+        }
+        if (
+            StringUtils.isNotBlank(keyAndPassword.getConfirmPassword()) &&
+            !Objects.equals(keyAndPassword.getNewPassword(), keyAndPassword.getConfirmPassword())
+        ) {
+            throw new BadRequestAlertException("Şifreler birbiriyle eşleşmiyor.", "userManagement", "passwordmismatch");
         }
         Optional<User> user = userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
 
-        if (!user.isPresent()) {
-            throw new AccountResourceException("No user was found for this reset key");
+        if (user.isEmpty()) {
+            throw new InvalidResetKeyException();
         }
     }
 
-    private static boolean isPasswordLengthInvalid(String password) {
-        return (
-            StringUtils.isEmpty(password) ||
-            password.length() < ManagedUserVM.PASSWORD_MIN_LENGTH ||
-            password.length() > ManagedUserVM.PASSWORD_MAX_LENGTH
-        );
+    private static String normalizeEmailPayload(String mail) {
+        if (mail == null) {
+            return "";
+        }
+        String value = mail.trim();
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            value = value.substring(1, value.length() - 1);
+        }
+        return value.trim();
+    }
+
+    private static String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (StringUtils.isNotBlank(forwarded)) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

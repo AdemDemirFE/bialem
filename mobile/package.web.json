@@ -1,9 +1,10 @@
 {
   "name": "bialem-web",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build --mode production"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

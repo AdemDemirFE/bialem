@@ -378,20 +378,21 @@ export function createSpringClient(options: SpringClientOptions) {
       async setSession() {
         return { data: { session: await currentSession() }, error: null };
       },
-      async updateUser({ password }: { password: string }) {
-        const key =
-          typeof window === "undefined"
+      async updateUser({ password, key }: { password: string; key?: string | null }) {
+        const resolvedKey =
+          key ||
+          (typeof window === "undefined"
             ? null
             : new URLSearchParams(window.location.search).get("key") ||
-              new URLSearchParams(window.location.hash.replace(/^#/, "")).get("key");
-        if (!key) {
+              new URLSearchParams(window.location.hash.replace(/^#/, "")).get("key"));
+        if (!resolvedKey) {
           return { error: asError("Şifre yenileme anahtarı eksik.") };
         }
         try {
           await request("/api/account/reset-password/finish", {
             method: "POST",
             auth: false,
-            json: { key, newPassword: password }
+            json: { key: resolvedKey, newPassword: password, confirmPassword: password }
           });
           return { error: null };
         } catch (error) {

@@ -4,33 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createBrowserApi } from "../../src/lib/browser-api";
 import styles from "../public-page.module.css";
 
-type RecoveryParameters = {
-  key: string | null;
-  errorDescription: string | null;
-};
-
-type Stage = "request" | "choice" | "password" | "success";
-
-const emptyParameters: RecoveryParameters = {
-  key: null,
-  errorDescription: null
-};
-
-function readRecoveryParameters(): RecoveryParameters {
-  const query = new URLSearchParams(window.location.search);
-  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
-  return {
-    key: query.get("key") ?? hash.get("key"),
-    errorDescription: query.get("error_description") ?? hash.get("error_description")
-  };
-}
+type Stage = "request" | "password" | "success";
 
 export function ResetPasswordBridge() {
   const [stage, setStage] = useState<Stage>("request");
-  const [parameters, setParameters] = useState<RecoveryParameters>(emptyParameters);
-  const [appUrl, setAppUrl] = useState("bialem://reset-password");
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -38,12 +17,13 @@ export function ResetPasswordBridge() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    const recoveryParameters = readRecoveryParameters();
-    const hasRecoveryLink = Boolean(recoveryParameters.key || recoveryParameters.errorDescription);
-
-    setParameters(recoveryParameters);
-    setAppUrl(`bialem://reset-password${window.location.search}${window.location.hash}`);
-    setStage(hasRecoveryLink ? "choice" : "request");
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const initialCode = query.get("key") ?? query.get("code") ?? hash.get("key") ?? hash.get("code");
+    if (initialCode) {
+      setCode(initialCode.replace(/\s/g, ""));
+      setStage("password");
+    }
   }, []);
 
   async function requestReset(event: FormEvent<HTMLFormElement>) {
@@ -54,16 +34,16 @@ export function ResetPasswordBridge() {
 
     try {
       const client = createBrowserApi();
-      const { error: resetError } = await client.auth.resetPasswordForEmail(
-        email.trim().toLowerCase(),
-        { redirectTo: `${window.location.origin}/reset-password` }
-      );
+      const { error: resetError } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
 
       if (resetError) {
         throw resetError;
       }
 
-      setMessage("E-posta adresi kayıtlıysa şifre yenileme bağlantısı gönderildi.");
+      setMessage("Eğer bu e-posta adresi sistemimizde kayıtlıysa şifre sıfırlama kodu gönderildi.");
+      setStage("password");
     } catch {
       setError("Şifre yenileme isteği şu anda gönderilemedi. Lütfen biraz sonra tekrar deneyin.");
     } finally {
@@ -71,27 +51,18 @@ export function ResetPasswordBridge() {
     }
   }
 
-  async function continueOnWeb() {
-    setError(null);
-    if (parameters.errorDescription) {
-      setError("Bağlantı geçersiz, süresi dolmuş veya daha önce kullanılmış. Yeni bir bağlantı isteyin.");
-      setStage("request");
-      return;
-    }
-    if (!parameters.key) {
-      setError("Şifre yenileme anahtarı bulunamadı.");
-      setStage("request");
-      return;
-    }
-    setStage("password");
-  }
-
   async function savePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Yeni şifren en az 8 karakter olmalıdır.");
+    const normalizedCode = code.replace(/\s/g, "").trim();
+    if (!normalizedCode || normalizedCode.length < 6) {
+      setError("E-postanıza gelen 8 haneli sıfırlama kodunu girin.");
+      return;
+    }
+
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+      setError("Yeni şifren en az 8 karakter olmalı ve en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.");
       return;
     }
 
@@ -104,16 +75,17 @@ export function ResetPasswordBridge() {
 
     try {
       const client = createBrowserApi();
-      const { error: updateError } = await client.auth.updateUser({ password });
+      const { error: updateError } = await client.auth.updateUser({ password, key: normalizedCode });
       if (updateError) throw updateError;
 
       await client.auth.signOut();
       window.history.replaceState({}, "", "/reset-password");
       setPassword("");
       setPasswordConfirmation("");
+      setCode("");
       setStage("success");
     } catch {
-      setError("Şifre güncellenemedi. Yeni bir şifre yenileme bağlantısı isteyin.");
+      setError("Şifre güncellenemedi. Kod hatalı veya süresi dolmuş olabilir. Yeni bir kod isteyin.");
     } finally {
       setPending(false);
     }
@@ -129,7 +101,7 @@ export function ResetPasswordBridge() {
             <>
               <h1 className={styles.title}>Şifreni yenile.</h1>
               <p className={styles.lead}>
-                Hesabına bağlı e-posta adresini yaz. Güvenli yenileme bağlantısını sana gönderelim.
+                Hesabına bağlı e-posta adresini yaz. Sana 8 haneli bir sıfırlama kodu gönderelim.
               </p>
               <form className={styles.resetForm} onSubmit={requestReset}>
                 <label className={styles.resetLabel}>
@@ -145,31 +117,35 @@ export function ResetPasswordBridge() {
                   />
                 </label>
                 <button className={styles.button} type="submit" disabled={pending}>
-                  {pending ? "Gönderiliyor..." : "Yenileme bağlantısı gönder"}
+                  {pending ? "Gönderiliyor..." : "Sıfırlama kodu gönder"}
                 </button>
               </form>
               {message ? <p className={styles.successMessage}>{message}</p> : null}
             </>
           ) : null}
 
-          {stage === "choice" ? (
-            <>
-              <h1 className={styles.title}>Yeni şifreni nerede belirlemek istersin?</h1>
-              <p className={styles.lead}>
-                İşleme bu tarayıcıda devam edebilir veya Bi&apos;Alem uygulamasını açabilirsin.
-              </p>
-              <div className={styles.actions}>
-                <button className={styles.button} type="button" onClick={continueOnWeb}>
-                  Web’de devam et
-                </button>
-                <a className={styles.secondaryButton} href={appUrl}>Uygulamada devam et</a>
-              </div>
-            </>
-          ) : null}
-
           {stage === "password" ? (
-              <p className={styles.lead}>En az 8 karakterden oluşan güçlü bir şifre kullan.</p>
+            <>
+              <h1 className={styles.title}>Kodu gir, yeni şifreni belirle.</h1>
+              <p className={styles.lead}>
+                E-postadaki 8 haneli kodu yaz. Şifre en az 8 karakter, bir büyük harf, bir küçük harf ve bir rakam içermeli.
+              </p>
+              {message ? <p className={styles.successMessage}>{message}</p> : null}
               <form className={styles.resetForm} onSubmit={savePassword}>
+                <label className={styles.resetLabel}>
+                  Sıfırlama kodu
+                  <input
+                    className={styles.resetInput}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    required
+                    maxLength={12}
+                    value={code}
+                    onChange={(event) => setCode(event.target.value.replace(/[^\d\s]/g, ""))}
+                    placeholder="12345678"
+                  />
+                </label>
                 <label className={styles.resetLabel}>
                   Yeni şifre
                   <input
@@ -198,6 +174,9 @@ export function ResetPasswordBridge() {
                   {pending ? "Kaydediliyor..." : "Şifreyi güncelle"}
                 </button>
               </form>
+              <button className={styles.secondaryButton} type="button" onClick={() => setStage("request")}>
+                Yeni kod gönder
+              </button>
             </>
           ) : null}
 
@@ -206,16 +185,18 @@ export function ResetPasswordBridge() {
               <h1 className={styles.title}>Şifren güncellendi.</h1>
               <p className={styles.lead}>Yeni şifrenle uygulamaya veya yönetim paneline giriş yapabilirsin.</p>
               <div className={styles.actions}>
-                <a className={styles.button} href="/admin/login">Admin girişine git</a>
-                <a className={styles.secondaryButton} href="/">Ana sayfaya dön</a>
+                <a className={styles.button} href="/admin/login">
+                  Admin girişine git
+                </a>
+                <a className={styles.secondaryButton} href="/">
+                  Ana sayfaya dön
+                </a>
               </div>
             </>
           ) : null}
 
           {error ? <p className={styles.errorMessage}>{error}</p> : null}
-          <p className={styles.notice}>
-            Güvenliğin için şifre yenileme bağlantısını başkalarıyla paylaşma.
-          </p>
+          <p className={styles.notice}>Güvenliğin için sıfırlama kodunu başkalarıyla paylaşma.</p>
         </section>
       </div>
     </main>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
 import { api } from "../src/lib/api";
+import { getAppEnv, getAppVersion, getAppVersionCode } from "../src/lib/backend-config";
 import { colors } from "../src/theme/colors";
 
 type Preferences = {
@@ -181,6 +182,10 @@ export default function SettingsScreen() {
           </>
         )}
 
+        <Text style={styles.versionLine}>
+          BiAlem v{getAppVersion()} ({getAppVersionCode()}) · {getAppEnv()}
+        </Text>
+
         {saving ? (
           <View style={styles.savingBadge}>
             <ActivityIndicator size="small" color={colors.actionText} />
@@ -267,5 +272,6 @@ const styles = StyleSheet.create({
   requestsButton: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, borderTopWidth: 1, borderTopColor: colors.border },
   requestsIcon: { width: 42, height: 42, alignItems: "center", justifyContent: "center", borderRadius: 15, backgroundColor: colors.accentSoft },
   savingBadge: { position: "absolute", right: 22, bottom: 18, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.action },
-  savingText: { color: colors.actionText, fontSize: 12, fontWeight: "900" }
+  savingText: { color: colors.actionText, fontSize: 12, fontWeight: "900" },
+  versionLine: { marginTop: 8, textAlign: "center", color: colors.muted, fontSize: 12, fontWeight: "700" }
 });

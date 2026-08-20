@@ -1,15 +1,29 @@
 {
   "name": "bialem-mobile",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "web": "vite",
-    "build": "vite build",
+    "1:dev": "node ../scripts/run-mobile-vite.mjs --mode=development",
+    "1:dev:proxy": "node ../scripts/run-mobile-vite.mjs --mode=development --proxy",
+    "2:prod": "vite build --mode production",
+    "3:android-test": "vite build --mode android-test",
+
+    "dev": "npm run 1:dev",
+    "web": "npm run 1:dev",
+    "build": "npm run 2:prod",
+    "build:android:test": "npm run 3:android-test",
+
+    "android:1:dev": "vite build --mode development && node ../scripts/cap-sync-android.mjs",
+    "android:2:prod": "npm run 2:prod && node ../scripts/cap-sync-android.mjs",
+    "android:3:test": "npm run 3:android-test && node ../scripts/cap-sync-android.mjs --android-test",
+
+    "android": "npm run android:2:prod && npx cap open android",
+    "android:test": "npm run android:3:test",
+
     "preview": "vite preview --host --port 4173",
-    "android": "npm run build && npx cap sync android && npx cap open android",
     "brand-assets": "npx @capacitor/assets generate --android --pwa --assetPath resources --iconBackgroundColor '#2A1878' --iconBackgroundColorDark '#1A1048' --splashBackgroundColor '#2A1878' --splashBackgroundColorDark '#1A1048' --logoSplashScale 0.42",
-    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "ios": "npm run 2:prod && npx cap sync ios && npx cap open ios",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

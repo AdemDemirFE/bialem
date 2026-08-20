@@ -57,10 +57,17 @@ spring:
     user: ${SPRING_LIQUIBASE_USER:${SPRING_DATASOURCE_USERNAME:bialem}}
     password: ${SPRING_LIQUIBASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
   mail:
-    host: ${SPRING_MAIL_HOST:localhost}
-    port: ${SPRING_MAIL_PORT:25}
-    username: ${SPRING_MAIL_USERNAME:}
-    password: ${SPRING_MAIL_PASSWORD:}
+    host: ${SPRING_MAIL_HOST:${MAIL_HOST:localhost}}
+    port: ${SPRING_MAIL_PORT:${MAIL_PORT:25}}
+    username: ${SPRING_MAIL_USERNAME:${MAIL_USERNAME:}}
+    password: ${SPRING_MAIL_PASSWORD:${MAIL_PASSWORD:}}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
+            required: ${SPRING_MAIL_SMTP_STARTTLS_REQUIRED:false}
   thymeleaf:
     cache: true
 
@@ -118,14 +125,16 @@ jhipster:
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   cors:
-    allowed-origins: ${JHIPSTER_CORS_ALLOWED_ORIGINS:https://bialem.app,https://www.bialem.app}
+    allowed-origins: ${JHIPSTER_CORS_ALLOWED_ORIGINS:https://bialem.app,https://www.bialem.app,https://localhost,http://localhost,capacitor://localhost}
+    allowed-origin-patterns: ${JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://localhost:*}
     allowed-methods: '*'
     allowed-headers: '*'
     exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
     allow-credentials: true
     max-age: 1800
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: ${JHIPSTER_MAIL_BASE_URL:https://bialem.app}
+    from: ${SPRING_MAIL_FROM:${MAIL_FROM:bialem@localhost}}
+    base-url: ${JHIPSTER_MAIL_BASE_URL:${FRONTEND_URL:https://bialem.app}}
   logging:
     use-json-format: false # By default, logs are not in Json format
     logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration

@@ -1,11 +1,6 @@
-const fallbackWebUrl = "https://bialem.app";
+import { getPublicWebUrl } from "./backend-config";
 
-function vitePublicWebUrl() {
-  const meta = (import.meta as { env?: Record<string, string> }).env ?? {};
-  return meta.VITE_PUBLIC_WEB_URL;
-}
-
-export const publicWebUrl = (vitePublicWebUrl() || fallbackWebUrl).replace(/\/$/, "");
+export const publicWebUrl = getPublicWebUrl();
 
 export function eventPublicUrl(eventId: string) {
   return `${publicWebUrl}/event-share/${eventId}`;

@@ -85,4 +85,5 @@
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <include file="config/liquibase/changelog/20260819101502_added_entity_constraints_UserRole.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
+    <include file="config/liquibase/changelog/20260820140000_widen_user_reset_key.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

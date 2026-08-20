@@ -23,6 +23,9 @@ logging:
 spring:
   application:
     name: bialem
+  # Optional local secrets (gitignored). Create from docs / paste App Password there.
+  config:
+    import: optional:classpath:config/application-mail-local.yml
   docker:
     compose:
       enabled: true
@@ -50,10 +53,20 @@ spring:
   liquibase:
     contexts: dev
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: ${SPRING_MAIL_HOST:${MAIL_HOST:smtp.gmail.com}}
+    port: ${SPRING_MAIL_PORT:${MAIL_PORT:587}}
+    # username/password: env (MAIL_*) or gitignored application-mail-local.yml
+    username: ${SPRING_MAIL_USERNAME:${MAIL_USERNAME:acbaldirlioglu@gmail.com}}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:
@@ -95,7 +108,8 @@ jhipster:
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://localhost:3000
+    base-url: ${JHIPSTER_MAIL_BASE_URL:${FRONTEND_URL:http://localhost:5173}}
+    from: ${SPRING_MAIL_FROM:${MAIL_FROM:acbaldirlioglu@gmail.com}}
   logging:
     use-json-format: false # By default, logs are not in Json format
     logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration

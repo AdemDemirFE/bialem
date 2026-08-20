@@ -74,13 +74,20 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     @JsonIgnore
     private String activationKey;
 
-    @Size(max = 20)
-    @Column(name = "reset_key", length = 20)
+    @Size(max = 64)
+    @Column(name = "reset_key", length = 64)
     @JsonIgnore
     private String resetKey;
 
     @Column(name = "reset_date")
     private Instant resetDate = null;
+
+    /**
+     * Clear-text reset token for outbound mail only; never persisted.
+     */
+    @jakarta.persistence.Transient
+    @JsonIgnore
+    private String clearResetKey;
 
     @JsonIgnore
     @ManyToMany
@@ -172,6 +179,14 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     public void setResetKey(String resetKey) {
         this.resetKey = resetKey;
+    }
+
+    public String getClearResetKey() {
+        return clearResetKey;
+    }
+
+    public void setClearResetKey(String clearResetKey) {
+        this.clearResetKey = clearResetKey;
     }
 
     public Instant getResetDate() {

@@ -38,6 +38,7 @@ import AdvantageDetailScreen from "../app/advantages/[id]";
 import AdvantageRedeemScreen from "../app/advantages/redeem";
 import LegalScreen from "../app/legal/[document]";
 import ResetPasswordScreen from "../app/reset-password";
+import ForgotPasswordScreen from "../app/forgot-password";
 import { type ReactNode, useEffect } from "react";
 
 function RouterBinder({ children }: { children: ReactNode }) {
@@ -94,6 +95,7 @@ export function App() {
               <Route path="/advantages/redeem" element={<AdvantageRedeemScreen />} />
               <Route path="/advantages/:id" element={<AdvantageDetailScreen />} />
               <Route path="/legal/:document" element={<LegalScreen />} />
+              <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
               <Route path="/reset-password" element={<ResetPasswordScreen />} />
             </Route>
           </Routes>

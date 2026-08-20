@@ -10,4 +10,9 @@ export function useURL() {
   return typeof window === "undefined" ? null : window.location.href;
 }
 
-export default { createURL, openURL };
+export async function getInitialURL() {
+  if (typeof window === "undefined") return null;
+  return window.location.href;
+}
+
+export default { createURL, openURL, getInitialURL, useURL };

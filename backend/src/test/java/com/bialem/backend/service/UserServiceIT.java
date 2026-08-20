@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.bialem.backend.IntegrationTest;
 import com.bialem.backend.domain.User;
 import com.bialem.backend.repository.UserRepository;
+import com.bialem.backend.security.PasswordResetTokenHasher;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -23,7 +24,6 @@ import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
-import tech.jhipster.security.RandomUtil;
 
 /**
  * Integration tests for {@link UserService}.
@@ -124,15 +124,15 @@ class UserServiceIT {
 
     @Test
     @Transactional
-    void assertThatResetKeyMustNotBeOlderThan24Hours() {
-        Instant daysAgo = Instant.now().minus(25, ChronoUnit.HOURS);
-        String resetKey = RandomUtil.generateResetKey();
+    void assertThatResetKeyMustNotBeOlderThan30Minutes() {
+        Instant expired = Instant.now().minus(31, ChronoUnit.MINUTES);
+        String rawToken = "test-reset-token-raw-value";
         user.setActivated(true);
-        user.setResetDate(daysAgo);
-        user.setResetKey(resetKey);
+        user.setResetDate(expired);
+        user.setResetKey(PasswordResetTokenHasher.hashToken(rawToken));
         userRepository.saveAndFlush(user);
 
-        Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
+        Optional<User> maybeUser = userService.completePasswordReset("Johndoe2", rawToken);
         assertThat(maybeUser).isNotPresent();
         userRepository.delete(user);
     }
@@ -140,13 +140,13 @@ class UserServiceIT {
     @Test
     @Transactional
     void assertThatResetKeyMustBeValid() {
-        Instant daysAgo = Instant.now().minus(25, ChronoUnit.HOURS);
+        Instant recent = Instant.now().minus(5, ChronoUnit.MINUTES);
         user.setActivated(true);
-        user.setResetDate(daysAgo);
-        user.setResetKey("1234");
+        user.setResetDate(recent);
+        user.setResetKey(PasswordResetTokenHasher.hashToken("stored-token"));
         userRepository.saveAndFlush(user);
 
-        Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
+        Optional<User> maybeUser = userService.completePasswordReset("Johndoe2", "wrong-token");
         assertThat(maybeUser).isNotPresent();
         userRepository.delete(user);
     }
@@ -155,14 +155,14 @@ class UserServiceIT {
     @Transactional
     void assertThatUserCanResetPassword() {
         String oldPassword = user.getPassword();
-        Instant daysAgo = Instant.now().minus(2, ChronoUnit.HOURS);
-        String resetKey = RandomUtil.generateResetKey();
+        Instant recent = Instant.now().minus(5, ChronoUnit.MINUTES);
+        String rawToken = "valid-reset-token-for-user";
         user.setActivated(true);
-        user.setResetDate(daysAgo);
-        user.setResetKey(resetKey);
+        user.setResetDate(recent);
+        user.setResetKey(PasswordResetTokenHasher.hashToken(rawToken));
         userRepository.saveAndFlush(user);
 
-        Optional<User> maybeUser = userService.completePasswordReset("johndoe2", user.getResetKey());
+        Optional<User> maybeUser = userService.completePasswordReset("Johndoe2", rawToken);
         assertThat(maybeUser).isPresent();
         assertThat(maybeUser.orElse(null).getResetDate()).isNull();
         assertThat(maybeUser.orElse(null).getResetKey()).isNull();

@@ -31,6 +31,8 @@ public class MailService {
 
     private static final String BASE_URL = "baseUrl";
 
+    private static final String RESET_KEY = "resetKey";
+
     private final JHipsterProperties jHipsterProperties;
 
     private final JavaMailSender javaMailSender;
@@ -91,10 +93,14 @@ public class MailService {
             LOG.debug("Email doesn't exist for user '{}'", user.getLogin());
             return;
         }
-        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Locale locale = Locale.forLanguageTag(user.getLangKey() != null ? user.getLangKey() : "tr");
         Context context = new Context(locale);
         context.setVariable(USER, user);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        String clearResetKey = user.getClearResetKey();
+        if (clearResetKey != null) {
+            context.setVariable(RESET_KEY, clearResetKey);
+        }
         String content = templateEngine.process(templateName, context);
         String subject = messageSource.getMessage(titleKey, null, locale);
         sendEmailSync(user.getEmail(), subject, content, false, true);

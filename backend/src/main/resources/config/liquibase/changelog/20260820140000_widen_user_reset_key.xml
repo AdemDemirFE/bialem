@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260820140000-1" author="bialem">
+        <comment>Widen reset_key to store SHA-256 hex hashes of password-reset tokens</comment>
+        <modifyDataType tableName="jhi_user" columnName="reset_key" newDataType="varchar(64)"/>
+    </changeSet>
+</databaseChangeLog>

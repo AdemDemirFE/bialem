@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
@@ -31,6 +32,7 @@ const authPalettes = {
 } as const;
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { resolvedTheme } = useTheme();
   const authPalette = authPalettes[resolvedTheme];
   const {
@@ -41,7 +43,6 @@ export default function HomeScreen() {
     notice,
     signIn,
     signUp,
-    requestPasswordReset,
     resendSignUpEmail,
     saveProfile,
     clearError,
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [city, setCity] = useState("");
@@ -160,13 +162,12 @@ export default function HomeScreen() {
     return (
       <KeyboardAvoidingView
         style={[styles.keyboardPage, { backgroundColor: authPalette.page }]}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
       <ScrollView
         contentContainerStyle={[styles.page, { backgroundColor: authPalette.page }]}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode="none"
       >
         <View style={[styles.hero, { backgroundColor: authPalette.surface, borderColor: authPalette.border, shadowColor: authPalette.ink }]}>
           <View style={styles.authBrandRow}>
@@ -228,11 +229,20 @@ export default function HomeScreen() {
           ) : null}
 
           <Field label="E-posta" value={email} onChangeText={setEmail} placeholder="ornek@eposta.com" />
-          <Field label="Şifre" value={password} onChangeText={setPassword} placeholder="En az 8 karakter" secureTextEntry />
+          <Field
+            label="Şifre"
+            value={password}
+            onChangeText={setPassword}
+            placeholder={mode === "signup" ? "Min. 8, büyük/küçük harf + rakam" : "En az 8 karakter"}
+            secureTextEntry={!showPassword}
+            showPasswordToggle
+            passwordVisible={showPassword}
+            onTogglePasswordVisibility={() => setShowPassword((value) => !value)}
+          />
 
           {mode === "signin" ? (
-            <Pressable style={styles.forgotPasswordButton} onPress={() => void requestPasswordReset(email)}>
-              <Text style={[styles.forgotPasswordText, { color: authPalette.accent }]}>Şifremi unuttum</Text>
+            <Pressable style={styles.forgotPasswordButton} onPress={() => router.push("/forgot-password")}>
+              <Text style={[styles.forgotPasswordText, { color: authPalette.accent }]}>Şifremi Unuttum</Text>
             </Pressable>
           ) : null}
 
@@ -280,13 +290,12 @@ export default function HomeScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.keyboardPage}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
     <ScrollView
       contentContainerStyle={styles.page}
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-      automaticallyAdjustKeyboardInsets
+      keyboardDismissMode="none"
     >
       <View style={styles.hero}>
         <Text style={styles.kicker}>Profil Kurulumu</Text>
@@ -450,26 +459,54 @@ type FieldProps = {
   placeholder: string;
   secureTextEntry?: boolean;
   multiline?: boolean;
+  showPasswordToggle?: boolean;
+  passwordVisible?: boolean;
+  onTogglePasswordVisibility?: () => void;
 };
 
-function Field({ label, multiline = false, ...props }: FieldProps) {
+function Field({
+  label,
+  multiline = false,
+  showPasswordToggle = false,
+  passwordVisible = false,
+  onTogglePasswordVisibility,
+  secureTextEntry,
+  ...props
+}: FieldProps) {
   const { resolvedTheme } = useTheme();
   const palette = authPalettes[resolvedTheme];
 
   return (
     <View style={styles.fieldGroup}>
       <Text style={[styles.fieldLabel, { color: palette.ink }]}>{label}</Text>
-      <TextInput
-        {...props}
-        style={[
-          styles.input,
-          { backgroundColor: palette.surface, borderColor: palette.border, color: palette.ink },
-          multiline && styles.textArea
-        ]}
-        autoCapitalize="none"
-        multiline={multiline}
-        placeholderTextColor={palette.muted}
-      />
+      <View style={styles.inputWrap}>
+        <TextInput
+          {...props}
+          secureTextEntry={secureTextEntry}
+          style={[
+            styles.input,
+            showPasswordToggle && styles.inputWithToggle,
+            { backgroundColor: palette.surface, borderColor: palette.border, color: palette.ink },
+            multiline && styles.textArea
+          ]}
+          autoCapitalize="none"
+          multiline={multiline}
+          placeholderTextColor={palette.muted}
+        />
+        {showPasswordToggle ? (
+          <Pressable
+            style={styles.eyeButton}
+            onPress={onTogglePasswordVisibility}
+            accessibilityLabel={passwordVisible ? "Şifreyi gizle" : "Şifreyi göster"}
+          >
+            <Ionicons
+              name={passwordVisible ? "eye-outline" : "eye-off-outline"}
+              size={22}
+              color={palette.muted}
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -744,7 +781,6 @@ const styles = StyleSheet.create({
   },
   page: {
     flexGrow: 1,
-    minHeight: "100%",
     backgroundColor: colors.page,
     padding: 24,
     gap: 24
@@ -921,6 +957,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700"
   },
+  inputWrap: {
+    position: "relative",
+    justifyContent: "center"
+  },
   input: {
     minHeight: 52,
     borderRadius: 18,
@@ -931,6 +971,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: colors.ink,
     fontSize: 16
+  },
+  inputWithToggle: {
+    paddingRight: 48
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 12,
+    height: 52,
+    width: 36,
+    alignItems: "center",
+    justifyContent: "center"
   },
   textArea: {
     minHeight: 110,

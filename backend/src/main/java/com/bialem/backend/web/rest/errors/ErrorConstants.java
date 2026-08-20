@@ -10,6 +10,8 @@ public final class ErrorConstants {
     public static final URI DEFAULT_TYPE = URI.create(PROBLEM_BASE_URL + "/problem-with-message");
     public static final URI CONSTRAINT_VIOLATION_TYPE = URI.create(PROBLEM_BASE_URL + "/constraint-violation");
     public static final URI INVALID_PASSWORD_TYPE = URI.create(PROBLEM_BASE_URL + "/invalid-password");
+    public static final URI INVALID_RESET_KEY_TYPE = URI.create(PROBLEM_BASE_URL + "/invalid-reset-key");
+    public static final URI PASSWORD_RESET_RATE_LIMIT_TYPE = URI.create(PROBLEM_BASE_URL + "/password-reset-rate-limit");
     public static final URI EMAIL_ALREADY_USED_TYPE = URI.create(PROBLEM_BASE_URL + "/email-already-used");
     public static final URI LOGIN_ALREADY_USED_TYPE = URI.create(PROBLEM_BASE_URL + "/login-already-used");
 

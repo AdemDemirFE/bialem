@@ -2,6 +2,12 @@ apply plugin: 'com.android.application'
 
 def bialemBrandRes = file("${buildDir}/generated/bialem-brand/res")
 
+// App version comes from root package.json (single source of truth).
+def rootPackageJson = new File(rootProject.projectDir, "../../package.json")
+def bialemPkg = new groovy.json.JsonSlurper().parseText(rootPackageJson.getText("UTF-8"))
+def bialemVersionName = (bialemPkg.version ?: "1.0.0").toString()
+def bialemVersionCode = (bialemPkg.bialem?.versionCode ?: 1) as Integer
+
 tasks.register("syncBialemBrand") {
     def brandDir = file("${projectDir}/../../resources")
     inputs.dir(brandDir)
@@ -31,8 +37,8 @@ android {
         applicationId "com.bialem.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode bialemVersionCode
+        versionName bialemVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

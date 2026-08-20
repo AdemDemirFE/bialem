@@ -95,6 +95,14 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (
             ex instanceof com.bialem.backend.service.InvalidPasswordException
         ) return (ProblemDetailWithCause) new InvalidPasswordException().getBody();
+        if (ex instanceof com.bialem.backend.service.PasswordResetRateLimitException) {
+            return ProblemDetailWithCauseBuilder.instance()
+                .withStatus(HttpStatus.TOO_MANY_REQUESTS.value())
+                .withType(ErrorConstants.PASSWORD_RESET_RATE_LIMIT_TYPE)
+                .withTitle("Çok fazla şifre sıfırlama isteği gönderildi. Lütfen bir süre sonra tekrar deneyin.")
+                .withProperty(MESSAGE_KEY, "error.passwordresetratelimit")
+                .build();
+        }
 
         if (
             ex instanceof ErrorResponseException exp && exp.getBody() instanceof ProblemDetailWithCause problemDetailWithCause
@@ -218,6 +226,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (err instanceof AccessDeniedException) return HttpStatus.FORBIDDEN;
         if (err instanceof ConcurrencyFailureException) return HttpStatus.CONFLICT;
         if (err instanceof BadCredentialsException) return HttpStatus.UNAUTHORIZED;
+        if (err instanceof com.bialem.backend.service.PasswordResetRateLimitException) return HttpStatus.TOO_MANY_REQUESTS;
         return null;
     }
 

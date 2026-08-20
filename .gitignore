@@ -15,10 +15,16 @@ coverage
 .env.production.local
 .env.prod
 .env.production
+!mobile/.env.production
+!mobile/.env.android-test
+!mobile/.env.development
 *.pem
 *.key
+*.jks
+*.keystore
 mobile/.expo
 mobile/.env
+mobile/.capacitor-android-test
 mobile/dist-*
 admin/.env.local
 admin/.vercel
@@ -29,3 +35,5 @@ artifacts/
 **/*-firebase-adminsdk-*.json
 **/firebase-service-account*.json
 **/fcm-service-account*.json
+# Local SMTP / secrets (never commit)
+backend/src/main/resources/config/application-mail-local.yml
