@@ -1,0 +1,44 @@
+#
+# Root dockerignore used when building the *frontend* with:
+#   context: ..
+# from deploy/docker-compose.prod.yml.
+#
+# Goal: keep build context small while ensuring these are present:
+# - tsconfig.base.json (required by mobile/tsconfig.json extends)
+# - mobile/ source for Vite build
+#
+.git
+.github
+
+**/node_modules
+**/dist
+**/build
+**/*.log
+
+backend/
+admin/
+deploy/
+
+# Local / secrets
+.env
+.env.*
+
+# Native mobile / expo toolchain (not needed for web-only production build)
+mobile/android/
+mobile/ios/
+mobile/.expo/
+mobile/eas.json
+mobile/google-services.json
+mobile/app.json
+mobile/app.config.js
+mobile/capacitor.config.ts
+mobile/capacitor.config.ts
+
+# Replace with package.web.json for web build
+mobile/package.json
+mobile/package-lock.json
+
+# Keep these explicitly via allow-list patterns (Dockerignore is deny-first):
+# (We can't use allow-lists in .dockerignore; instead we just avoid broad excludes.)
+# NOTE: We do NOT ignore mobile/src/, mobile/vite.config.ts, mobile/tsconfig.json,
+# mobile/index.html, mobile/public/, mobile/resources/, mobile/nginx.conf, mobile/.npmrc.
