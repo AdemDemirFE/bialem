@@ -11,6 +11,12 @@ cd "${ROOT}"
 if [[ -d .git ]]; then
   if [[ -n "$(git status --porcelain)" ]]; then
     echo "Local changes detected. Deployment stopped." >&2
+    echo "Changed files:" >&2
+    git status --porcelain >&2
+    echo >&2
+    echo "Inspect:  git diff" >&2
+    echo "If the VPS edits are disposable:  git checkout -- ." >&2
+    echo "Then:     git pull --ff-only && ./update.sh" >&2
     exit 1
   fi
   echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
