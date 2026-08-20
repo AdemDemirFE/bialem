@@ -55,3 +55,23 @@ Android:
 npm run build
 npx cap sync android
 npx cap open android 
+
+
+npm run android:2:prod
+
+Karıştırma
+Komut	API
+npm run 1:dev
+localhost:8080
+vite --mode android-test
+191.215.36.29:8184
+npm run 2:prod / production
+api.bialem.app
+
+
+
+bizim vps tabanlı apk
+cd c:\ADEM\GITHUB\bialem
+npm run android:3:test
+cd mobile\android
+gradlew.bat clean assembleDebug

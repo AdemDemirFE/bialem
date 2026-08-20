@@ -4,8 +4,8 @@ cd /d "%~dp0.."
 echo === vite android-test build ===
 call npm run build:android:test
 if errorlevel 1 exit /b 1
-echo === cap sync android ===
-call npx cap sync android
+echo === cap sync android (android-test) ===
+call node ..\scripts\cap-sync-android.mjs --android-test
 if errorlevel 1 exit /b 1
 echo === verify capacitor.config.json ===
 if not exist android\app\src\main\assets\capacitor.config.json (

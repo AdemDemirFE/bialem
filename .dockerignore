@@ -32,7 +32,6 @@ mobile/google-services.json
 mobile/app.json
 mobile/app.config.js
 mobile/capacitor.config.ts
-mobile/capacitor.config.ts
 
 # Replace with package.web.json for web build
 mobile/package.json
