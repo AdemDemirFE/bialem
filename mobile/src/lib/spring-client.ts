@@ -30,7 +30,11 @@ export function createSpringClient(options: SpringClientOptions) {
       const token = await options.getToken();
       if (token) headers.set("Authorization", `Bearer ${token}`);
     }
-    const response = await fetch(`${options.getBaseUrl()}${path}`, {
+    const resolvedUrl = `${options.getBaseUrl()}${path}`;
+    if (path === "/api/push-device-tokens") {
+      console.log("[PUSH] request URL:", resolvedUrl);
+    }
+    const response = await fetch(resolvedUrl, {
       ...init,
       headers,
       body: init.json === undefined ? init.body : JSON.stringify(init.json)
