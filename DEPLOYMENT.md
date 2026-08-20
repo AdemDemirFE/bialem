@@ -1,5 +1,8 @@
 # Bialem production deployment
 
+> **VPS update command:** `bash update.sh` — not `./update.sh` (Permission denied without executable bit).  
+> Alternative: `npm run update` or `bash deploy/scripts/update.sh`
+
 This stack is **production only**. Local development stays on Spring `dev` + host Postgres `localhost:15432`. Do not mix the two.
 
 Production does **not** use Expo or Supabase. The live path is Nginx → Vite web (`bialem.app`) and Spring Boot JWT API (`api.bialem.app`) → PostgreSQL (`bialem-db:5432`).

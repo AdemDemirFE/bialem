@@ -11,6 +11,9 @@
   },
   "scripts": {
     "postinstall": "node scripts/bootstrap-local-dev.mjs",
+    "deploy": "bash deploy/scripts/deploy.sh",
+    "update": "bash deploy/scripts/update.sh",
+    "deploy:chmod": "node scripts/mark-deploy-executable.mjs",
     "dev:mobile": "npm --workspace mobile run dev",
     "dev:admin": "npm --workspace admin run dev",
     "dev:mobile:web": "npm --workspace mobile run dev",

@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
-FROM maven:3.9.9-eclipse-temurin-17-jammy AS build
+# eclipse-temurin = OpenJDK 17 (Eclipse Adoptium), not Eclipse IDE.
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /src
 
 COPY pom.xml sonar-project.properties checkstyle.xml ./
@@ -7,7 +8,7 @@ COPY src src
 RUN mvn -ntp -Pprod -DskipTests package \
     && cp target/bialem-0.0.1-SNAPSHOT.jar /tmp/app.jar
 
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 RUN apt-get update \
