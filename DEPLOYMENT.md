@@ -83,6 +83,32 @@ sudo certbot --nginx \
 
 `update.sh` stops if the git working tree is dirty. It never runs `git reset --hard`, `docker system prune`, or `docker compose down -v`.
 
+## Troubleshooting: "Local changes detected"
+
+On the VPS, running `chmod +x deploy/scripts/*.sh` marks many files as **modified** in git (file mode only). `git pull` then fails.
+
+Reset tracked files to match GitHub (`.env.prod` is **not** touched):
+
+```bash
+cd /opt/bialem
+git status
+git diff --stat
+git checkout -- .
+git pull --ff-only
+./update.sh
+```
+
+Do **not** use `git reset --hard` unless you understand what it discards. Do **not** use `git clean -fd` (can remove untracked files).
+
+If you edited a file on purpose, back it up first:
+
+```bash
+cp deploy/scripts/update.sh /root/update.sh.vps.bak
+git checkout -- .
+git pull --ff-only
+./update.sh
+```
+
 ## Local development (do not use deploy.sh)
 
 ```bash
