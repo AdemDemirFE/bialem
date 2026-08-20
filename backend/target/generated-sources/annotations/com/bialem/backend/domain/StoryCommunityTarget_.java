@@ -1,11 +1,13 @@
 package com.bialem.backend.domain;
 
+import jakarta.annotation.Generated;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.StaticMetamodel;
 import java.time.Instant;
 
 @StaticMetamodel(StoryCommunityTarget.class)
+@Generated("org.hibernate.processor.HibernateProcessor")
 public abstract class StoryCommunityTarget_ {
 
 	public static final String CREATED_AT = "createdAt";

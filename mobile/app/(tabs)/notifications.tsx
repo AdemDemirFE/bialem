@@ -3,26 +3,14 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { getNotificationTarget } from "../../src/lib/notifications";
-import { api } from "../../src/lib/api";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  sendTestNotification,
+  type AppNotification
+} from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
-
-type NotificationPayload = {
-  event_id?: string;
-  post_id?: string;
-  user_id?: string;
-  community_id?: string;
-  follow_request_id?: string;
-};
-
-type NotificationItem = {
-  id: string;
-  type: string;
-  title: string;
-  body: string | null;
-  payload: NotificationPayload;
-  is_read: boolean;
-  created_at: string;
-};
 
 type NotificationFilter = "all" | "unread" | "events" | "communities" | "social" | "advantages";
 
@@ -38,7 +26,7 @@ const notificationFilters: { value: NotificationFilter; label: string }[] = [
 export default function NotificationsScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,17 +38,11 @@ export default function NotificationsScreen() {
     refresh ? setRefreshing(true) : setLoading(true);
     setError(null);
 
-    const result = await api
-      .from("notifications")
-      .select("id, type, title, body, payload, is_read, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (result.error) {
-      setError(result.error.message);
-    } else {
-      setItems((result.data ?? []) as NotificationItem[]);
+    try {
+      const data = await getNotifications();
+      setItems(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi");
     }
 
     setLoading(false);
@@ -72,35 +54,46 @@ export default function NotificationsScreen() {
   }, [user?.id]);
 
   const markAllAsRead = async () => {
-    if (!user || items.every((item) => item.is_read)) return;
+    if (!user || items.every((item) => item.read)) return;
 
-    const result = await api.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
-
-    if (result.error) {
-      setError(result.error.message);
-      return;
+    try {
+      await markAllNotificationsAsRead();
+      setItems((current) => current.map((item) => ({ ...item, read: true })));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "İşlem başarısız");
     }
-
-    setItems((current) => current.map((item) => ({ ...item, is_read: true })));
   };
 
-  const openNotification = async (item: NotificationItem) => {
-    if (!item.is_read) {
-      await api.from("notifications").update({ is_read: true }).eq("id", item.id);
-      setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, is_read: true } : entry)));
+  const openNotification = async (item: AppNotification) => {
+    if (!item.read) {
+      try {
+        await markNotificationAsRead(item.id);
+        setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, read: true } : entry)));
+      } catch (err) {
+        console.warn("Failed to mark notification as read", err);
+      }
     }
 
-    const target = getNotificationTarget(item.payload);
+    const target = item.route ?? getNotificationTarget({ route: item.route ?? undefined });
     if (target) router.push(target as never);
   };
 
-  const unreadCount = items.filter((item) => !item.is_read).length;
+  const handleTestNotification = async () => {
+    try {
+      await sendTestNotification();
+      await loadNotifications(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Test bildirimi gönderilemedi");
+    }
+  };
+
+  const unreadCount = items.filter((item) => !item.read).length;
   const visibleItems = useMemo(
     () =>
       items.filter((item) => {
         if (filter === "all") return true;
-        if (filter === "unread") return !item.is_read;
-        return getNotificationCategory(item.type) === filter;
+        if (filter === "unread") return !item.read;
+        return getNotificationCategory(item.notificationType ?? "GENERIC") === filter;
       }),
     [filter, items]
   );
@@ -116,11 +109,16 @@ export default function NotificationsScreen() {
           <Text style={styles.title}>{unreadCount > 0 ? `${unreadCount} yeni bildirimin var` : "Her şey güncel"}</Text>
           <Text style={styles.description}>Etkinlik, yorum ve topluluk hareketlerini tek yerden takip et.</Text>
         </View>
-        {unreadCount > 0 ? (
-          <Pressable style={styles.readAllButton} onPress={() => void markAllAsRead()}>
-            <Text style={styles.readAllText}>Tümünü okundu yap</Text>
+        <View style={styles.heroActions}>
+          {unreadCount > 0 ? (
+            <Pressable style={styles.readAllButton} onPress={() => void markAllAsRead()}>
+              <Text style={styles.readAllText}>Tümünü okundu yap</Text>
+            </Pressable>
+          ) : null}
+          <Pressable style={styles.testButton} onPress={() => void handleTestNotification()}>
+            <Text style={styles.testButtonText}>Test bildirimi gönder</Text>
           </Pressable>
-        ) : null}
+        </View>
       </View>
 
       <View style={styles.filters}>
@@ -149,24 +147,24 @@ export default function NotificationsScreen() {
       ) : (
         <View style={styles.list}>
           {visibleItems.map((item) => {
-            const hasTarget = Boolean(getNotificationTarget(item.payload));
+            const hasTarget = Boolean(item.route);
             return (
               <Pressable
                 key={item.id}
-                style={[styles.card, !item.is_read && styles.unreadCard]}
+                style={[styles.card, !item.read && styles.unreadCard]}
                 onPress={() => void openNotification(item)}
               >
-                <View style={[styles.typeMark, !item.is_read && styles.unreadMark]}>
-                  <Text style={styles.typeMarkText}>{getTypeMark(item.type)}</Text>
+                <View style={[styles.typeMark, !item.read && styles.unreadMark]}>
+                  <Text style={styles.typeMarkText}>{getTypeMark(item.notificationType ?? "GENERIC")}</Text>
                 </View>
                 <View style={styles.cardBody}>
                   <View style={styles.cardHeader}>
                     <Text style={styles.cardTitle}>{item.title}</Text>
-                    {!item.is_read ? <View style={styles.unreadDot} /> : null}
+                    {!item.read ? <View style={styles.unreadDot} /> : null}
                   </View>
                   {item.body ? <Text style={styles.cardText}>{item.body}</Text> : null}
                   <Text style={styles.cardMeta}>
-                    {formatRelativeDate(item.created_at)}{hasTarget ? "  ·  Detayı aç" : ""}
+                    {formatRelativeDate(item.createdAt)}{hasTarget ? "  ·  Detayı aç" : ""}
                   </Text>
                 </View>
               </Pressable>
@@ -213,8 +211,11 @@ const styles = StyleSheet.create({
   kicker: { color: colors.accent, fontSize: 13, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase" },
   title: { color: colors.ink, fontSize: 30, lineHeight: 36, fontWeight: "800" },
   description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
+  heroActions: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   readAllButton: { alignSelf: "flex-start", backgroundColor: colors.action, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 11 },
   readAllText: { color: colors.actionText, fontSize: 13, fontWeight: "800" },
+  testButton: { alignSelf: "flex-start", backgroundColor: colors.accentSoft, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 11 },
+  testButtonText: { color: colors.accent, fontSize: 13, fontWeight: "800" },
   error: { color: colors.danger, fontSize: 14, fontWeight: "600" },
   filters: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, flexGrow: 0, flexShrink: 0 },
   filter: {

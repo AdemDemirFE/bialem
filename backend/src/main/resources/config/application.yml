@@ -237,6 +237,9 @@ jhipster:
 
 # application:
 
+firebase:
+  credentials: ${FIREBASE_CREDENTIALS:}
+
 bialem:
   openai:
     api-key: ${OPENAI_API_KEY:}

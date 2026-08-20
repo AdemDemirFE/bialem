@@ -15,6 +15,9 @@ export async function registerPushToken() {
 export async function deactivateCurrentDevicePushToken() {}
 
 export function getNotificationTarget(data: Record<string, unknown>) {
+  if (typeof data.route === "string" && data.route.length > 0) {
+    return data.route;
+  }
   if (typeof data.follow_request_id === "string") return "/people/requests";
   for (const [key, route] of [
     ["event_id", "event"],

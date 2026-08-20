@@ -134,7 +134,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return false;
     }
     setLoading(false);
+    initializePushNotificationsAfterLogin();
     return true;
+  };
+
+  const initializePushNotificationsAfterLogin = async () => {
+    try {
+      const { initializePushNotifications } = await import("./pushNotifications");
+      await initializePushNotifications();
+    } catch (error) {
+      console.warn("Push notification init after login failed", error);
+    }
   };
 
   const signUp = async ({ email, password, displayName, username }: SignUpInput) => {

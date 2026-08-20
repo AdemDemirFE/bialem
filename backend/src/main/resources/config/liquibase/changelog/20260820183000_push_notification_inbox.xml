@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260820183000-1" author="bialem">
+        <addColumn tableName="notification">
+            <column name="notification_type" type="varchar(80)"/>
+            <column name="reference_id" type="varchar(120)"/>
+            <column name="route" type="varchar(500)"/>
+            <column name="read_at" type="${datetimeType}"/>
+        </addColumn>
+        <sql>
+            UPDATE notification SET notification_type = type WHERE notification_type IS NULL;
+        </sql>
+        <createIndex tableName="notification" indexName="idx_notification_user_created">
+            <column name="user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="notification" indexName="idx_notification_user_unread">
+            <column name="user_id"/>
+            <column name="is_read"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260820183000-2" author="bialem">
+        <addColumn tableName="push_token">
+            <column name="updated_at" type="${datetimeType}"/>
+        </addColumn>
+        <sql>
+            UPDATE push_token SET updated_at = created_at WHERE updated_at IS NULL;
+        </sql>
+        <createIndex tableName="push_token" indexName="idx_push_token_user_active">
+            <column name="user_id"/>
+            <column name="is_active"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
