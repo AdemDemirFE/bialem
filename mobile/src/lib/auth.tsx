@@ -134,7 +134,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return false;
     }
     setLoading(false);
-    initializePushNotificationsAfterLogin();
+    await initializePushNotificationsAfterLogin();
     return true;
   };
 
