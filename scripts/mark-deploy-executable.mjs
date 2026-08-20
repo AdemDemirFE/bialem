@@ -16,8 +16,10 @@ const files = [
   "update.sh",
   ...[
     "backup-db.sh",
+    "build-backend-jar.sh",
     "common.sh",
     "deploy.sh",
+    "free-disk.sh",
     "health-check.sh",
     "import-initial-data.sh",
     "logs.sh",

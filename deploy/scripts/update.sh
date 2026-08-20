@@ -6,6 +6,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 require_docker
 assert_prod_env
 assert_bialem_ports
+warn_disk_space
 
 cd "${ROOT}"
 if [[ -d .git ]]; then
@@ -28,6 +29,7 @@ else
 fi
 
 echo "Building and recreating Bialem services (volumes kept)..."
+"${SCRIPT_DIR}/build-backend-jar.sh"
 compose up -d --build --remove-orphans
 
 echo "Waiting for health..."

@@ -87,3 +87,11 @@ assert_bialem_ports() {
   assert_port_free_or_bialem "${FRONTEND_PORT}" "bialem-frontend"
   assert_port_free_or_bialem "${BACKEND_PORT}" "bialem-backend"
 }
+
+warn_disk_space() {
+  local avail_kb
+  avail_kb="$(df -Pk / | awk 'NR==2 {print $4}')"
+  if [[ "${avail_kb}" -lt 2097152 ]]; then
+    echo "WARNING: less than 2GB free on /. Run: bash deploy/scripts/free-disk.sh" >&2
+  fi
+}

@@ -1,23 +1,15 @@
 # syntax=docker/dockerfile:1
-# eclipse-temurin = OpenJDK 17 (Eclipse Adoptium), not Eclipse IDE.
-FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /src
-
-COPY pom.xml sonar-project.properties checkstyle.xml ./
-COPY src src
-RUN mvn -ntp -Pprod -DskipTests package \
-    && cp target/bialem-0.0.1-SNAPSHOT.jar /tmp/app.jar
-
-FROM eclipse-temurin:17-jre
+# Runtime only (~180MB). JAR is built on the host via deploy/scripts/build-backend-jar.sh
+# using a temporary Maven container (not kept in the final image).
+# eclipse-temurin = OpenJDK 17 JRE (Eclipse Adoptium), not Eclipse IDE.
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd --system --gid 1001 bialem \
-    && useradd --system --uid 1001 --gid bialem --home-dir /app --shell /usr/sbin/nologin bialem
+RUN apk add --no-cache curl \
+    && addgroup -S -g 1001 bialem \
+    && adduser -S -u 1001 -G bialem -h /app -s /sbin/nologin bialem
 
-COPY --from=build /tmp/app.jar /app/app.jar
+COPY target/bialem-0.0.1-SNAPSHOT.jar /app/app.jar
 RUN chown bialem:bialem /app/app.jar
 
 USER bialem

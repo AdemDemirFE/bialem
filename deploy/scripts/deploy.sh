@@ -6,8 +6,10 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 require_docker
 assert_prod_env
 assert_bialem_ports
+warn_disk_space
 
 echo "Deploying Bialem (project=${PROJECT_NAME}) from ${ROOT}"
+"${SCRIPT_DIR}/build-backend-jar.sh"
 compose up -d --build
 
 echo "Waiting for health..."

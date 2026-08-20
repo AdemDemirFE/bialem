@@ -123,6 +123,26 @@ bash deploy/scripts/update.sh
 
 Do **not** run `chmod +x` on the VPS if you plan to `git pull` later (Git will show those files as modified).
 
+## Troubleshooting: no space left on device
+
+Docker build pulls Maven (~200MB), Node (~150MB), and JRE layers. Failed builds fill `/var/lib/docker`.
+
+Check:
+
+```bash
+df -h /
+docker system df
+```
+
+Free space (does **not** stop other projects or delete `bialem-postgres-data`):
+
+```bash
+bash deploy/scripts/free-disk.sh
+bash deploy/scripts/update.sh
+```
+
+Backend build uses a **temporary** Maven container; the running backend image is **JRE-only** (~180MB). Maven is not part of the live stack — only needed once per deploy to compile the JAR.
+
 If you edited a file on purpose, back it up first:
 
 ```bash
