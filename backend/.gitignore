@@ -57,6 +57,7 @@ local.properties
 *.orig
 classes/
 out/
+.target/
 
 ######################
 # Visual Studio Code
