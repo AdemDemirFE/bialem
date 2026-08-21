@@ -4,6 +4,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 import { imageSources } from "../src/theme/images";
 import { useTheme } from "../src/theme/theme";
@@ -34,6 +35,7 @@ const authPalettes = {
 export default function HomeScreen() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
+  const insets = useScreenInsets();
   const authPalette = authPalettes[resolvedTheme];
   const {
     user,
@@ -135,7 +137,7 @@ export default function HomeScreen() {
 
   if (loading || !onboardingChecked) {
     return (
-      <View style={styles.centeredPage}>
+      <View style={[styles.centeredPage, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.loadingText}>Bialem hazırlanıyor...</Text>
       </View>
@@ -165,7 +167,7 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
       <ScrollView
-        contentContainerStyle={[styles.page, { backgroundColor: authPalette.page }]}
+        contentContainerStyle={[styles.page, { backgroundColor: authPalette.page, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
       >
@@ -335,6 +337,7 @@ export default function HomeScreen() {
 
 function WelcomeScreen({ onSelectMode }: { onSelectMode: (mode: AuthMode) => Promise<void> }) {
   const [continuing, setContinuing] = useState(false);
+  const insets = useScreenInsets();
 
   const continueToAuth = async (mode: AuthMode) => {
     setContinuing(true);
@@ -342,7 +345,7 @@ function WelcomeScreen({ onSelectMode }: { onSelectMode: (mode: AuthMode) => Pro
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.welcomePage}>
+    <ScrollView contentContainerStyle={[styles.welcomePage, { paddingTop: insets.top + 36, paddingBottom: insets.bottom + 28 }]}>
       <View style={styles.welcomeBrand}>
         <View style={styles.welcomeLogoFrame}>
           <Image source={imageSources.logo} style={styles.welcomeLogo} resizeMode="cover" />

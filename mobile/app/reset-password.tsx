@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { api } from "../src/lib/api";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 import { showAppSuccess, showAppError } from "../src/components/AppAlert";
 
@@ -39,6 +40,7 @@ function readKeyFromUrl(url: string | null | undefined) {
 }
 
 export default function ResetPasswordScreen() {
+  const insets = useScreenInsets();
   const router = useRouter();
   const incomingUrl = Linking.useURL();
   const routeParams = useLocalSearchParams<{
@@ -116,7 +118,7 @@ export default function ResetPasswordScreen() {
         style={styles.keyboardPage}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
           <View style={styles.icon}>
             <Ionicons name="key" size={30} color={colors.accent} />
           </View>

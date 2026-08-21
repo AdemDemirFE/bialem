@@ -17,6 +17,7 @@ import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib/team-identities";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 type PostRecord = {
@@ -52,6 +53,7 @@ type CommentRecord = {
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const commentInputRef = useRef<TextInput>(null);
   const [post, setPost] = useState<PostRecord | null>(null);
   const [community, setCommunity] = useState<CommunityRecord | null>(null);
@@ -218,7 +220,7 @@ export default function PostDetailScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadPost("refresh")} tintColor={colors.accent} />}
@@ -230,7 +232,7 @@ export default function PostDetailScreen() {
         </Link>
 
         {loading ? (
-          <View style={styles.centerBox}>
+          <View style={[styles.centerBox, { paddingTop: insets.top + 40 }]}>
             <ActivityIndicator color={colors.accent} />
             <Text style={styles.loadingText}>Paylaşım yükleniyor...</Text>
           </View>
@@ -377,7 +379,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: "flex-start",
-    marginTop: 14,
+    marginTop: 0,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 999,

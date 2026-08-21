@@ -6,6 +6,7 @@ import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { ImageViewerModal } from "../../src/components/ImageViewerModal";
 import { useAuth } from "../../src/lib/auth";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { profileStatusLabel } from "../../src/lib/profile-status";
 import { api } from "../../src/lib/api";
@@ -57,6 +58,7 @@ type FollowSummary = { follower_count: number; following_count: number; is_follo
 type ProfileTab = "plans" | "posts" | "reviews";
 
 export default function ProfileScreen() {
+  const insets = useScreenInsets();
   const { user, profile, signOut, updateAvatar } = useAuth();
   const { preference, resolvedTheme, setPreference } = useTheme();
   const [stats, setStats] = useState<ActivityStats>({ communities: 0, events: 0, posts: 0, comments: 0 });
@@ -238,7 +240,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadProfileData("refresh")} tintColor={colors.accent} />}
     >
       <ImageViewerModal

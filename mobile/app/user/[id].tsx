@@ -7,6 +7,7 @@ import { useAuth } from "../../src/lib/auth";
 import { getProfileFollowState, setProfileFollow, type FollowState } from "../../src/lib/follows";
 import { profileStatusLabel } from "../../src/lib/profile-status";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { showAppConfirm, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 import { getPlatformTeamIdentity, getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
@@ -47,6 +48,7 @@ export default function UserProfileDetailScreen() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [profileCard, setProfileCard] = useState<PublicProfileCard | null>(null);
   const [reviews, setReviews] = useState<UserReviewRecord[]>([]);
   const [reviewableEvents, setReviewableEvents] = useState<ReviewableEvent[]>([]);
@@ -249,7 +251,7 @@ export default function UserProfileDetailScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadUserProfile("refresh")} tintColor={colors.accent} />}
     >
       <Link href="/(tabs)/feed" asChild>
@@ -259,7 +261,7 @@ export default function UserProfileDetailScreen() {
       </Link>
 
       {loading ? (
-        <View style={styles.centerBox}>
+        <View style={[styles.centerBox, { paddingTop: insets.top + 40 }]}>
           <ActivityIndicator color={colors.accent} />
           <Text style={styles.loadingText}>Kullanıcı profili yükleniyor...</Text>
         </View>
@@ -459,7 +461,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: "flex-start",
-    marginTop: 14,
+    marginTop: 0,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 999,

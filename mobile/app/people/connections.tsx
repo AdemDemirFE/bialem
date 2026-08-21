@@ -6,6 +6,7 @@ import { PeopleListItem, type PublicPerson } from "../../src/components/PeopleLi
 import { useAuth } from "../../src/lib/auth";
 import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { getPlatformTeamIdentityMap } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
 
@@ -27,6 +28,7 @@ export default function FollowConnectionsScreen() {
   const router = useRouter();
   const params = useConnectionParams();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const rawUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
   const userId = rawUserId || user?.id;
   const initialTab = (Array.isArray(params.tab) ? params.tab[0] : params.tab) === "following" ? "following" : "followers";
@@ -102,7 +104,7 @@ export default function FollowConnectionsScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page}>
+    <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

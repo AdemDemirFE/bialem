@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 import { showAppConfirmDelete, showAppSuccess, showAppError } from "../src/components/AppAlert";
 
@@ -19,6 +20,7 @@ const legalLinks = [
 
 export default function AccountScreen() {
   const { changePassword, clearError, error: authError } = useAuth();
+  const insets = useScreenInsets();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
@@ -93,7 +95,7 @@ export default function AccountScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
       <Stack.Screen options={{ headerShown: true, title: "Hesap ve yasal" }} />
       <View style={styles.hero}>
         <View style={styles.iconBadge}><Ionicons name="shield-checkmark" size={28} color={colors.accent} /></View>

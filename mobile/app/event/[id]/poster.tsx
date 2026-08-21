@@ -2,11 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Sharing from "expo-sharing";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { captureRef } from "react-native-view-shot";
 import { eventPublicUrl } from "../../../src/lib/links";
+import { shareContent } from "../../../src/lib/share";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
 import { imageSources } from "../../../src/theme/images";
@@ -98,7 +99,12 @@ export default function EventPosterScreen() {
           dialogTitle: "Instagram Hikâyeleri veya gönderi olarak paylaş"
         });
       } else {
-        await Share.share({ message: `${event.title}\n${eventPublicUrl(event.id)}` });
+        await shareContent({
+          title: event.title,
+          text: event.title,
+          url: eventPublicUrl(event.id),
+          dialogTitle: "Etkinliği Paylaş"
+        });
       }
     } catch (shareError) {
       setError(shareError instanceof Error ? shareError.message : "Afiş paylaşılamadı.");

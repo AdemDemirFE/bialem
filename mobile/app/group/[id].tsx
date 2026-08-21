@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { showAppConfirm, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 
@@ -39,6 +40,7 @@ type ManagedMember = {
 };
 
 export default function GroupDetailScreen() {
+  const insets = useScreenInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const [group, setGroup] = useState<GroupRecord | null>(null);
@@ -207,7 +209,7 @@ export default function GroupDetailScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadGroup("refresh")} tintColor={colors.accent} />}
     >
       <Stack.Screen options={{ headerShown: true, title: group?.name || "Grup" }} />

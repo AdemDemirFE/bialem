@@ -5,6 +5,7 @@ import { ActivityIndicator, ImageBackground, Pressable, RefreshControl, ScrollVi
 import { showAppAlert, showAppConfirm, showAppError, showJoinCommunityResult } from "../../src/components/AppAlert";
 import { ImagePickerField } from "../../src/components/ImagePickerField";
 import { useAuth } from "../../src/lib/auth";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { removeUploadedImage, uploadCommunityCover, type PickedImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -48,6 +49,7 @@ type PendingMembership = {
 };
 
 export default function CommunityDetailScreen() {
+  const insets = useScreenInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const [community, setCommunity] = useState<CommunityRecord | null>(null);
@@ -277,7 +279,7 @@ export default function CommunityDetailScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadCommunity("refresh")} tintColor={colors.accent} />}
     >
       <Stack.Screen options={{ headerShown: true, title: community?.name || "Topluluk" }} />

@@ -6,6 +6,7 @@ import type { CityRadarEvent } from "../src/components/CityDiscovery";
 import { useAuth } from "../src/lib/auth";
 import { api } from "../src/lib/api";
 import { normalizeImageUrl } from "../src/lib/media-url";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 
 type RadarCategory = "Tümü" | "Konser" | "Tiyatro" | "Stand-up" | "Sergi" | "Atölye" | "Spor" | "Diğer";
@@ -13,6 +14,7 @@ type RadarCategory = "Tümü" | "Konser" | "Tiyatro" | "Stand-up" | "Sergi" | "A
 const categories: RadarCategory[] = ["Tümü", "Konser", "Tiyatro", "Stand-up", "Sergi", "Atölye", "Spor", "Diğer"];
 
 export default function CityRadarScreen() {
+  const insets = useScreenInsets();
   const { profile } = useAuth();
   const city = profile?.city?.trim() || "Ankara";
   const [events, setEvents] = useState<CityRadarEvent[]>([]);
@@ -50,7 +52,7 @@ export default function CityRadarScreen() {
       <Stack.Screen options={{ headerShown: true, title: "Şehir Radarı" }} />
       <ScrollView
         style={styles.screen}
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
       >
         <View style={styles.hero}>

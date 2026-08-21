@@ -6,12 +6,14 @@ import { PeopleListItem, type PublicPerson } from "../../src/components/PeopleLi
 import { useAuth } from "../../src/lib/auth";
 import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { getPlatformTeamIdentityMap } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
 
 export default function PeopleDiscoveryScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [query, setQuery] = useState("");
   const [people, setPeople] = useState<PublicPerson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export default function PeopleDiscoveryScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

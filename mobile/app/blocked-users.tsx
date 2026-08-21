@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../src/lib/api";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 import { showAppConfirm, showAppSuccess, showAppError } from "../src/components/AppAlert";
 
@@ -15,6 +16,7 @@ type BlockedProfile = {
 };
 
 export default function BlockedUsersScreen() {
+  const insets = useScreenInsets();
   const [profiles, setProfiles] = useState<BlockedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export default function BlockedUsersScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Engellenen kullanıcılar" }} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+      <ScrollView style={styles.screen} contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <View style={styles.icon}><Ionicons name="shield-outline" size={26} color={colors.actionText} /></View>
           <Text style={styles.title}>Güvenli alanını yönet.</Text>

@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 type RedemptionResult = {
@@ -14,6 +15,7 @@ type RedemptionResult = {
 };
 
 export default function AdvantageRedeemScreen() {
+  const insets = useScreenInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -59,7 +61,7 @@ export default function AdvantageRedeemScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Avantaj doğrula" }} />
-      <View style={styles.page}>
+      <View style={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.cameraFrame}>
           <CameraView
             style={StyleSheet.absoluteFill}

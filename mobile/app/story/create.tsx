@@ -12,6 +12,7 @@ import {
   uploadStoryImage
 } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 type CommunityOption = {
@@ -22,6 +23,7 @@ type CommunityOption = {
 export default function CreateStoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [mode, setMode] = useState<"text" | "image">("text");
   const [body, setBody] = useState("");
   const [image, setImage] = useState<PickedImage | null>(null);
@@ -195,7 +197,7 @@ export default function CreateStoryScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
       <Link href="/(tabs)/feed" asChild>
         <Pressable style={styles.backButton}><Text style={styles.backText}>Keşfet'e dön</Text></Pressable>
       </Link>

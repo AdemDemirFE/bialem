@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { CityRadarEvent } from "../../src/components/CityDiscovery";
 import { addEventToCalendar } from "../../src/lib/calendar";
 import { api } from "../../src/lib/api";
+import { cityEventPublicUrl } from "../../src/lib/links";
+import { shareContent } from "../../src/lib/share";
 import { normalizeImageUrl } from "../../src/lib/media-url";
 import { colors } from "../../src/theme/colors";
 
@@ -100,8 +102,9 @@ export default function CityEventDetailScreen() {
 
   const shareEvent = async () => {
     if (!event) return;
-    const url = event.source_url || event.ticket_url || "";
-    await Share.share({ title: event.title, message: `${event.title}\n${formatDate(event.starts_at)} · ${event.venue_name || event.city}${url ? `\n${url}` : ""}` });
+    const url = cityEventPublicUrl(event.event_id);
+    const text = `${event.title}\n${formatDate(event.starts_at)} · ${event.venue_name || event.city}`;
+    await shareContent({ title: event.title, text, url, dialogTitle: "Etkinliği Paylaş" });
   };
 
   if (loading) {

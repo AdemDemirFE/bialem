@@ -3,11 +3,13 @@ import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { colors } from "../../src/theme/colors";
 import { ImageViewerModal } from "../../src/components/ImageViewerModal";
 
 export default function EditProfileScreen() {
+  const insets = useScreenInsets();
   const { user, profile, loading, error, clearError, saveProfile, updateAvatar } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -64,7 +66,7 @@ export default function EditProfileScreen() {
         onEdit={() => void changePhoto()}
       />
 
-      <ScrollView style={styles.screen} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.screen} contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <Pressable accessibilityLabel="Profil fotoğrafını görüntüle" style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
             {profile?.avatar_url ? (

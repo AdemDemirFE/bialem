@@ -3,6 +3,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { api } from "../../../src/lib/api";
+import { useScreenInsets } from "../../../src/lib/safeArea";
 import { colors } from "../../../src/theme/colors";
 import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../../src/components/AppAlert";
 
@@ -27,6 +28,7 @@ const initialPermissions: Permissions = {
 };
 
 export default function CommunityAssistantsScreen() {
+  const insets = useScreenInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [communityName, setCommunityName] = useState("Topluluk");
   const [assistants, setAssistants] = useState<Assistant[]>([]);
@@ -111,7 +113,7 @@ export default function CommunityAssistantsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Moderatör Yardımcıları" }} />
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <Text style={styles.kicker}>YETKİ PAYLAŞIMI</Text>
           <Text style={styles.title}>{communityName}</Text>

@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../src/lib/auth";
 import { addEventToCalendar } from "../../src/lib/calendar";
 import { eventPublicUrl } from "../../src/lib/links";
+import { shareContent } from "../../src/lib/share";
 import { api } from "../../src/lib/api";
 import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
@@ -298,7 +298,7 @@ export default function EventDetailScreen() {
 
   const shareEvent = async () => {
     const invite = getInvite();
-    await Share.share({ title: event?.title, message: `${invite.text}\n${invite.url}`, url: invite.url });
+    await shareContent({ title: event?.title ?? "Etkinlik", text: invite.text, url: invite.url, dialogTitle: "Etkinliği Paylaş" });
   };
 
   const shareOnWhatsApp = async () => {
@@ -308,10 +308,7 @@ export default function EventDetailScreen() {
 
   const shareOnInstagram = async () => {
     const invite = getInvite();
-    await Share.share(
-      { title: "Instagram'da paylaş", message: `${invite.text}\n${invite.url}`, url: invite.url },
-      { dialogTitle: "Instagram veya Instagram Hikâyeleri ile paylaş" }
-    );
+    await shareContent({ title: "Instagram'da paylaş", text: invite.text, url: invite.url, dialogTitle: "Instagram veya Instagram Hikâyeleri ile paylaş" });
   };
 
   const openInstagramPoster = () => {

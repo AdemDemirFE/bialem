@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "rea
 import { useAuth } from "../../src/lib/auth";
 import { removeStoryImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 
@@ -26,6 +27,7 @@ export default function StoryViewerScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [queue, setQueue] = useState<StoryDetail[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -195,7 +197,7 @@ export default function StoryViewerScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.action} />
       </View>
     );
@@ -203,7 +205,7 @@ export default function StoryViewerScreen() {
 
   if (!story) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { paddingTop: insets.top }]}>
         <Text style={styles.error}>{error}</Text>
         <Pressable style={styles.closeButton} onPress={closeViewer}>
           <Text style={styles.closeText}>Keşfet'e dön</Text>
@@ -221,7 +223,7 @@ export default function StoryViewerScreen() {
       )}
       <View style={styles.scrim} pointerEvents="none" />
 
-      <View style={styles.tapRow}>
+      <View style={[styles.tapRow, { top: insets.top + 118 }]}>
         <Pressable
           style={styles.tapZone}
           onPress={goPrev}
@@ -240,7 +242,7 @@ export default function StoryViewerScreen() {
         />
       </View>
 
-      <View style={styles.progressRow} pointerEvents="none">
+      <View style={[styles.progressRow, { top: insets.top + 52 }]} pointerEvents="none">
         {queue.map((item, itemIndex) => (
           <View key={item.story_id} style={styles.progressTrack}>
             <View
@@ -256,7 +258,7 @@ export default function StoryViewerScreen() {
         ))}
       </View>
 
-      <View style={styles.header} pointerEvents="box-none">
+      <View style={[styles.header, { top: insets.top + 66 }]} pointerEvents="box-none">
         <View style={styles.avatar}>
           {story.avatar_url ? (
             <Image source={{ uri: story.avatar_url }} style={styles.avatarImage} />
@@ -285,7 +287,7 @@ export default function StoryViewerScreen() {
         </View>
       </View>
 
-      <View style={styles.content} pointerEvents="none">
+      <View style={[styles.content, { paddingTop: insets.top + 130, paddingBottom: insets.bottom + 90 }]} pointerEvents="none">
         {story.body ? (
           <Text style={[styles.body, story.content_type === "text" && styles.textStoryBody]}>{story.body}</Text>
         ) : null}
@@ -296,7 +298,7 @@ export default function StoryViewerScreen() {
         <Text style={styles.sideHint}>{index > 0 ? "‹" : ""}</Text>
         <Text style={styles.sideHint}>{index < queue.length - 1 ? "›" : ""}</Text>
       </View>
-      <Text style={styles.expiry} pointerEvents="none">
+      <Text style={[styles.expiry, { bottom: insets.bottom + 34 }]} pointerEvents="none">
         {paused ? "Duraklatıldı" : "Bu anlık 24 saat sonra kaybolur."}
       </Text>
 

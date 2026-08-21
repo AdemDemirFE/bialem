@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { getNotificationTarget } from "../../src/lib/notifications";
 import { addForegroundNotificationListener } from "../../src/lib/pushNotifications";
 import {
@@ -36,6 +37,7 @@ const notificationFilters: { value: FilterValue; label: string }[] = [
 ];
 
 export default function NotificationsScreen() {
+  const insets = useScreenInsets();
   const { user } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -217,7 +219,7 @@ export default function NotificationsScreen() {
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={renderItem}
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       ListHeaderComponent={<ListHeader />}
       ListFooterComponent={
         loadingMore ? (

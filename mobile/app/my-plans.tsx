@@ -3,6 +3,7 @@ import { Link, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../src/lib/api";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 
 type PlanFilter = "upcoming" | "past" | "all";
@@ -26,6 +27,7 @@ const filters: { value: PlanFilter; label: string }[] = [
 ];
 
 export default function MyPlansScreen() {
+  const insets = useScreenInsets();
   const [plans, setPlans] = useState<ProfilePlan[]>([]);
   const [filter, setFilter] = useState<PlanFilter>("upcoming");
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export default function MyPlansScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: "Planlarım" }} />
       <ScrollView
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
       >
         <View style={styles.hero}>
