@@ -75,3 +75,8 @@ cd c:\ADEM\GITHUB\bialem
 npm run android:3:test
 cd mobile\android
 gradlew.bat clean assembleDebug
+
+
+cd ~/ADEM/GITHUB/bialem/mobile
+npm run ios:3:test
+npx cap open ios
