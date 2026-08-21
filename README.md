@@ -80,3 +80,12 @@ gradlew.bat clean assembleDebug
 cd ~/ADEM/GITHUB/bialem/mobile
 npm run ios:3:test
 npx cap open ios
+
+
+cd /opt/bialem
+
+bash deploy/scripts/build-backend-jar.sh
+bash deploy/scripts/restart.sh
+bash deploy/scripts/status.sh
+
+http://127.0.0.1:${BACKEND_PORT}/management/health

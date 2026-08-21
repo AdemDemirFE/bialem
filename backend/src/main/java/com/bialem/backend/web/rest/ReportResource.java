@@ -60,6 +60,13 @@ public class ReportResource {
         if (reportDTO.getId() != null) {
             throw new BadRequestAlertException("A new report cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        if (reportDTO.getReporter() != null && reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
+            reportDTO.getReporter().getId(),
+            reportDTO.getTargetType(),
+            reportDTO.getTargetId()
+        )) {
+            throw new BadRequestAlertException("You have already reported this content", ENTITY_NAME, "alreadyReported");
+        }
         reportDTO = reportService.save(reportDTO);
         return ResponseEntity.created(new URI("/api/reports/" + reportDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, false, ENTITY_NAME, reportDTO.getId().toString()))

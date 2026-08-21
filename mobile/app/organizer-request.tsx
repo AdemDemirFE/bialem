@@ -1,7 +1,7 @@
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -75,6 +75,7 @@ function formatMapAddress(address: Location.LocationGeocodedAddress) {
 
 export default function OrganizerRequestScreen() {
   const { groupId: initialGroupId } = useLocalSearchParams<{ groupId?: string }>();
+  const router = useRouter();
   const { user, profile } = useAuth();
   const insets = useSafeAreaInsets();
   const [communities, setCommunities] = useState<CommunityOption[]>([]);
@@ -102,6 +103,20 @@ export default function OrganizerRequestScreen() {
   const [mapSearch, setMapSearch] = useState("");
   const [mapSearching, setMapSearching] = useState(false);
   const [capacity, setCapacity] = useState("");
+
+  const goBack = () => {
+    if (typeof window === "undefined") {
+      router.back();
+      return;
+    }
+    const currentPath = window.location.pathname;
+    router.back();
+    window.setTimeout(() => {
+      if (window.location.pathname === currentPath) {
+        router.replace("/(tabs)/feed");
+      }
+    }, 100);
+  };
 
   useEffect(() => {
     let active = true;
@@ -384,6 +399,10 @@ export default function OrganizerRequestScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: createsDirectly ? "Etkinlik Oluştur" : "Etkinlik Öner" }} />
       <ScrollView contentContainerStyle={styles.page}>
+        <Pressable style={styles.backButton} onPress={goBack} accessibilityLabel="Geri dön">
+          <Ionicons name="arrow-back" size={18} color={colors.muted} />
+          <Text style={styles.backText}>Geri</Text>
+        </Pressable>
         <View style={styles.panel}>
         <Text style={styles.kicker}>{createsDirectly ? "ETKİNLİK OLUŞTUR" : "ETKİNLİK ÖNER"}</Text>
         <Text style={styles.title}>
@@ -652,7 +671,25 @@ const styles = StyleSheet.create({
     minHeight: "100%",
     backgroundColor: colors.page,
     padding: 24,
+    paddingTop: 16,
     gap: 20
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
+  },
+  backText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "700"
   },
   panel: {
     backgroundColor: colors.surface,

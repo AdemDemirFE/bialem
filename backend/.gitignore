@@ -148,3 +148,13 @@ Desktop.ini
 ######################
 coverage/
 .nyc_output/
+
+
+# Maven / Java build output
+target/
+**/target/
+/target
+
+# Generated files
+**/generated-sources/
+**/generated-test-sources/
