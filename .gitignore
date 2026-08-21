@@ -60,3 +60,13 @@ mobile/ios/Pods/
 mobile/ios/*.xcworkspace/xcuserdata/
 mobile/ios/*.xcodeproj/xcuserdata/
 mobile/ios/**/xcuserdata/
+
+# Maven / Java build output
+target/
+**/target/
+
+# Generated files
+mobile/backend/generated-sources/
+mobile/backend/generated-test-sources/
+mobile/backend/generated-sources/
+mobile/backend/target/

@@ -1,5 +1,6 @@
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { showAppError, showAppSuccess, showAppWarning } from "../../src/components/AppAlert";
 import {
   ActivityIndicator,
   Image,
@@ -55,6 +56,7 @@ export default function PostDetailScreen() {
   const { user } = useAuth();
   const insets = useScreenInsets();
   const commentInputRef = useRef<TextInput>(null);
+  const reportingLock = useRef(false);
   const [post, setPost] = useState<PostRecord | null>(null);
   const [community, setCommunity] = useState<CommunityRecord | null>(null);
   const [comments, setComments] = useState<CommentRecord[]>([]);
@@ -192,6 +194,8 @@ export default function PostDetailScreen() {
       return;
     }
 
+    if (reportingLock.current) return;
+    reportingLock.current = true;
     setReportingTarget(targetId);
     setError(null);
     setNotice(null);
@@ -204,14 +208,20 @@ export default function PostDetailScreen() {
       details
     });
 
+    setReportingTarget(null);
+    reportingLock.current = false;
+
     if (reportError) {
-      setError(reportError.message);
-      setReportingTarget(null);
+      const message = reportError.message.toLowerCase();
+      if (message.includes("already reported") || message.includes("daha önce") || message.includes("duplicate") || message.includes("unique")) {
+        void showAppWarning("Bu yorumu daha önce raporladınız.", "Bilgilendirme");
+      } else {
+        void showAppError(reportError.message);
+      }
       return;
     }
 
-    setNotice("Rapor admin ekibine iletildi.");
-    setReportingTarget(null);
+    void showAppSuccess("Yorum rapor edildi.");
   };
 
   const backHref = post?.community_id ? { pathname: "/community/[id]" as const, params: { id: post.community_id } } : "/(tabs)/feed";
@@ -265,7 +275,8 @@ export default function PostDetailScreen() {
                 </View>
               ) : null}
               <Pressable
-                style={[styles.reportButton, reportingTarget === post.id && styles.buttonDisabled]}
+                style={[styles.reportButton, reportingTarget !== null && styles.buttonDisabled]}
+                disabled={reportingTarget !== null}
                 onPress={() => void handleReport("post", post.id, `Paylaşım raporu: ${(post.body || "").slice(0, 80)}`)}
               >
                 <Text style={styles.reportButtonText}>{reportingTarget === post.id ? "Raporlanıyor..." : "Paylaşımı rapor et"}</Text>
@@ -299,7 +310,8 @@ export default function PostDetailScreen() {
                         </Link>
                       ) : null}
                       <Pressable
-                        style={styles.inlineReportButton}
+                        style={[styles.inlineReportButton, reportingTarget !== null && styles.buttonDisabled]}
+                        disabled={reportingTarget !== null}
                         onPress={() => void handleReport("comment", comment.id, `Paylaşım yorumu raporu: ${comment.body.slice(0, 80)}`)}
                       >
                         <Text style={styles.inlineReportText}>

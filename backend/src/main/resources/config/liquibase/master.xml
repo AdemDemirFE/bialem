@@ -89,4 +89,5 @@
     <include file="config/liquibase/changelog/20260820183000_push_notification_inbox.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260820200000_push_notification_tables.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260821120000_notification_system.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260821170000_add_report_unique_constraint.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>
