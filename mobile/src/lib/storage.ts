@@ -27,6 +27,15 @@ export async function takePhotoWithCamera(): Promise<PickedImage | null> {
   return pickImageFromLibrary();
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function pickImageFromLibrary(_options?: { square?: boolean }): Promise<PickedImage | null> {
   if (typeof document === "undefined") return null;
   return new Promise((resolve) => {
@@ -39,11 +48,12 @@ export async function pickImageFromLibrary(_options?: { square?: boolean }): Pro
         resolve(null);
         return;
       }
+      const [dataUri, bytes] = await Promise.all([fileToBase64(file), file.arrayBuffer()]);
       resolve({
-        uri: URL.createObjectURL(file),
+        uri: dataUri,
         fileName: sanitizeFileName(file.name || `image-${Date.now()}.jpg`),
         mimeType: file.type || "image/jpeg",
-        bytes: await file.arrayBuffer()
+        bytes
       });
     };
     input.click();

@@ -12,6 +12,7 @@ import {
   View
 } from "react-native";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { imageSources } from "../../src/theme/images";
 
@@ -28,6 +29,7 @@ const suggestions = [
 ];
 
 export default function AssistantScreen() {
+  const insets = useScreenInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -66,7 +68,7 @@ export default function AssistantScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
           <View style={styles.logoFrame}>
             <Image source={imageSources.logo} style={styles.logo} resizeMode="cover" />

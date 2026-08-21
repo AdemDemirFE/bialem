@@ -130,6 +130,16 @@ export async function markAllNotificationsAsRead() {
   }
 }
 
+export async function deleteNotification(id: number) {
+  const path = `/api/app/notifications/${id}`;
+  try {
+    await api.rest.delete(path);
+  } catch (error) {
+    await logAndRethrow("delete notification", path, error);
+    throw error;
+  }
+}
+
 export async function sendTestNotification() {
   const path = "/api/app/notifications/test";
   try {

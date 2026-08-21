@@ -3,7 +3,9 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { api } from "../../../src/lib/api";
+import { useScreenInsets } from "../../../src/lib/safeArea";
 import { colors } from "../../../src/theme/colors";
+import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../../src/components/AppAlert";
 
 type Assistant = {
   assignment_id: string;
@@ -26,6 +28,7 @@ const initialPermissions: Permissions = {
 };
 
 export default function CommunityAssistantsScreen() {
+  const insets = useScreenInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [communityName, setCommunityName] = useState("Topluluk");
   const [assistants, setAssistants] = useState<Assistant[]>([]);
@@ -86,16 +89,22 @@ export default function CommunityAssistantsScreen() {
     setBusyId(null);
   };
 
-  const removeAssistant = async (assignmentId: string) => {
+  const removeAssistant = async (assignmentId: string, displayName: string) => {
+    const confirmed = await showAppConfirmDelete(`${displayName} adlı moderatör yardımcısını kaldırmak istediğinize emin misiniz?`);
+    if (!confirmed) return;
+
     setBusyId(assignmentId);
     setError(null);
     setNotice(null);
     const { error: removeError } = await api.rpc("remove_community_moderator_assistant", {
       target_assignment_id: assignmentId
     });
-    if (removeError) setError(formatError(removeError.message));
-    else {
-      setNotice("Moderatör yardımcısı kaldırıldı.");
+    if (removeError) {
+      const message = formatError(removeError.message);
+      setError(message);
+      void showAppError(message);
+    } else {
+      void showAppSuccess("Moderatör yardımcısı kaldırıldı.");
       await loadAssistants();
     }
     setBusyId(null);
@@ -104,7 +113,7 @@ export default function CommunityAssistantsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Moderatör Yardımcıları" }} />
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <Text style={styles.kicker}>YETKİ PAYLAŞIMI</Text>
           <Text style={styles.title}>{communityName}</Text>
@@ -148,7 +157,7 @@ export default function CommunityAssistantsScreen() {
                   assistant={assistant}
                   busy={busyId === assistant.assignment_id}
                   onSave={(nextPermissions) => saveAssistant(assistant.email, nextPermissions, assistant.assignment_id)}
-                  onRemove={() => removeAssistant(assistant.assignment_id)}
+                  onRemove={() => removeAssistant(assistant.assignment_id, assistant.display_name)}
                 />
               ))}
             </View>

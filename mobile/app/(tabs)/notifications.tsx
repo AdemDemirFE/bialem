@@ -9,7 +9,9 @@ import {
   Text,
   View
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../src/lib/auth";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { getNotificationTarget } from "../../src/lib/notifications";
 import { addForegroundNotificationListener } from "../../src/lib/pushNotifications";
 import {
@@ -17,10 +19,12 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   sendTestNotification,
+  deleteNotification,
   type AppNotification,
   type NotificationFilter
 } from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
+import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 
 const PAGE_SIZE = 20;
 
@@ -33,6 +37,7 @@ const notificationFilters: { value: FilterValue; label: string }[] = [
 ];
 
 export default function NotificationsScreen() {
+  const insets = useScreenInsets();
   const { user } = useAuth();
   const router = useRouter();
   const [items, setItems] = useState<AppNotification[]>([]);
@@ -126,6 +131,21 @@ export default function NotificationsScreen() {
     }
   };
 
+  const removeNotification = async (id: number) => {
+    const confirmed = await showAppConfirmDelete("Bu bildirimi silmek istediğinize emin misiniz?");
+    if (!confirmed) return;
+
+    try {
+      await deleteNotification(id);
+      setItems((current) => current.filter((item) => item.id !== id));
+      void showAppSuccess("Bildirim silindi.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Bildirim silinemedi";
+      setError(message);
+      void showAppError(message);
+    }
+  };
+
   const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
 
   const renderItem = ({ item }: { item: AppNotification }) => {
@@ -148,6 +168,13 @@ export default function NotificationsScreen() {
             {formatRelativeDate(item.createdAt)}{hasTarget ? "  ·  Detayı aç" : ""}
           </Text>
         </View>
+        <Pressable
+          style={styles.deleteButton}
+          onPress={() => void removeNotification(item.id)}
+          hitSlop={8}
+        >
+          <Ionicons name="trash-outline" size={16} color={colors.muted} />
+        </Pressable>
       </Pressable>
     );
   };
@@ -192,7 +219,7 @@ export default function NotificationsScreen() {
       data={items}
       keyExtractor={(item) => String(item.id)}
       renderItem={renderItem}
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       ListHeaderComponent={<ListHeader />}
       ListFooterComponent={
         loadingMore ? (
@@ -280,6 +307,7 @@ const styles = StyleSheet.create({
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent },
   cardText: { color: colors.muted, fontSize: 14, lineHeight: 20 },
   cardMeta: { color: colors.accent, fontSize: 12, fontWeight: "700", marginTop: 3 },
+  deleteButton: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceStrong, marginLeft: 8 },
   stateCard: { minHeight: 230, padding: 24, gap: 10, alignItems: "center", justifyContent: "center", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   emptyMark: { width: 58, height: 58, borderRadius: 22, textAlign: "center", textAlignVertical: "center", backgroundColor: colors.action, color: colors.ink, fontSize: 24, fontWeight: "900" },
   emptyTitle: { color: colors.ink, fontSize: 20, fontWeight: "800" },

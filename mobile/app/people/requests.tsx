@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 type FollowRequest = {
@@ -23,6 +24,7 @@ type FollowRequest = {
 export default function FollowRequestsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -68,7 +70,7 @@ export default function FollowRequestsScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRequests(true)} tintColor={colors.accent as string} />}
     >
       <View style={styles.header}>

@@ -1,9 +1,11 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { isLegalDocumentKey, legalDocuments } from "../../src/content/legal";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 export default function LegalDocumentScreen() {
+  const insets = useScreenInsets();
   const params = useLocalSearchParams<{ document?: string }>();
   const key = typeof params.document === "string" ? params.document : "";
   const document = isLegalDocumentKey(key) ? legalDocuments[key] : null;
@@ -18,7 +20,7 @@ export default function LegalDocumentScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
       <Stack.Screen options={{ headerShown: true, title: document.title }} />
       <Text style={styles.kicker}>BİALEM GÜVEN MERKEZİ</Text>
       <Text style={styles.title}>{document.title}</Text>

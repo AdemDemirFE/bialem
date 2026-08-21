@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/theme";
 
@@ -38,6 +39,7 @@ const authPalettes = {
 } as const;
 
 export default function ForgotPasswordScreen() {
+  const insets = useScreenInsets();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const palette = authPalettes[resolvedTheme];
@@ -78,7 +80,7 @@ export default function ForgotPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.page, { backgroundColor: palette.page }]}
+          contentContainerStyle={[styles.page, { backgroundColor: palette.page, paddingBottom: insets.bottom + 24 }]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={[styles.icon, { backgroundColor: palette.accentSoft }]}>

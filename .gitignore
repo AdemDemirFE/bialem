@@ -37,3 +37,26 @@ artifacts/
 **/fcm-service-account*.json
 # Local SMTP / secrets (never commit)
 backend/src/main/resources/config/application-mail-local.yml
+
+# Java/Maven build output
+backend/target/
+
+
+######################
+# Android Build
+######################
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties/
+mobile/android/.idea/
+
+######################
+# iOS Build
+######################
+mobile/ios/App/build/
+mobile/ios/DerivedData/
+mobile/ios/Pods/
+mobile/ios/*.xcworkspace/xcuserdata/
+mobile/ios/*.xcodeproj/xcuserdata/
+mobile/ios/**/xcuserdata/

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { eventDeepLink } from "../../src/lib/links";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { imageSources } from "../../src/theme/images";
 
@@ -25,6 +26,7 @@ type PublicEvent = {
 
 export default function PublicEventShareScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useScreenInsets();
   const [event, setEvent] = useState<PublicEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function PublicEventShareScreen() {
   }, [id]);
 
   return (
-    <ScrollView contentContainerStyle={styles.page}>
+    <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.shell}>
         <View style={styles.brandRow}>
           <Image source={imageSources.logo} style={styles.logo} resizeMode="contain" />

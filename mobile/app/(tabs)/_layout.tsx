@@ -51,7 +51,8 @@ export default function TabsLayout() {
         },
         tabBarHideOnKeyboard: true,
         sceneStyle: {
-          backgroundColor: colors.page
+          backgroundColor: colors.page,
+          paddingTop: insets.top
         }
       }}
     >

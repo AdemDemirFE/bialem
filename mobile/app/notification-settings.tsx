@@ -7,6 +7,7 @@ import {
   updateNotificationPreferences,
   type NotificationPreference
 } from "../src/lib/notificationApi";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 
 const KNOWN_TYPES = [
@@ -18,6 +19,7 @@ const KNOWN_TYPES = [
 ];
 
 export default function NotificationSettingsScreen() {
+  const insets = useScreenInsets();
   const router = useRouter();
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export default function NotificationSettingsScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.hero}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={colors.ink} />

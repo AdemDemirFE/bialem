@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleS
 import { CityDiscovery } from "../../src/components/CityDiscovery";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { imageSources } from "../../src/theme/images";
 
@@ -46,6 +47,7 @@ type StoryItem = {
 type DiscoveryMode = "forYou" | "today" | "week" | "city";
 
 export default function FeedScreen() {
+  const insets = useScreenInsets();
   const { user, profile } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [posts, setPosts] = useState<PostItem[]>([]);
@@ -154,7 +156,7 @@ export default function FeedScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadFeed("refresh")} tintColor={colors.accent} />}
     >
       <View style={styles.brandHero}>

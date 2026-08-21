@@ -3,6 +3,7 @@ import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 import { api } from "../../../src/lib/api";
+import { useScreenInsets } from "../../../src/lib/safeArea";
 import { colors } from "../../../src/theme/colors";
 
 type CommunityMember = {
@@ -25,6 +26,7 @@ function roleLabel(role: CommunityMember["member_role"]) {
 export default function CommunityMembersScreen() {
   const params = useLocalSearchParams<{ id: string | string[]; name?: string | string[] }>();
   const router = useRouter();
+  const insets = useScreenInsets();
   const communityId = Array.isArray(params.id) ? params.id[0] : params.id;
   const communityName = Array.isArray(params.name) ? params.name[0] : params.name;
   const [query, setQuery] = useState("");
@@ -98,7 +100,7 @@ export default function CommunityMembersScreen() {
       <FlatList
         data={members}
         keyExtractor={(member) => member.user_id}
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadMembers("refresh")} tintColor={colors.accent} />}
         ListHeaderComponent={(

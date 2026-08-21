@@ -1,3 +1,4 @@
+import { Alert, Platform } from "react-native";
 import Swal, { type SweetAlertIcon, type SweetAlertResult } from "sweetalert2";
 
 type AlertOptions = {
@@ -5,11 +6,16 @@ type AlertOptions = {
   text?: string;
   icon?: SweetAlertIcon;
   confirmText?: string;
+  timer?: number;
 };
 
 type ConfirmOptions = AlertOptions & {
   cancelText?: string;
   confirmDanger?: boolean;
+};
+
+type FireOptions = ConfirmOptions & {
+  showCancel?: boolean;
 };
 
 const brand = {
@@ -20,16 +26,45 @@ const brand = {
   surface: "#ffffff"
 };
 
-function fire(options: {
-  title: string;
-  text?: string;
-  icon?: SweetAlertIcon;
-  confirmText?: string;
-  showCancel?: boolean;
-  cancelText?: string;
-  confirmDanger?: boolean;
-}): Promise<SweetAlertResult> {
-  return Swal.fire({
+function isWeb() {
+  return Platform.OS === "web" && typeof document !== "undefined";
+}
+
+function nativeAlert({ title, text, icon = "info" }: AlertOptions) {
+  Alert.alert(title, text, [{ text: "Tamam" }], { cancelable: true });
+  return Promise.resolve({ isConfirmed: true, isDismissed: false } as SweetAlertResult);
+}
+
+function nativeConfirm({
+  title,
+  text,
+  confirmText = "Evet",
+  cancelText = "Hayır"
+}: ConfirmOptions): Promise<boolean> {
+  return new Promise((resolve) => {
+    Alert.alert(
+      title,
+      text,
+      [
+        { text: cancelText, onPress: () => resolve(false), style: "cancel" },
+        { text: confirmText, onPress: () => resolve(true) }
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) }
+    );
+  });
+}
+
+function fire(options: FireOptions): Promise<SweetAlertResult> {
+  if (!isWeb()) {
+    if (options.showCancel) {
+      return nativeConfirm(options).then((confirmed) =>
+        ({ isConfirmed: confirmed, isDismissed: !confirmed } as SweetAlertResult)
+      );
+    }
+    return nativeAlert(options);
+  }
+
+  const swalOptions: Record<string, unknown> = {
     title: options.title,
     text: options.text,
     icon: options.icon ?? "info",
@@ -38,6 +73,7 @@ function fire(options: {
     showCancelButton: Boolean(options.showCancel),
     reverseButtons: true,
     buttonsStyling: false,
+    timerProgressBar: Boolean(options.timer),
     customClass: {
       popup: "bialem-alert",
       title: "bialem-alert-title",
@@ -48,11 +84,33 @@ function fire(options: {
     },
     color: brand.ink,
     background: brand.surface
-  });
+  };
+
+  if (options.timer !== undefined) {
+    swalOptions.timer = options.timer;
+  }
+
+  return Swal.fire(swalOptions);
 }
 
-export function showAppAlert({ title, text, icon = "info", confirmText }: AlertOptions) {
-  return fire({ title, text, icon, confirmText });
+export function showAppAlert({ title, text, icon = "info", confirmText, timer }: AlertOptions) {
+  return fire({ title, text, icon, confirmText, timer });
+}
+
+export function showAppSuccess(message: string, title = "Başarılı") {
+  return showAppAlert({ title, text: message, icon: "success", timer: 3000 });
+}
+
+export function showAppInfo(message: string, title = "Bilgilendirme") {
+  return showAppAlert({ title, text: message, icon: "info", timer: 4000 });
+}
+
+export function showAppWarning(message: string, title = "Uyarı") {
+  return showAppAlert({ title, text: message, icon: "warning", timer: 4000 });
+}
+
+export function showAppError(message: string, title = "Hata") {
+  return showAppAlert({ title, text: message, icon: "error" });
 }
 
 export async function showAppConfirm({
@@ -60,7 +118,7 @@ export async function showAppConfirm({
   text,
   icon = "question",
   confirmText = "Evet",
-  cancelText = "Vazgeç",
+  cancelText = "Hayır",
   confirmDanger
 }: ConfirmOptions) {
   const result = await fire({
@@ -75,8 +133,15 @@ export async function showAppConfirm({
   return result.isConfirmed;
 }
 
-export function showAppError(message: string, title = "İşlem tamamlanamadı") {
-  return showAppAlert({ title, text: message, icon: "error" });
+export async function showAppConfirmDelete(message?: string) {
+  return showAppConfirm({
+    title: "Emin misiniz?",
+    text: message ?? "Bu kaydı silmek istediğinize emin misiniz?",
+    icon: "warning",
+    confirmText: "Evet, Sil",
+    cancelText: "Vazgeç",
+    confirmDanger: true
+  });
 }
 
 function statusOf(data: unknown) {
@@ -93,7 +158,8 @@ export function showJoinCommunityResult(data: unknown, error?: { message: string
     return showAppAlert({
       title: kind === "group" ? "Gruba katıldın" : "Topluluğa katıldın",
       text: "Artık içerikleri görebilir, etkinliklere katılabilirsin.",
-      icon: "success"
+      icon: "success",
+      timer: 3000
     });
   }
 
@@ -101,7 +167,8 @@ export function showJoinCommunityResult(data: unknown, error?: { message: string
     return showAppAlert({
       title: "Katılım isteğin gönderildi",
       text: `Moderatör onayından sonra ${target} üye olacaksın.`,
-      icon: "info"
+      icon: "info",
+      timer: 4000
     });
   }
 
@@ -109,7 +176,8 @@ export function showJoinCommunityResult(data: unknown, error?: { message: string
     return showAppAlert({
       title: "İstek henüz açılamıyor",
       text: "Önceki katılım isteğin reddedilmiş. Yeni bir istek için moderatörle iletişime geç.",
-      icon: "warning"
+      icon: "warning",
+      timer: 4000
     });
   }
 
@@ -124,7 +192,8 @@ export function showJoinCommunityResult(data: unknown, error?: { message: string
   return showAppAlert({
     title: "Katılım kaydedildi",
     text: "Durumun güncellendi.",
-    icon: "success"
+    icon: "success",
+    timer: 3000
   });
 }
 
@@ -141,19 +210,22 @@ export function showEventJoinResult(data: unknown, error?: { message: string } |
     return showAppAlert({
       title: "Bekleme listesine eklendin",
       text: "Kontenjan dolu. Yer açılırsa sıran gelince haberdar edilirsin.",
-      icon: "warning"
+      icon: "warning",
+      timer: 4000
     });
   }
   if (status === "approved" || status === "checked_in") {
     return showAppAlert({
       title: "Katılımın onaylandı",
       text: "Etkinlik günü yerin ayrıldı.",
-      icon: "success"
+      icon: "success",
+      timer: 3000
     });
   }
   return showAppAlert({
     title: "Katılım isteğin gönderildi",
     text: "Moderatör onayından sonra etkinliğe katılmış olacaksın.",
-    icon: "info"
+    icon: "info",
+    timer: 4000
   });
 }

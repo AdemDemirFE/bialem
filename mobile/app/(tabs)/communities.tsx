@@ -15,6 +15,7 @@ import {
 import { showAppAlert, showAppError, showJoinCommunityResult } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 import { getCommunityCover } from "../../src/theme/communityCovers";
 
@@ -67,6 +68,7 @@ function matchesSearch(community: Community, query: string) {
 }
 
 export default function CommunitiesScreen() {
+  const insets = useScreenInsets();
   const { user } = useAuth();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [memberships, setMemberships] = useState<Record<string, Membership>>({});
@@ -315,7 +317,7 @@ export default function CommunitiesScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadCommunities("refresh")} tintColor={colors.accent} />}
       keyboardShouldPersistTaps="handled"
     >

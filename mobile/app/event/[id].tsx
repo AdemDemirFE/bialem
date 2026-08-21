@@ -4,10 +4,8 @@ import QRCode from "react-native-qrcode-svg";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
-  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,11 +13,12 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { showAppAlert, showAppConfirm, showAppError, showEventJoinResult } from "../../src/components/AppAlert";
+import { showAppAlert, showAppConfirm, showAppError, showAppSuccess, showEventJoinResult } from "../../src/components/AppAlert";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../src/lib/auth";
 import { addEventToCalendar } from "../../src/lib/calendar";
 import { eventPublicUrl } from "../../src/lib/links";
+import { shareContent } from "../../src/lib/share";
 import { api } from "../../src/lib/api";
 import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
@@ -299,7 +298,7 @@ export default function EventDetailScreen() {
 
   const shareEvent = async () => {
     const invite = getInvite();
-    await Share.share({ title: event?.title, message: `${invite.text}\n${invite.url}`, url: invite.url });
+    await shareContent({ title: event?.title ?? "Etkinlik", text: invite.text, url: invite.url, dialogTitle: "Etkinliği Paylaş" });
   };
 
   const shareOnWhatsApp = async () => {
@@ -309,10 +308,7 @@ export default function EventDetailScreen() {
 
   const shareOnInstagram = async () => {
     const invite = getInvite();
-    await Share.share(
-      { title: "Instagram'da paylaş", message: `${invite.text}\n${invite.url}`, url: invite.url },
-      { dialogTitle: "Instagram veya Instagram Hikâyeleri ile paylaş" }
-    );
+    await shareContent({ title: "Instagram'da paylaş", text: invite.text, url: invite.url, dialogTitle: "Instagram veya Instagram Hikâyeleri ile paylaş" });
   };
 
   const openInstagramPoster = () => {
@@ -467,23 +463,24 @@ export default function EventDetailScreen() {
 
     if (cancellationError) {
       setError(cancellationError.message);
+      void showAppError(cancellationError.message);
     } else {
-      setNotice("Etkinlik iptal edildi ve katılımcılara bildirildi.");
       setCancellationReason("");
+      void showAppSuccess("Etkinlik iptal edildi ve katılımcılara bildirildi.");
       await loadEvent("refresh");
     }
     setCancellingEvent(false);
   };
 
-  const handleCancelEvent = () => {
-    Alert.alert(
-      "Etkinliği iptal et",
-      "Etkinlik yayından kaldırılacak, açık katılımlar iptal edilecek ve katılımcılara bildirim gönderilecek. Bu işlemi yapmak istiyor musunuz?",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "Etkinliği iptal et", style: "destructive", onPress: () => void cancelEvent() }
-      ]
-    );
+  const handleCancelEvent = async () => {
+    const confirmed = await showAppConfirm({
+      title: "Etkinliği iptal et",
+      text: "Etkinlik yayından kaldırılacak, açık katılımlar iptal edilecek ve katılımcılara bildirim gönderilecek. Bu işlemi yapmak istiyor musunuz?",
+      confirmText: "Etkinliği iptal et",
+      cancelText: "Vazgeç",
+      confirmDanger: true
+    });
+    if (confirmed) void cancelEvent();
   };
 
   const isEventStaff = canReviewEvent || Boolean(participationSummary?.can_manage);

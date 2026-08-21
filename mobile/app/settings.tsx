@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, Vie
 import { useAuth } from "../src/lib/auth";
 import { api } from "../src/lib/api";
 import { getAppEnv, getAppVersion, getAppVersionCode } from "../src/lib/backend-config";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
 
 type Preferences = {
@@ -37,6 +38,7 @@ const defaults: Preferences = {
 
 export default function SettingsScreen() {
   const { user } = useAuth();
+  const insets = useScreenInsets();
   const [preferences, setPreferences] = useState(defaults);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -83,7 +85,7 @@ export default function SettingsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Gizlilik ve bildirimler" }} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+      <ScrollView style={styles.screen} contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <Ionicons name="options" size={27} color={colors.actionText} />

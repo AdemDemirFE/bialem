@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
 
 type Offer = {
@@ -40,6 +41,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function AdvantagesScreen() {
+  const insets = useScreenInsets();
   const { user, profile } = useAuth();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function AdvantagesScreen() {
       <Stack.Screen options={{ headerShown: true, title: "Bialem Avantaj" }} />
       <ScrollView
         style={styles.screen}
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
       >
         <View style={styles.hero}>

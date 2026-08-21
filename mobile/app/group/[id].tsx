@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
+import { useScreenInsets } from "../../src/lib/safeArea";
 import { colors } from "../../src/theme/colors";
+import { showAppConfirm, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 
 type GroupRecord = {
   id: string;
@@ -38,6 +40,7 @@ type ManagedMember = {
 };
 
 export default function GroupDetailScreen() {
+  const insets = useScreenInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const [group, setGroup] = useState<GroupRecord | null>(null);
@@ -140,27 +143,28 @@ export default function GroupDetailScreen() {
     setBusyId(null);
   };
 
-  const confirmLeaveGroup = () => {
+  const confirmLeaveGroup = async () => {
     if (!group || busyId) return;
-    Alert.alert(
-      "Gruptan ayrıl",
-      `${group.name} grubundan ayrılmak istediğine emin misin? Grup içeriklerine erişimin sona erecek.`,
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Gruptan ayrıl",
-          style: "destructive",
-          onPress: async () => {
-            setBusyId("leave-group");
-            setError(null);
-            const { error: leaveError } = await api.rpc("leave_community", { target_community_id: group.id });
-            setBusyId(null);
-            if (leaveError) setError(leaveError.message);
-            else router.replace({ pathname: "/community/[id]", params: { id: group.parent_id } });
-          }
-        }
-      ]
-    );
+    const confirmed = await showAppConfirm({
+      title: "Gruptan ayrıl",
+      text: `${group.name} grubundan ayrılmak istediğine emin misin? Grup içeriklerine erişimin sona erecek.`,
+      confirmText: "Gruptan ayrıl",
+      cancelText: "Vazgeç",
+      confirmDanger: true
+    });
+    if (!confirmed) return;
+
+    setBusyId("leave-group");
+    setError(null);
+    const { error: leaveError } = await api.rpc("leave_community", { target_community_id: group.id });
+    setBusyId(null);
+    if (leaveError) {
+      setError(leaveError.message);
+      void showAppError(leaveError.message);
+    } else {
+      void showAppSuccess("Gruptan ayrıldın.");
+      router.replace({ pathname: "/community/[id]", params: { id: group.parent_id } });
+    }
   };
 
   const cancelMembershipRequest = async () => {
@@ -179,35 +183,33 @@ export default function GroupDetailScreen() {
     setBusyId(null);
   };
 
-  const confirmRemoveMember = (member: ManagedMember) => {
+  const confirmRemoveMember = async (member: ManagedMember) => {
     if (busyId) return;
-    Alert.alert(
-      "Üyeyi gruptan çıkar",
-      `${member.display_name} adlı üyeyi bu gruptan çıkarmak istediğine emin misin?`,
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Üyeyi çıkar",
-          style: "destructive",
-          onPress: async () => {
-            setBusyId(member.membership_id);
-            setError(null);
-            const { error: removeError } = await api.rpc("remove_community_member", { target_membership_id: member.membership_id });
-            if (removeError) setError(removeError.message);
-            else {
-              setNotice(`${member.display_name} gruptan çıkarıldı.`);
-              await loadGroup("refresh");
-            }
-            setBusyId(null);
-          }
-        }
-      ]
-    );
+    const confirmed = await showAppConfirm({
+      title: "Üyeyi gruptan çıkar",
+      text: `${member.display_name} adlı üyeyi bu gruptan çıkarmak istediğine emin misin?`,
+      confirmText: "Üyeyi çıkar",
+      cancelText: "Vazgeç",
+      confirmDanger: true
+    });
+    if (!confirmed) return;
+
+    setBusyId(member.membership_id);
+    setError(null);
+    const { error: removeError } = await api.rpc("remove_community_member", { target_membership_id: member.membership_id });
+    if (removeError) {
+      setError(removeError.message);
+      void showAppError(removeError.message);
+    } else {
+      void showAppSuccess(`${member.display_name} gruptan çıkarıldı.`);
+      await loadGroup("refresh");
+    }
+    setBusyId(null);
   };
 
   return (
     <ScrollView
-      contentContainerStyle={styles.page}
+      contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadGroup("refresh")} tintColor={colors.accent} />}
     >
       <Stack.Screen options={{ headerShown: true, title: group?.name || "Grup" }} />

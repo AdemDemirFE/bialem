@@ -28,14 +28,14 @@ public class AppNotificationResource {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<AppNotificationDTO>> getNotifications(
+    public ResponseEntity<Page<AppNotificationDTO>> getNotifications(
         @RequestParam(name = "filter", defaultValue = "ALL") AppNotificationService.NotificationFilter filter,
         @org.springdoc.core.annotations.ParameterObject Pageable pageable
     ) {
         LOG.debug("REST request to get current user notifications with filter {}", filter);
         Page<AppNotificationDTO> page = appNotificationService.listCurrentUser(filter, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return ResponseEntity.ok().headers(headers).body(page);
     }
 
     @GetMapping("/inbox")
@@ -60,6 +60,13 @@ public class AppNotificationResource {
     public ResponseEntity<Void> markAllRead() {
         LOG.debug("REST request to mark all current user notifications as read");
         appNotificationService.markAllCurrentUserRead();
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable("id") Long id) {
+        LOG.debug("REST request to delete current user notification {}", id);
+        appNotificationService.deleteCurrentUser(id);
         return ResponseEntity.noContent().build();
     }
 

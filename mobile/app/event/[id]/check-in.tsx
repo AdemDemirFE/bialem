@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../../../src/lib/api";
+import { useScreenInsets } from "../../../src/lib/safeArea";
 import { colors } from "../../../src/theme/colors";
 
 type RosterItem = {
@@ -17,6 +18,7 @@ type RosterItem = {
 
 export default function EventCheckInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useScreenInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [roster, setRoster] = useState<RosterItem[]>([]);
   const [eventTitle, setEventTitle] = useState("Katılımcı yönetimi");
@@ -98,7 +100,7 @@ export default function EventCheckInScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRoster(true)} tintColor={colors.accent} />}>
+    <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRoster(true)} tintColor={colors.accent} />}>
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.ink} /></Pressable>
         <View style={{ flex: 1 }}><Text style={styles.kicker}>ORGANİZATÖR MERKEZİ</Text><Text style={styles.title}>{eventTitle}</Text></View>

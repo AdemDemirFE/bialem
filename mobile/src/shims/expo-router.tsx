@@ -18,6 +18,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import { Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function normalizeHref(href: string) {
   return href.replace("/(tabs)", "").replace(/^\/tabs/, "") || "/";
@@ -117,6 +118,7 @@ export function Stack({ children, screenOptions }: { children?: ReactNode; scree
 
 Stack.Screen = function StackScreen({ options }: { options?: Record<string, unknown> }) {
   const setOptions = useContext(HeaderContext);
+  const insets = useSafeAreaInsets();
   useEffect(() => {
     if (options?.title) document.title = String(options.title);
     setOptions(options || {});
@@ -124,7 +126,15 @@ Stack.Screen = function StackScreen({ options }: { options?: Record<string, unkn
   if (options?.headerShown === false) return null;
   if (!options?.title) return null;
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#d7e0f5" }}>
+    <View
+      style={{
+        paddingHorizontal: 16,
+        paddingBottom: 12,
+        paddingTop: insets.top + 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#d7e0f5"
+      }}
+    >
       <Text style={{ fontWeight: "800", fontSize: 18 }}>{String(options.title)}</Text>
     </View>
   );
@@ -144,7 +154,7 @@ export function Tabs({
   const screens = Children.toArray(children).filter(isValidElement) as Array<{ props: { name: string; options?: any } }>;
   return (
     <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
+      <View style={[{ flex: 1 }, screenOptions?.sceneStyle]}>
         <Outlet />
       </View>
       <View style={[{ flexDirection: "row", justifyContent: "space-around", alignItems: "center" }, screenOptions?.tabBarStyle]}>

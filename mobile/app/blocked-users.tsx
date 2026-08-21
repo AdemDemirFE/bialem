@@ -3,7 +3,9 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { api } from "../src/lib/api";
+import { useScreenInsets } from "../src/lib/safeArea";
 import { colors } from "../src/theme/colors";
+import { showAppConfirm, showAppSuccess, showAppError } from "../src/components/AppAlert";
 
 type BlockedProfile = {
   user_id: string;
@@ -14,6 +16,7 @@ type BlockedProfile = {
 };
 
 export default function BlockedUsersScreen() {
+  const insets = useScreenInsets();
   const [profiles, setProfiles] = useState<BlockedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -32,23 +35,37 @@ export default function BlockedUsersScreen() {
     void load();
   }, []);
 
-  const unblock = async (userId: string) => {
+  const unblock = async (profile: BlockedProfile) => {
     if (busyId) return;
-    setBusyId(userId);
+
+    const confirmed = await showAppConfirm({
+      title: "Engeli kaldır",
+      text: `${profile.display_name} adlı kullanıcının engelini kaldırmak istediğine emin misin?`,
+      confirmText: "Engeli kaldır",
+      cancelText: "Vazgeç"
+    });
+    if (!confirmed) return;
+
+    setBusyId(profile.user_id);
     setError(null);
     const { error: unblockError } = await api.rpc("set_profile_block", {
-      target_user_id: userId,
+      target_user_id: profile.user_id,
       target_should_block: false
     });
-    if (unblockError) setError("Engel kaldırılamadı. Lütfen tekrar deneyin.");
-    else setProfiles((current) => current.filter((profile) => profile.user_id !== userId));
+    if (unblockError) {
+      setError("Engel kaldırılamadı. Lütfen tekrar deneyin.");
+      void showAppError(unblockError.message || "Engel kaldırılamadı.");
+    } else {
+      setProfiles((current) => current.filter((item) => item.user_id !== profile.user_id));
+      void showAppSuccess(`${profile.display_name} adlı kullanıcının engeli kaldırıldı.`);
+    }
     setBusyId(null);
   };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Engellenen kullanıcılar" }} />
-      <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+      <ScrollView style={styles.screen} contentContainerStyle={[styles.page, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.hero}>
           <View style={styles.icon}><Ionicons name="shield-outline" size={26} color={colors.actionText} /></View>
           <Text style={styles.title}>Güvenli alanını yönet.</Text>
@@ -79,7 +96,7 @@ export default function BlockedUsersScreen() {
                   <Text style={styles.name} numberOfLines={1}>{profile.display_name}</Text>
                   <Text style={styles.username} numberOfLines={1}>@{profile.username}</Text>
                 </View>
-                <Pressable style={styles.button} onPress={() => void unblock(profile.user_id)} disabled={busyId === profile.user_id}>
+                <Pressable style={styles.button} onPress={() => void unblock(profile)} disabled={busyId === profile.user_id}>
                   {busyId === profile.user_id ? <ActivityIndicator size="small" color={colors.actionText} /> : <Text style={styles.buttonText}>Engeli kaldır</Text>}
                 </Pressable>
               </View>
