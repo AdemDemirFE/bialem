@@ -5,6 +5,12 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="20260820200000-1" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="push_device_token"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="push_device_token">
             <column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
@@ -41,6 +47,12 @@
     </changeSet>
 
     <changeSet id="20260820200000-2" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="app_notification"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="app_notification">
             <column name="id" type="bigint">
                 <constraints primaryKey="true" nullable="false"/>
