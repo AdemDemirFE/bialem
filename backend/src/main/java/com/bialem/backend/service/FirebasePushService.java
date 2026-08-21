@@ -1,74 +1,226 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.config.FirebaseConfig;
+import com.bialem.backend.domain.NotificationDeliveryLog;
+import com.bialem.backend.domain.NotificationOutbox;
+import com.bialem.backend.domain.PushDeviceToken;
+import com.bialem.backend.domain.enumeration.NotificationDeliveryStatus;
+import com.bialem.backend.domain.enumeration.NotificationOutboxStatus;
+import com.bialem.backend.domain.enumeration.NotificationPriority;
+import com.bialem.backend.repository.NotificationDeliveryLogRepository;
+import com.bialem.backend.repository.NotificationOutboxRepository;
 import com.bialem.backend.repository.PushDeviceTokenRepository;
-import com.google.firebase.messaging.AndroidConfig;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.MessagingErrorCode;
-import com.google.firebase.messaging.Notification;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.firebase.messaging.*;
+import java.time.Instant;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FirebasePushService {
 
     private static final Logger LOG = LoggerFactory.getLogger(FirebasePushService.class);
 
+    private static final int MAX_BATCH_SIZE = 500;
+
     private final FirebaseConfig firebaseConfig;
     private final PushDeviceTokenRepository pushDeviceTokenRepository;
+    private final NotificationDeliveryLogRepository deliveryLogRepository;
+    private final NotificationOutboxRepository outboxRepository;
 
-    public FirebasePushService(FirebaseConfig firebaseConfig, PushDeviceTokenRepository pushDeviceTokenRepository) {
+    public FirebasePushService(
+        FirebaseConfig firebaseConfig,
+        PushDeviceTokenRepository pushDeviceTokenRepository,
+        NotificationDeliveryLogRepository deliveryLogRepository,
+        NotificationOutboxRepository outboxRepository
+    ) {
         this.firebaseConfig = firebaseConfig;
         this.pushDeviceTokenRepository = pushDeviceTokenRepository;
+        this.deliveryLogRepository = deliveryLogRepository;
+        this.outboxRepository = outboxRepository;
     }
 
-    public void sendToToken(String token, String title, String body, Map<String, String> data) {
+    @Transactional
+    public NotificationOutboxStatus sendOutbox(NotificationOutbox outbox) {
         if (!firebaseConfig.isAvailable()) {
-            LOG.debug("Skipping FCM send; Firebase is not configured");
-            return;
+            LOG.debug("Firebase not configured; skipping push for outbox {}", outbox.getId());
+            return NotificationOutboxStatus.SKIPPED;
         }
-        if (token == null || token.isBlank()) {
-            return;
+
+        List<PushDeviceToken> devices = pushDeviceTokenRepository.findByUser_IdAndActiveTrue(outbox.getUser().getId());
+        devices = devices.stream().filter(d -> Boolean.TRUE.equals(d.getNotificationsEnabled())).toList();
+
+        if (devices.isEmpty()) {
+            LOG.debug("No active devices for user {} outbox {}", outbox.getUser().getId(), outbox.getId());
+            return NotificationOutboxStatus.SKIPPED;
         }
-        Map<String, String> payload = new HashMap<>();
-        if (data != null) {
-            data.forEach((key, value) -> {
-                if (key != null && value != null) {
-                    payload.put(key, value);
+
+        Map<String, String> data = buildPayload(outbox);
+        NotificationPriority priority = resolvePriority(outbox);
+
+        int successCount = 0;
+        int failureCount = 0;
+        String lastError = null;
+
+        for (List<PushDeviceToken> batch : partition(devices, MAX_BATCH_SIZE)) {
+            List<String> tokens = batch.stream().map(PushDeviceToken::getToken).toList();
+            MulticastMessage message = buildMulticastMessage(tokens, data, priority);
+            try {
+                BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
+                for (int i = 0; i < batch.size(); i++) {
+                    PushDeviceToken device = batch.get(i);
+                    if (i < response.getResponses().size() && response.getResponses().get(i).isSuccessful()) {
+                        successCount++;
+                        markDeviceSuccess(device);
+                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.SENT, null, null, outbox.getAttemptCount());
+                    } else {
+                        failureCount++;
+                        SendResponse sendResponse = i < response.getResponses().size() ? response.getResponses().get(i) : null;
+                        String errorCode = null;
+                        String errorMessage = null;
+                        if (sendResponse != null && sendResponse.getException() != null) {
+                            errorCode = String.valueOf(sendResponse.getException().getMessagingErrorCode());
+                            errorMessage = maskError(sendResponse.getException().getMessage());
+                            lastError = errorMessage;
+                            handleDeviceError(device, sendResponse.getException());
+                        }
+                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, errorCode, errorMessage, outbox.getAttemptCount());
+                    }
                 }
-            });
+            } catch (FirebaseMessagingException ex) {
+                LOG.warn("FCM multicast failed for outbox {}", outbox.getId(), ex);
+                lastError = maskError(ex.getMessage());
+                failureCount += batch.size();
+                for (PushDeviceToken device : batch) {
+                    saveDeliveryLog(
+                        outbox,
+                        device,
+                        NotificationDeliveryStatus.FAILED,
+                        String.valueOf(ex.getMessagingErrorCode()),
+                        lastError,
+                        outbox.getAttemptCount()
+                    );
+                }
+            } catch (RuntimeException ex) {
+                LOG.warn("Unexpected FCM failure for outbox {}", outbox.getId(), ex);
+                lastError = "Beklenmeyen gönderim hatası";
+                failureCount += batch.size();
+                for (PushDeviceToken device : batch) {
+                    saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, null, lastError, outbox.getAttemptCount());
+                }
+            }
         }
-        Message message = Message.builder()
-            .setToken(token)
-            .setNotification(Notification.builder().setTitle(title).setBody(body).build())
-            .putAllData(payload)
-            .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
-            .build();
-        try {
-            FirebaseMessaging.getInstance().send(message);
-        } catch (FirebaseMessagingException ex) {
-            LOG.warn("FCM send failed: {}", ex.getMessagingErrorCode());
-            removeIfInvalid(token, ex.getMessagingErrorCode());
-        } catch (RuntimeException ex) {
-            LOG.warn("FCM send failed", ex);
+
+        outbox.setLastError(lastError);
+        if (failureCount == 0 && successCount > 0) {
+            return NotificationOutboxStatus.SENT;
         }
+        if (successCount > 0) {
+            return NotificationOutboxStatus.PARTIAL;
+        }
+        return NotificationOutboxStatus.FAILED;
     }
 
-    private void removeIfInvalid(String token, MessagingErrorCode code) {
+    public boolean isAvailable() {
+        return firebaseConfig.isAvailable();
+    }
+
+    private MulticastMessage buildMulticastMessage(List<String> tokens, Map<String, String> data, NotificationPriority priority) {
+        MulticastMessage.Builder builder = MulticastMessage.builder()
+            .addAllTokens(tokens)
+            .putAllData(data)
+            .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build());
+
+        if (priority == NotificationPriority.HIGH) {
+            builder.setApnsConfig(ApnsConfig.builder().setAps(Aps.builder().setContentAvailable(true).build()).build());
+        }
+        return builder.build();
+    }
+
+    private Map<String, String> buildPayload(NotificationOutbox outbox) {
+        Map<String, String> data = new HashMap<>();
+        data.put("notificationId", String.valueOf(outbox.getNotification().getId()));
+        data.put("type", outbox.getNotification().getNotificationType());
+        data.put("title", outbox.getNotification().getTitle());
+        if (outbox.getNotification().getBody() != null) {
+            data.put("body", outbox.getNotification().getBody());
+        }
+        if (outbox.getNotification().getRoute() != null) {
+            data.put("route", outbox.getNotification().getRoute());
+        }
+        if (outbox.getNotification().getReferenceId() != null) {
+            data.put("referenceId", outbox.getNotification().getReferenceId());
+        }
+        return data;
+    }
+
+    private NotificationPriority resolvePriority(NotificationOutbox outbox) {
+        if (outbox.getNotification().getTemplate() != null && outbox.getNotification().getTemplate().getPriority() != null) {
+            return outbox.getNotification().getTemplate().getPriority();
+        }
+        return NotificationPriority.NORMAL;
+    }
+
+    private void markDeviceSuccess(PushDeviceToken device) {
+        Instant now = Instant.now();
+        device.setLastSuccessAt(now);
+        device.setLastSeenAt(now);
+        pushDeviceTokenRepository.save(device);
+    }
+
+    private void handleDeviceError(PushDeviceToken device, FirebaseMessagingException ex) {
+        MessagingErrorCode code = ex.getMessagingErrorCode();
         if (
             code == MessagingErrorCode.UNREGISTERED ||
             code == MessagingErrorCode.INVALID_ARGUMENT ||
             code == MessagingErrorCode.SENDER_ID_MISMATCH
         ) {
-            pushDeviceTokenRepository.findByToken(token).ifPresent(existing -> {
-                pushDeviceTokenRepository.delete(existing);
-                LOG.info("Removed invalid FCM token id={}", existing.getId());
-            });
+            device.setActive(false);
+            device.setLastFailureAt(Instant.now());
+            pushDeviceTokenRepository.save(device);
+            LOG.info("Deactivated invalid FCM token id={}", device.getId());
+        } else {
+            device.setLastFailureAt(Instant.now());
+            pushDeviceTokenRepository.save(device);
         }
+    }
+
+    private void saveDeliveryLog(
+        NotificationOutbox outbox,
+        PushDeviceToken device,
+        NotificationDeliveryStatus status,
+        String errorCode,
+        String errorMessage,
+        Integer attemptNumber
+    ) {
+        NotificationDeliveryLog log = new NotificationDeliveryLog();
+        log.setNotification(outbox.getNotification());
+        log.setPushDevice(device);
+        log.setProvider("FCM");
+        log.setStatus(status);
+        log.setErrorCode(errorCode);
+        log.setErrorMessage(errorMessage);
+        log.setAttemptNumber(attemptNumber);
+        log.setSentAt(Instant.now());
+        log.setCreatedAt(Instant.now());
+        deliveryLogRepository.save(log);
+    }
+
+    private String maskError(String message) {
+        if (message == null) {
+            return null;
+        }
+        return message.replaceAll("[a-zA-Z0-9_-]{20,}", "***");
+    }
+
+    private <T> List<List<T>> partition(List<T> list, int size) {
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += size) {
+            partitions.add(list.subList(i, Math.min(i + size, list.size())));
+        }
+        return partitions;
     }
 }

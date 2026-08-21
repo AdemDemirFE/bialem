@@ -70,7 +70,7 @@ public class AppRpcService {
             case "get_my_follow_relation" -> followRelation(me, id(args.get("target_user_id")));
             case "get_my_follow_requests" -> myFollowRequests(me);
             case "review_follow_request" -> reviewFollowRequest(me, id(args.get("target_request_id")), str(args.get("target_decision")));
-            case "get_public_follow_connections" -> followConnections(id(args.get("target_user_id")));
+            case "get_public_follow_connections" -> followConnections(me, id(args.get("target_user_id")), str(args.get("target_kind")));
             case "set_profile_block" -> setBlock(me, id(args.get("target_user_id")), bool(args.get("should_block"), true));
             case "get_my_blocked_profiles" -> blockedProfiles(me);
             case "join_community" -> joinCommunity(me, id(args.get("target_community_id")));
@@ -244,6 +244,8 @@ public class AppRpcService {
                 Map<String, Object> row = support.profileEmbed(request.getRequester());
                 row.put("request_id", support.stringify(request.getId()));
                 row.put("created_at", request.getCreatedAt().toString());
+                row.put("follower_count", count("select count(f) from Follow f where f.followed = :p", request.getRequester()));
+                row.put("following_count", count("select count(f) from Follow f where f.follower = :p", request.getRequester()));
                 return row;
             })
             .toList();
@@ -265,14 +267,31 @@ public class AppRpcService {
         return true;
     }
 
-    private Map<String, Object> followConnections(Long profileId) {
+    private List<Map<String, Object>> followConnections(Profile me, Long profileId, String kind) {
         Profile profile = support.requireProfile(profileId);
-        return Map.of(
-            "followers",
-            em.createQuery("select f.follower from Follow f where f.followed = :p", Profile.class).setParameter("p", profile).getResultList().stream().map(support::profileEmbed).toList(),
-            "following",
-            em.createQuery("select f.followed from Follow f where f.follower = :p", Profile.class).setParameter("p", profile).getResultList().stream().map(support::profileEmbed).toList()
-        );
+        boolean wantFollowing = "following".equalsIgnoreCase(kind);
+        List<Profile> followers = wantFollowing ? List.of() : em.createQuery("select f.follower from Follow f where f.followed = :p", Profile.class).setParameter("p", profile).getResultList();
+        List<Profile> following = wantFollowing ? em.createQuery("select f.followed from Follow f where f.follower = :p", Profile.class).setParameter("p", profile).getResultList() : List.of();
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+        for (Profile person : followers) {
+            if (!seen.add(person.getId())) continue;
+            rows.add(enrichConnection(person, me));
+        }
+        for (Profile person : following) {
+            if (!seen.add(person.getId())) continue;
+            rows.add(enrichConnection(person, me));
+        }
+        return rows;
+    }
+
+    private Map<String, Object> enrichConnection(Profile person, Profile me) {
+        Map<String, Object> row = support.profileEmbed(person);
+        row.put("follower_count", count("select count(f) from Follow f where f.followed = :p", person));
+        row.put("following_count", count("select count(f) from Follow f where f.follower = :p", person));
+        row.put("is_following", followRelation(me, person.getId()).equals("following"));
+        return row;
     }
 
     private boolean setBlock(Profile me, Long targetId, boolean shouldBlock) {

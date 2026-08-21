@@ -10,6 +10,27 @@ export type AppNotification = {
   route?: string | null;
   read: boolean;
   createdAt: string;
+  pushStatus?: string | null;
+  pushSentAt?: string | null;
+};
+
+export type NotificationFilter = "ALL" | "READ" | "UNREAD";
+
+export type PagedNotifications = {
+  content: AppNotification[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+};
+
+export type NotificationPreference = {
+  id?: number;
+  notificationType: string;
+  inAppEnabled: boolean;
+  pushEnabled: boolean;
+  emailEnabled?: boolean;
+  mandatory?: boolean;
 };
 
 function buildUrl(path: string): string {
@@ -31,30 +52,56 @@ async function logAndRethrow(label: string, path: string, error: unknown) {
   throw error;
 }
 
-export async function registerPushToken(token: string, platform = "ANDROID") {
+export async function registerPushToken(
+  token: string,
+  platform = "ANDROID",
+  extras?: { firebaseInstallationId?: string; deviceUuid?: string; appVersion?: string; notificationsEnabled?: boolean }
+) {
   const path = "/api/push-device-tokens";
   try {
-    console.log("[PUSH] sending token to backend", { url: buildUrl(path), tokenPreview: `${token.slice(0, 8)}...` });
-    await api.rest.post(path, { token, platform });
+    const tokenPreview = token ? `${token.slice(0, 8)}...` : "(empty)";
+    console.log("[PUSH] sending token to backend", { url: buildUrl(path), tokenPreview });
+    await api.rest.post(path, {
+      token,
+      platform,
+      firebaseInstallationId: extras?.firebaseInstallationId,
+      deviceUuid: extras?.deviceUuid,
+      appVersion: extras?.appVersion,
+      notificationsEnabled: extras?.notificationsEnabled ?? true
+    });
     console.log("[PUSH] token registered successfully");
   } catch (error) {
     await logAndRethrow("token registration", path, error);
   }
 }
 
-export async function getNotifications(): Promise<AppNotification[]> {
-  const path = "/api/notifications/inbox";
+export async function deactivateCurrentPushDevice() {
+  const path = "/api/push-device-tokens/current";
   try {
-    const data = await api.rest.get<AppNotification[]>(path);
-    return Array.isArray(data) ? data : [];
+    await api.rest.delete(path);
+    console.log("[PUSH] current device deactivated");
+  } catch (error) {
+    await logAndRethrow("device deactivation", path, error);
+  }
+}
+
+export async function getNotifications(
+  filter: NotificationFilter = "ALL",
+  page = 0,
+  size = 20
+): Promise<PagedNotifications> {
+  const path = `/api/app/notifications?filter=${encodeURIComponent(filter)}&page=${page}&size=${size}&sort=createdAt,desc`;
+  try {
+    const data = await api.rest.get<PagedNotifications>(path);
+    return data ?? { content: [], totalPages: 0, totalElements: 0, size, number: page };
   } catch (error) {
     await logAndRethrow("get notifications", path, error);
-    return [];
+    return { content: [], totalPages: 0, totalElements: 0, size, number: page };
   }
 }
 
 export async function getUnreadNotificationCount(): Promise<number> {
-  const path = "/api/notifications/unread-count";
+  const path = "/api/app/notifications/unread-count";
   try {
     const data = await api.rest.get<{ count: number }>(path);
     return data?.count ?? 0;
@@ -65,7 +112,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
 }
 
 export async function markNotificationAsRead(id: number) {
-  const path = `/api/notifications/${id}/read`;
+  const path = `/api/app/notifications/${id}/read`;
   try {
     return await api.rest.put<AppNotification>(path);
   } catch (error) {
@@ -75,7 +122,7 @@ export async function markNotificationAsRead(id: number) {
 }
 
 export async function markAllNotificationsAsRead() {
-  const path = "/api/notifications/read-all";
+  const path = "/api/app/notifications/read-all";
   try {
     await api.rest.put(path);
   } catch (error) {
@@ -84,11 +131,33 @@ export async function markAllNotificationsAsRead() {
 }
 
 export async function sendTestNotification() {
-  const path = "/api/notifications/test";
+  const path = "/api/app/notifications/test";
   try {
     return await api.rest.post<AppNotification>(path);
   } catch (error) {
     await logAndRethrow("test notification", path, error);
     throw error;
+  }
+}
+
+export async function getNotificationPreferences(): Promise<NotificationPreference[]> {
+  const path = "/api/app/notifications/preferences";
+  try {
+    const data = await api.rest.get<NotificationPreference[]>(path);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    await logAndRethrow("get preferences", path, error);
+    return [];
+  }
+}
+
+export async function updateNotificationPreferences(preferences: NotificationPreference[]): Promise<NotificationPreference[]> {
+  const path = "/api/app/notifications/preferences";
+  try {
+    const data = await api.rest.put<NotificationPreference[]>(path, preferences);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    await logAndRethrow("update preferences", path, error);
+    return [];
   }
 }

@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * An AppNotification.
@@ -61,6 +63,37 @@ public class AppNotification implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "user", "preferences" }, allowSetters = true)
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    @JsonIgnoreProperties(value = {}, allowSetters = true)
+    private NotificationTemplate template;
+
+    @Size(max = 120)
+    @Column(name = "event_id", length = 120)
+    private String eventId;
+
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+    @Column(name = "payload")
+    private String payload;
+
+    @Column(name = "scheduled_at")
+    private Instant scheduledAt;
+
+    @Size(max = 40)
+    @Column(name = "push_status", length = 40)
+    private String pushStatus;
+
+    @Column(name = "push_sent_at")
+    private Instant pushSentAt;
+
+    @Size(max = 120)
+    @Column(name = "correlation_id", length = 120)
+    private String correlationId;
+
+    @Size(max = 500)
+    @Column(name = "idempotency_key", length = 500, unique = true)
+    private String idempotencyKey;
 
     public Long getId() {
         return this.id;
@@ -189,6 +222,110 @@ public class AppNotification implements Serializable {
 
     public AppNotification user(User user) {
         this.setUser(user);
+        return this;
+    }
+
+    public NotificationTemplate getTemplate() {
+        return this.template;
+    }
+
+    public void setTemplate(NotificationTemplate template) {
+        this.template = template;
+    }
+
+    public AppNotification template(NotificationTemplate template) {
+        this.setTemplate(template);
+        return this;
+    }
+
+    public String getEventId() {
+        return this.eventId;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
+    public AppNotification eventId(String eventId) {
+        this.setEventId(eventId);
+        return this;
+    }
+
+    public String getPayload() {
+        return this.payload;
+    }
+
+    public void setPayload(String payload) {
+        this.payload = payload;
+    }
+
+    public AppNotification payload(String payload) {
+        this.setPayload(payload);
+        return this;
+    }
+
+    public Instant getScheduledAt() {
+        return this.scheduledAt;
+    }
+
+    public void setScheduledAt(Instant scheduledAt) {
+        this.scheduledAt = scheduledAt;
+    }
+
+    public AppNotification scheduledAt(Instant scheduledAt) {
+        this.setScheduledAt(scheduledAt);
+        return this;
+    }
+
+    public String getPushStatus() {
+        return this.pushStatus;
+    }
+
+    public void setPushStatus(String pushStatus) {
+        this.pushStatus = pushStatus;
+    }
+
+    public AppNotification pushStatus(String pushStatus) {
+        this.setPushStatus(pushStatus);
+        return this;
+    }
+
+    public Instant getPushSentAt() {
+        return this.pushSentAt;
+    }
+
+    public void setPushSentAt(Instant pushSentAt) {
+        this.pushSentAt = pushSentAt;
+    }
+
+    public AppNotification pushSentAt(Instant pushSentAt) {
+        this.setPushSentAt(pushSentAt);
+        return this;
+    }
+
+    public String getCorrelationId() {
+        return this.correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
+
+    public AppNotification correlationId(String correlationId) {
+        this.setCorrelationId(correlationId);
+        return this;
+    }
+
+    public String getIdempotencyKey() {
+        return this.idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public AppNotification idempotencyKey(String idempotencyKey) {
+        this.setIdempotencyKey(idempotencyKey);
         return this;
     }
 

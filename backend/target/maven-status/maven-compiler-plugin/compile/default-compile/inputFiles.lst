@@ -47,6 +47,11 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeratio
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\HonorBadgeType.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\MediaType.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\ModerationStatus.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\NotificationDeliveryStatus.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\NotificationEventType.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\NotificationOutboxStatus.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\NotificationPriority.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\NotificationScheduleType.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\PartnerTrustLevel.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\enumeration\PartnerVenueCategory.java
@@ -68,6 +73,9 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\Follow.jav
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\FollowRequest.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\HonorBadge.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\Notification.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\NotificationDeliveryLog.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\NotificationOutbox.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\NotificationTemplate.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\PartnerOffer.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\PartnerOfferRedemption.java
@@ -86,11 +94,18 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\StoryCommu
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\StoryView.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\User.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\UserHonorBadge.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\UserNotificationPreference.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\UserReview.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\domain\UserRole.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\GeneratedByJHipster.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\management\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\management\SecurityMetersService.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationEvent.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationEventListener.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationEventPublisher.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationOutboxScheduler.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationProcessor.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\notification\NotificationTemplateService.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\AccountPreferencesRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\AiUsageLogRepository.java
@@ -112,7 +127,10 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\EventR
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\FollowRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\FollowRequestRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\HonorBadgeRepository.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\NotificationDeliveryLogRepository.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\NotificationOutboxRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\NotificationRepository.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\NotificationTemplateRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\PartnerOfferRedemptionRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\PartnerOfferRepository.java
@@ -130,6 +148,7 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\StoryC
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\StoryRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\StoryViewRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\UserHonorBadgeRepository.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\UserNotificationPreferenceRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\UserRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\UserReviewRepository.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\repository\UserRoleRepository.java
@@ -187,6 +206,7 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\Follo
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\FollowRequestDTO.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\HonorBadgeDTO.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\NotificationDTO.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\NotificationPreferenceDTO.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\PartnerOfferDTO.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\service\dto\PartnerOfferRedemptionDTO.java
@@ -295,6 +315,7 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\filter\packag
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\filter\SpaWebFilter.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AccountPreferencesResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AccountResource.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AdminNotificationResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AiUsageLogResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AppFacadeResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\AppNotificationResource.java
@@ -327,6 +348,7 @@ C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\FollowRe
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\FollowResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\HonorBadgeResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\NotificationResource.java
+C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\NotificationTemplateResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\package-info.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\PartnerOfferRedemptionResource.java
 C:\ADEM\GITHUB\bialem\backend\src\main\java\com\bialem\backend\web\rest\PartnerOfferResource.java

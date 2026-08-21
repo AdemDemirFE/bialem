@@ -114,10 +114,11 @@ export async function removeStoryImage(publicUrl: string) {
 }
 
 export async function uploadProfileAvatar(params: { userId: string; image: PickedImage }) {
-  const path = `${params.userId}/avatar`;
+  const extension = params.image.mimeType === "image/png" ? "png" : params.image.mimeType === "image/webp" ? "webp" : "jpg";
+  const path = `${params.userId}/avatar-${Date.now()}.${extension}`;
   const fileData = params.image.bytes ?? (await uriToArrayBuffer(params.image.uri));
   const { error: uploadError } = await api.storage.from("profile-avatars").upload(path, fileData, { contentType: params.image.mimeType });
   if (uploadError) throw uploadError;
   const { data } = api.storage.from("profile-avatars").getPublicUrl(path);
-  return `${data.publicUrl}?v=${Date.now()}`;
+  return data.publicUrl;
 }

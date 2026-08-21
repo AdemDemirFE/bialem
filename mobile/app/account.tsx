@@ -3,6 +3,7 @@ import { Link, router, Stack } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { api } from "../src/lib/api";
+import { useAuth } from "../src/lib/auth";
 import { colors } from "../src/theme/colors";
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
@@ -16,10 +17,52 @@ const legalLinks = [
 ] as const;
 
 export default function AccountScreen() {
+  const { changePassword, clearError, error: authError } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const submitPasswordChange = async () => {
+    clearError();
+    setPasswordSuccess(false);
+    setError(null);
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError("Tüm şifre alanlarını doldurmalısın.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Yeni şifre ile tekrarı birbiriyle eşleşmiyor.");
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setError("Yeni şifren mevcut şifrenle aynı olamaz.");
+      return;
+    }
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || /\d/.test(newPassword) === false) {
+      setError("Yeni şifre en az 8 karakter olmalı ve en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.");
+      return;
+    }
+
+    setPasswordBusy(true);
+    const ok = await changePassword(currentPassword, newPassword);
+    setPasswordBusy(false);
+    if (ok) {
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else if (authError) {
+      setError(authError);
+    }
+  };
 
   const deleteAccount = async () => {
     if (confirmation.trim().toLocaleUpperCase("tr-TR") !== CONFIRMATION_TEXT || busy) return;
@@ -50,6 +93,49 @@ export default function AccountScreen() {
 
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Gizlilik ve güvenlik</Text>
+        <Pressable style={styles.linkRow} onPress={() => { setPasswordOpen((v) => !v); setPasswordSuccess(false); setError(null); }}>
+          <Ionicons name="key-outline" size={21} color={colors.accent} />
+          <View style={styles.linkCopy}>
+            <Text style={styles.linkText}>Şifremi değiştir</Text>
+            <Text style={styles.linkHint}>Hesabının şifresini güncelle.</Text>
+          </View>
+          <Ionicons name={passwordOpen ? "chevron-down" : "chevron-forward"} size={18} color={colors.muted} />
+        </Pressable>
+
+        {passwordOpen ? (
+          <View style={styles.passwordBox}>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {passwordSuccess ? <Text style={styles.successText}>Şifren başarıyla güncellendi.</Text> : null}
+            <TextInput
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholder="Mevcut şifre"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              style={styles.input}
+            />
+            <TextInput
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Yeni şifre"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              style={styles.input}
+            />
+            <TextInput
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Yeni şifre tekrar"
+              placeholderTextColor={colors.muted}
+              secureTextEntry
+              style={styles.input}
+            />
+            <Pressable disabled={passwordBusy} style={[styles.primaryButton, passwordBusy && styles.disabledButton]} onPress={() => void submitPasswordChange()}>
+              {passwordBusy ? <ActivityIndicator color={colors.actionText} /> : <Text style={styles.primaryButtonText}>Şifreyi güncelle</Text>}
+            </Pressable>
+          </View>
+        ) : null}
+
         <Link href="/settings" asChild>
           <Pressable style={styles.linkRow}>
             <Ionicons name="options-outline" size={21} color={colors.accent} />
@@ -161,6 +247,10 @@ const styles = StyleSheet.create({
   deleteBox: { gap: 12 },
   confirmLabel: { color: colors.ink, fontSize: 14, lineHeight: 20, fontWeight: "700" },
   input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 17, paddingHorizontal: 15, paddingVertical: 13, color: colors.ink, fontSize: 15, fontWeight: "700" },
+  passwordBox: { gap: 12, marginTop: 4 },
+  primaryButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 18, padding: 14, backgroundColor: colors.action },
+  primaryButtonText: { color: colors.actionText, fontSize: 14, fontWeight: "800" },
+  successText: { color: colors.success, fontSize: 13, lineHeight: 19, fontWeight: "700" },
   dangerButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 18, padding: 14, backgroundColor: colors.danger },
   dangerButtonText: { color: "#ffffff", fontSize: 14, fontWeight: "800" },
   disabledButton: { opacity: 0.45 },

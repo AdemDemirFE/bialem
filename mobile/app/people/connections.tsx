@@ -41,7 +41,10 @@ export default function FollowConnectionsScreen() {
 
     if (connectionsError) setError(connectionsError.message);
     else {
-      const nextPeople = (data ?? []) as PublicPerson[];
+      const nextPeople = ((Array.isArray(data) ? data : []) as PublicPerson[]).map((person) => ({
+        ...person,
+        follow_state: person.is_following ? "following" : person.follow_state ?? "none"
+      }));
       const ids = nextPeople.map((person) => person.user_id);
       const [identities, requestedIds] = await Promise.all([
         getPlatformTeamIdentityMap(ids),
@@ -49,7 +52,7 @@ export default function FollowConnectionsScreen() {
       ]);
       setPeople(nextPeople.map((person) => ({
         ...person,
-        follow_state: person.is_following ? "following" : requestedIds.has(person.user_id) ? "requested" : "none",
+        follow_state: person.follow_state === "following" ? "following" : requestedIds.has(person.user_id) ? "requested" : "none",
         team_role: identities.get(person.user_id) ?? null
       })));
     }

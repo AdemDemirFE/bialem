@@ -42,6 +42,9 @@
     "default_environment": "prod",
     "packaging": "jar"
   },
+  "dependencies": {
+    "sweetalert2": "^11.22.2"
+  },
   "devDependencies": {
     "generator-jhipster": "8.11.0",
     "prettier": "3.5.3",

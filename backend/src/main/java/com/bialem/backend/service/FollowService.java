@@ -1,11 +1,16 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.domain.Follow;
+import com.bialem.backend.domain.Profile;
+import com.bialem.backend.domain.enumeration.NotificationEventType;
+import com.bialem.backend.notification.NotificationEvent;
+import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.repository.FollowRepository;
 import com.bialem.backend.service.dto.FollowDTO;
 import com.bialem.backend.service.mapper.FollowMapper;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -26,9 +31,16 @@ public class FollowService {
 
     private final FollowMapper followMapper;
 
-    public FollowService(FollowRepository followRepository, FollowMapper followMapper) {
+    private final NotificationEventPublisher notificationEventPublisher;
+
+    public FollowService(
+        FollowRepository followRepository,
+        FollowMapper followMapper,
+        NotificationEventPublisher notificationEventPublisher
+    ) {
         this.followRepository = followRepository;
         this.followMapper = followMapper;
+        this.notificationEventPublisher = notificationEventPublisher;
     }
 
     /**
@@ -41,7 +53,34 @@ public class FollowService {
         LOG.debug("Request to save Follow : {}", followDTO);
         Follow follow = followMapper.toEntity(followDTO);
         follow = followRepository.save(follow);
+        publishNewFollowerEvent(follow);
         return followMapper.toDto(follow);
+    }
+
+    private void publishNewFollowerEvent(Follow follow) {
+        if (follow.getFollowed() == null || follow.getFollower() == null) {
+            return;
+        }
+        Long recipientUserId = resolveUserId(follow.getFollowed());
+        if (recipientUserId == null) {
+            return;
+        }
+        String idempotencyKey = "NEW_FOLLOWER:" + follow.getId() + ":" + recipientUserId;
+        Map<String, Object> variables = new java.util.HashMap<>();
+        variables.put("recipientUserId", recipientUserId);
+        variables.put("actorUserId", resolveUserId(follow.getFollower()));
+        variables.put("actorName", displayNameOf(follow.getFollower()));
+        variables.put("followedUserId", recipientUserId);
+        variables.put("followId", follow.getId());
+        notificationEventPublisher.publish(new NotificationEvent(NotificationEventType.NEW_FOLLOWER, idempotencyKey, variables));
+    }
+
+    private Long resolveUserId(Profile profile) {
+        return profile != null && profile.getUser() != null ? profile.getUser().getId() : null;
+    }
+
+    private String displayNameOf(Profile profile) {
+        return profile != null ? profile.getDisplayName() : "Bir kullanıcı";
     }
 
     /**

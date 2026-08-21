@@ -26,26 +26,43 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void init() {
-        if (credentialsPath == null || credentialsPath.isBlank()) {
-            LOG.warn("Firebase FCM disabled: firebase.credentials / FIREBASE_CREDENTIALS is empty");
-            return;
-        }
-        Path path = Path.of(credentialsPath);
-        if (!Files.isRegularFile(path)) {
-            LOG.warn("Firebase FCM disabled: credentials file not found at {}", path);
-            return;
-        }
-        if (!FirebaseApp.getApps().isEmpty()) {
+        if (FirebaseApp.getApps().isEmpty()) {
+            try {
+                initialize();
+            } catch (Exception ex) {
+                LOG.warn("Firebase FCM disabled: failed to initialize Admin SDK", ex);
+                available = false;
+            }
+        } else {
             available = true;
-            return;
         }
-        try (InputStream in = new FileInputStream(path.toFile())) {
-            FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(in)).build();
+    }
+
+    private void initialize() throws IOException {
+        if (credentialsPath != null && !credentialsPath.isBlank()) {
+            Path path = Path.of(credentialsPath);
+            if (Files.isRegularFile(path)) {
+                try (InputStream in = new FileInputStream(path.toFile())) {
+                    FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(in)).build();
+                    FirebaseApp.initializeApp(options);
+                    available = true;
+                    LOG.info("Firebase Admin SDK initialized from configured credentials");
+                    return;
+                }
+            } else {
+                LOG.warn("Firebase credentials file not found at {}, trying Application Default Credentials", path);
+            }
+        }
+
+        try {
+            GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+            FirebaseOptions options = FirebaseOptions.builder().setCredentials(credentials).build();
             FirebaseApp.initializeApp(options);
             available = true;
-            LOG.info("Firebase Admin SDK initialized for FCM");
+            LOG.info("Firebase Admin SDK initialized from Application Default Credentials");
         } catch (IOException ex) {
-            LOG.error("Firebase FCM disabled: failed to initialize Admin SDK", ex);
+            LOG.warn("Firebase FCM disabled: no credentials configured and Application Default Credentials unavailable");
+            available = false;
         }
     }
 

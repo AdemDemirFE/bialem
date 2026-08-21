@@ -13,6 +13,8 @@ public class AppNotificationDTO implements Serializable {
     private String route;
     private boolean read;
     private Instant createdAt;
+    private String pushStatus;
+    private Instant pushSentAt;
 
     public Long getId() {
         return id;
@@ -76,5 +78,21 @@ public class AppNotificationDTO implements Serializable {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPushStatus() {
+        return pushStatus;
+    }
+
+    public void setPushStatus(String pushStatus) {
+        this.pushStatus = pushStatus;
+    }
+
+    public Instant getPushSentAt() {
+        return pushSentAt;
+    }
+
+    public void setPushSentAt(Instant pushSentAt) {
+        this.pushSentAt = pushSentAt;
     }
 }
