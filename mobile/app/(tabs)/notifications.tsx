@@ -1,26 +1,35 @@
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { getNotificationTarget } from "../../src/lib/notifications";
+import { addForegroundNotificationListener } from "../../src/lib/pushNotifications";
 import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   sendTestNotification,
-  type AppNotification
+  type AppNotification,
+  type NotificationFilter
 } from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
 
-type NotificationFilter = "all" | "unread" | "events" | "communities" | "social" | "advantages";
+const PAGE_SIZE = 20;
 
-const notificationFilters: { value: NotificationFilter; label: string }[] = [
-  { value: "all", label: "Tümü" },
-  { value: "unread", label: "Okunmamış" },
-  { value: "events", label: "Etkinlik" },
-  { value: "communities", label: "Topluluk" },
-  { value: "social", label: "Sosyal" },
-  { value: "advantages", label: "Avantaj" }
+type FilterValue = "ALL" | "UNREAD" | "READ";
+
+const notificationFilters: { value: FilterValue; label: string }[] = [
+  { value: "ALL", label: "Tümü" },
+  { value: "UNREAD", label: "Okunmamış" },
+  { value: "READ", label: "Okunan" }
 ];
 
 export default function NotificationsScreen() {
@@ -29,29 +38,59 @@ export default function NotificationsScreen() {
   const [items, setItems] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<NotificationFilter>("all");
+  const [filter, setFilter] = useState<FilterValue>("ALL");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  const loadNotifications = async (refresh = false) => {
-    if (!user) return;
+  const loadNotifications = useCallback(
+    async (refresh = false, nextPage = 0) => {
+      if (!user) return;
 
-    refresh ? setRefreshing(true) : setLoading(true);
-    setError(null);
+      if (refresh) {
+        setRefreshing(true);
+      } else if (nextPage === 0) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      setError(null);
 
-    try {
-      const data = await getNotifications();
-      setItems(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi");
-    }
+      try {
+        const data = await getNotifications(filter, nextPage, PAGE_SIZE);
+        if (refresh || nextPage === 0) {
+          setItems(data.content);
+          setPage(0);
+        } else {
+          setItems((current) => [...current, ...data.content]);
+          setPage(nextPage);
+        }
+        setHasMore(data.content.length === PAGE_SIZE && nextPage + 1 < data.totalPages);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi");
+      }
 
-    setLoading(false);
-    setRefreshing(false);
-  };
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+    },
+    [filter, user?.id]
+  );
 
   useEffect(() => {
-    void loadNotifications();
-  }, [user?.id]);
+    void loadNotifications(true, 0);
+  }, [filter, user?.id]);
+
+  useEffect(() => {
+    return addForegroundNotificationListener(() => void loadNotifications(true, 0));
+  }, [loadNotifications]);
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      void loadNotifications(false, page + 1);
+    }
+  };
 
   const markAllAsRead = async () => {
     if (!user || items.every((item) => item.read)) return;
@@ -81,28 +120,40 @@ export default function NotificationsScreen() {
   const handleTestNotification = async () => {
     try {
       await sendTestNotification();
-      await loadNotifications(true);
+      await loadNotifications(true, 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Test bildirimi gönderilemedi");
     }
   };
 
-  const unreadCount = items.filter((item) => !item.read).length;
-  const visibleItems = useMemo(
-    () =>
-      items.filter((item) => {
-        if (filter === "all") return true;
-        if (filter === "unread") return !item.read;
-        return getNotificationCategory(item.notificationType ?? "GENERIC") === filter;
-      }),
-    [filter, items]
-  );
+  const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
 
-  return (
-    <ScrollView
-      contentContainerStyle={styles.page}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadNotifications(true)} tintColor={colors.accent} />}
-    >
+  const renderItem = ({ item }: { item: AppNotification }) => {
+    const hasTarget = Boolean(item.route);
+    return (
+      <Pressable
+        style={[styles.card, !item.read && styles.unreadCard]}
+        onPress={() => void openNotification(item)}
+      >
+        <View style={[styles.typeMark, !item.read && styles.unreadMark]}>
+          <Text style={styles.typeMarkText}>{getTypeMark(item.notificationType ?? "GENERIC")}</Text>
+        </View>
+        <View style={styles.cardBody}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            {!item.read ? <View style={styles.unreadDot} /> : null}
+          </View>
+          {item.body ? <Text style={styles.cardText}>{item.body}</Text> : null}
+          <Text style={styles.cardMeta}>
+            {formatRelativeDate(item.createdAt)}{hasTarget ? "  ·  Detayı aç" : ""}
+          </Text>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const ListHeader = () => (
+    <>
       <View style={styles.hero}>
         <View style={styles.heroText}>
           <Text style={styles.kicker}>Bildirim Merkezi</Text>
@@ -133,56 +184,42 @@ export default function NotificationsScreen() {
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {loading ? (
-        <View style={styles.stateCard}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.stateText}>Bildirimler yükleniyor...</Text>
-        </View>
-      ) : visibleItems.length === 0 ? (
-        <View style={styles.stateCard}>
-          <Text style={styles.emptyMark}>B</Text>
-          <Text style={styles.emptyTitle}>{items.length === 0 ? "Henüz bildirim yok" : "Bu filtrede bildirim yok"}</Text>
-          <Text style={styles.stateText}>{items.length === 0 ? "Yeni bir hareket olduğunda burada göreceksin." : "Başka bir filtre seçerek bildirimlerini inceleyebilirsin."}</Text>
-        </View>
-      ) : (
-        <View style={styles.list}>
-          {visibleItems.map((item) => {
-            const hasTarget = Boolean(item.route);
-            return (
-              <Pressable
-                key={item.id}
-                style={[styles.card, !item.read && styles.unreadCard]}
-                onPress={() => void openNotification(item)}
-              >
-                <View style={[styles.typeMark, !item.read && styles.unreadMark]}>
-                  <Text style={styles.typeMarkText}>{getTypeMark(item.notificationType ?? "GENERIC")}</Text>
-                </View>
-                <View style={styles.cardBody}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>{item.title}</Text>
-                    {!item.read ? <View style={styles.unreadDot} /> : null}
-                  </View>
-                  {item.body ? <Text style={styles.cardText}>{item.body}</Text> : null}
-                  <Text style={styles.cardMeta}>
-                    {formatRelativeDate(item.createdAt)}{hasTarget ? "  ·  Detayı aç" : ""}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
-    </ScrollView>
+    </>
   );
-}
 
-function getNotificationCategory(type: string): Exclude<NotificationFilter, "all" | "unread"> | "system" {
-  const normalized = type.toLowerCase();
-  if (normalized.includes("advantage") || normalized.includes("offer") || normalized.includes("partner")) return "advantages";
-  if (normalized.includes("event") || normalized.includes("participation") || normalized.includes("waitlist")) return "events";
-  if (normalized.includes("community") || normalized.includes("group") || normalized.includes("moderator")) return "communities";
-  if (normalized.includes("follow") || normalized.includes("comment") || normalized.includes("review") || normalized.includes("post") || normalized.includes("story")) return "social";
-  return "system";
+  return (
+    <FlatList
+      data={items}
+      keyExtractor={(item) => String(item.id)}
+      renderItem={renderItem}
+      contentContainerStyle={styles.page}
+      ListHeaderComponent={<ListHeader />}
+      ListFooterComponent={
+        loadingMore ? (
+          <View style={styles.footerLoader}>
+            <ActivityIndicator color={colors.accent} />
+          </View>
+        ) : null
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadNotifications(true, 0)} tintColor={colors.accent} />}
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.5}
+      ListEmptyComponent={
+        loading ? (
+          <View style={styles.stateCard}>
+            <ActivityIndicator color={colors.accent} />
+            <Text style={styles.stateText}>Bildirimler yükleniyor...</Text>
+          </View>
+        ) : (
+          <View style={styles.stateCard}>
+            <Text style={styles.emptyMark}>B</Text>
+            <Text style={styles.emptyTitle}>Henüz bildirim yok</Text>
+            <Text style={styles.stateText}>Yeni bir hareket olduğunda burada göreceksin.</Text>
+          </View>
+        )
+      }
+    />
+  );
 }
 
 function getTypeMark(type: string) {
@@ -232,8 +269,7 @@ const styles = StyleSheet.create({
   filterActive: { borderColor: colors.brandInk, backgroundColor: colors.brandInk },
   filterText: { color: colors.ink, fontSize: 12, fontWeight: "800" },
   filterTextActive: { color: "#fff" },
-  list: { gap: 11 },
-  card: { flexDirection: "row", gap: 13, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  card: { flexDirection: "row", gap: 13, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 11 },
   unreadCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   typeMark: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceStrong },
   unreadMark: { backgroundColor: colors.action },
@@ -247,5 +283,6 @@ const styles = StyleSheet.create({
   stateCard: { minHeight: 230, padding: 24, gap: 10, alignItems: "center", justifyContent: "center", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   emptyMark: { width: 58, height: 58, borderRadius: 22, textAlign: "center", textAlignVertical: "center", backgroundColor: colors.action, color: colors.ink, fontSize: 24, fontWeight: "900" },
   emptyTitle: { color: colors.ink, fontSize: 20, fontWeight: "800" },
-  stateText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: "center" }
+  stateText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: "center" },
+  footerLoader: { paddingVertical: 16, alignItems: "center" }
 });

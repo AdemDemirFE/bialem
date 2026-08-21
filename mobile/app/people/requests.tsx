@@ -55,7 +55,7 @@ export default function FollowRequestsScreen() {
 
     const { error: reviewError } = await api.rpc("review_follow_request", {
       target_request_id: requestId,
-      target_accept: accept
+      target_decision: accept ? "approved" : "rejected"
     });
 
     if (reviewError) {

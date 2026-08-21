@@ -5,6 +5,15 @@ import { router } from "./router";
 
 let listenersRegistered = false;
 let initInProgress = false;
+let pendingRoute: string | null = null;
+const foregroundListeners = new Set<() => void>();
+
+export function addForegroundNotificationListener(callback: () => void) {
+  foregroundListeners.add(callback);
+  return () => {
+    foregroundListeners.delete(callback);
+  };
+}
 
 export async function initializePushNotifications() {
   if (!Capacitor.isNativePlatform()) {
@@ -49,7 +58,11 @@ function registerPushListenersOnce() {
     const tokenPreview = token.value ? `${token.value.slice(0, 8)}...` : "(empty)";
     console.log("[PUSH] registration token received", { tokenPreview });
     try {
-      await registerPushTokenApi(token.value, Capacitor.getPlatform().toUpperCase());
+      const platform = Capacitor.getPlatform().toUpperCase();
+      await registerPushTokenApi(token.value, platform, {
+        deviceUuid: getDeviceUuid(),
+        appVersion: getAppVersion()
+      });
       console.log("[PUSH] token registered successfully");
     } catch (error) {
       console.warn("[PUSH] token registration failed", error);
@@ -62,17 +75,70 @@ function registerPushListenersOnce() {
 
   void PushNotifications.addListener("pushNotificationReceived", (notification) => {
     console.log("[PUSH] notification received in foreground", { title: notification.title });
+    foregroundListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch (e) {
+        console.warn("[PUSH] foreground listener error", e);
+      }
+    });
   });
 
   void PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
     const route = action.notification.data?.route;
     if (typeof route === "string" && route.length > 0) {
       console.log("[PUSH] notification tapped, navigating to", { route });
-      router.push(route);
+      navigateToRoute(route);
     }
   });
 
   console.log("[PUSH] listeners registered");
+}
+
+function getDeviceUuid(): string | undefined {
+  try {
+    if (typeof globalThis !== "undefined" && (globalThis as { deviceUuid?: string }).deviceUuid) {
+      return (globalThis as { deviceUuid?: string }).deviceUuid;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+function getAppVersion(): string | undefined {
+  try {
+    if (typeof globalThis !== "undefined" && (globalThis as { appVersion?: string }).appVersion) {
+      return (globalThis as { appVersion?: string }).appVersion;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+function navigateToRoute(route: string) {
+  if (!route || route.includes("://") || route.toLowerCase().startsWith("javascript:")) {
+    console.warn("[PUSH] rejected unsafe route", route);
+    return;
+  }
+  try {
+    if (pendingRoute === route) return;
+    pendingRoute = route;
+    router.push(route);
+    setTimeout(() => {
+      pendingRoute = null;
+    }, 500);
+  } catch (error) {
+    console.warn("[PUSH] navigation failed, storing route for later", error);
+    pendingRoute = route;
+  }
+}
+
+export function consumePendingNotificationRoute(): string | null {
+  const route = pendingRoute;
+  pendingRoute = null;
+  return route;
 }
 
 export function hasPushListenersRegistered(): boolean {

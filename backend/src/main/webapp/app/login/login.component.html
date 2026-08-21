@@ -41,7 +41,14 @@
           </label>
         </div>
 
-        <button type="submit" class="btn btn-primary" data-cy="submit">Giriş</button>
+        <button type="submit" class="btn btn-primary" data-cy="submit" [disabled]="authenticating()">
+          @if (authenticating()) {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Giriş yapılıyor...
+          } @else {
+            Giriş
+          }
+        </button>
       </form>
       <div class="mt-3 alert alert-warning">
         <a class="alert-link" routerLink="/account/reset/request" data-cy="forgetYourPasswordSelector">Şifreni mi unuttun?</a>

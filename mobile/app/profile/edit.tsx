@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, Text
 import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { colors } from "../../src/theme/colors";
+import { ImageViewerModal } from "../../src/components/ImageViewerModal";
 
 export default function EditProfileScreen() {
   const { user, profile, loading, error, clearError, saveProfile, updateAvatar } = useAuth();
@@ -14,6 +15,7 @@ export default function EditProfileScreen() {
   const [bio, setBio] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [viewerVisible, setViewerVisible] = useState(false);
 
   useEffect(() => {
     setDisplayName(profile?.display_name ?? "");
@@ -38,7 +40,9 @@ export default function EditProfileScreen() {
       const image = await pickImageFromLibrary({ square: true });
       if (!image) return;
       const avatarUrl = await uploadProfileAvatar({ userId: user.id, image });
-      await updateAvatar(avatarUrl);
+      if (await updateAvatar(avatarUrl)) {
+        setSaved(true);
+      }
     } finally {
       setUploadingAvatar(false);
     }
@@ -53,9 +57,16 @@ export default function EditProfileScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: true, title: "Profili Düzenle" }} />
+      <ImageViewerModal
+        visible={viewerVisible}
+        uri={profile?.avatar_url ?? null}
+        onClose={() => setViewerVisible(false)}
+        onEdit={() => void changePhoto()}
+      />
+
       <ScrollView style={styles.screen} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <Pressable accessibilityLabel="Profil fotoğrafını değiştir" style={styles.avatarButton} onPress={() => void changePhoto()}>
+          <Pressable accessibilityLabel="Profil fotoğrafını görüntüle" style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
             {profile?.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
             ) : (

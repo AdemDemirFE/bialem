@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260821120000-1" author="bialem">
+        <createTable tableName="notification_template">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="varchar(80)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_notification_template_code"/>
+            </column>
+            <column name="event_type" type="varchar(80)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_notification_template_event_type"/>
+            </column>
+            <column name="name" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title_template" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="body_template" type="varchar(2000)"/>
+            <column name="route_template" type="varchar(500)"/>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_app_enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="push_enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="varchar(20)" defaultValue="NORMAL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_strategy" type="varchar(80)"/>
+            <column name="schedule_type" type="varchar(40)" defaultValue="IMMEDIATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="delay_minutes" type="int"/>
+            <column name="preferred_send_time" type="varchar(10)"/>
+            <column name="timezone" type="varchar(80)" defaultValue="Europe/Istanbul"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+            <column name="created_by" type="varchar(80)"/>
+            <column name="updated_by" type="varchar(80)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260821120000-2" author="bialem">
+        <createTable tableName="user_notification_preference">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_type" type="varchar(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="in_app_enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="push_enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_enabled" type="boolean" defaultValueBoolean="false"/>
+            <column name="muted_until" type="${datetimeType}"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+            <column name="mandatory" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="user_id"
+            baseTableName="user_notification_preference"
+            constraintName="fk_user_notification_preference_user_id"
+            referencedColumnNames="id"
+            referencedTableName="jhi_user"/>
+
+        <addUniqueConstraint
+            columnNames="user_id, notification_type"
+            constraintName="ux_user_notification_preference_user_type"
+            tableName="user_notification_preference"/>
+
+        <createIndex indexName="idx_user_notification_preference_user_id" tableName="user_notification_preference">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260821120000-3" author="bialem">
+        <createTable tableName="notification_outbox">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="notification_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_at" type="${datetimeType}"/>
+            <column name="attempt_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_attempts" type="int" defaultValueNumeric="5">
+                <constraints nullable="false"/>
+            </column>
+            <column name="next_attempt_at" type="${datetimeType}"/>
+            <column name="last_error" type="varchar(2000)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent_at" type="${datetimeType}"/>
+            <column name="processed_at" type="${datetimeType}"/>
+            <column name="idempotency_key" type="varchar(500)">
+                <constraints unique="true" uniqueConstraintName="ux_notification_outbox_idempotency"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="notification_id"
+            baseTableName="notification_outbox"
+            constraintName="fk_notification_outbox_notification_id"
+            referencedColumnNames="id"
+            referencedTableName="app_notification"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="user_id"
+            baseTableName="notification_outbox"
+            constraintName="fk_notification_outbox_user_id"
+            referencedColumnNames="id"
+            referencedTableName="jhi_user"/>
+
+        <createIndex indexName="idx_notification_outbox_status_scheduled" tableName="notification_outbox">
+            <column name="status"/>
+            <column name="scheduled_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_notification_outbox_next_attempt" tableName="notification_outbox">
+            <column name="status"/>
+            <column name="next_attempt_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260821120000-4" author="bialem">
+        <createTable tableName="notification_delivery_log">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="notification_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="push_device_id" type="bigint"/>
+            <column name="provider" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_message_id" type="varchar(200)"/>
+            <column name="error_code" type="varchar(120)"/>
+            <column name="error_message" type="varchar(2000)"/>
+            <column name="attempt_number" type="int"/>
+            <column name="sent_at" type="${datetimeType}"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseColumnNames="notification_id"
+            baseTableName="notification_delivery_log"
+            constraintName="fk_notification_delivery_log_notification_id"
+            referencedColumnNames="id"
+            referencedTableName="app_notification"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="push_device_id"
+            baseTableName="notification_delivery_log"
+            constraintName="fk_notification_delivery_log_device_id"
+            referencedColumnNames="id"
+            referencedTableName="push_device_token"/>
+
+        <createIndex indexName="idx_notification_delivery_log_notification_id" tableName="notification_delivery_log">
+            <column name="notification_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260821120000-5" author="bialem">
+        <addColumn tableName="app_notification">
+            <column name="template_id" type="bigint"/>
+            <column name="event_id" type="varchar(120)"/>
+            <column name="payload" type="text"/>
+            <column name="scheduled_at" type="${datetimeType}"/>
+            <column name="push_status" type="varchar(40)"/>
+            <column name="push_sent_at" type="${datetimeType}"/>
+            <column name="correlation_id" type="varchar(120)"/>
+            <column name="idempotency_key" type="varchar(500)">
+                <constraints unique="true" uniqueConstraintName="ux_app_notification_idempotency"/>
+            </column>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            baseColumnNames="template_id"
+            baseTableName="app_notification"
+            constraintName="fk_app_notification_template_id"
+            referencedColumnNames="id"
+            referencedTableName="notification_template"/>
+
+        <createIndex indexName="idx_app_notification_user_created" tableName="app_notification">
+            <column name="user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_app_notification_user_read" tableName="app_notification">
+            <column name="user_id"/>
+            <column name="is_read"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260821120000-6" author="bialem">
+        <addColumn tableName="push_device_token">
+            <column name="active" type="boolean" defaultValueBoolean="true"/>
+            <column name="notifications_enabled" type="boolean" defaultValueBoolean="true"/>
+            <column name="last_seen_at" type="${datetimeType}"/>
+            <column name="last_success_at" type="${datetimeType}"/>
+            <column name="last_failure_at" type="${datetimeType}"/>
+            <column name="firebase_installation_id" type="varchar(255)"/>
+            <column name="device_uuid" type="varchar(255)"/>
+            <column name="app_version" type="varchar(80)"/>
+        </addColumn>
+
+        <createIndex indexName="idx_push_device_token_user_active" tableName="push_device_token">
+            <column name="user_id"/>
+            <column name="active"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260821120000-7" author="bialem">
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="NEW_FOLLOWER"/>
+            <column name="event_type" value="NEW_FOLLOWER"/>
+            <column name="name" value="Yeni Takipçi"/>
+            <column name="title_template" value="Yeni bir takipçin var"/>
+            <column name="body_template" value="{{actorName}} seni takip etmeye başladı."/>
+            <column name="route_template" value="/profile/{{actorUserId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="COMMUNITY_MEMBERSHIP_REQUEST"/>
+            <column name="event_type" value="COMMUNITY_MEMBERSHIP_REQUEST"/>
+            <column name="name" value="Topluluk Katılım İsteği"/>
+            <column name="title_template" value="Yeni topluluk katılım isteği"/>
+            <column name="body_template" value="{{communityName}} topluluğunda yeni bir üye başvurusu var."/>
+            <column name="route_template" value="/community/{{communityId}}/members"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="COMMUNITY_MEMBERSHIP_APPROVED"/>
+            <column name="event_type" value="COMMUNITY_MEMBERSHIP_APPROVED"/>
+            <column name="name" value="Topluluk Katılım Onaylandı"/>
+            <column name="title_template" value="Topluluk katılımın onaylandı"/>
+            <column name="body_template" value="{{communityName}}"/>
+            <column name="route_template" value="/community/{{communityId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="COMMUNITY_MEMBERSHIP_REJECTED"/>
+            <column name="event_type" value="COMMUNITY_MEMBERSHIP_REJECTED"/>
+            <column name="name" value="Topluluk Katılım Reddedildi"/>
+            <column name="title_template" value="Topluluk katılım isteğin reddedildi"/>
+            <column name="body_template" value="{{communityName}}"/>
+            <column name="route_template" value="/community/{{communityId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="HONOR_BADGE_AWARDED"/>
+            <column name="event_type" value="HONOR_BADGE_AWARDED"/>
+            <column name="name" value="Onur Madalyası"/>
+            <column name="title_template" value="Yeni bir onur madalyası kazandın"/>
+            <column name="body_template" value="{{badgeName}}"/>
+            <column name="route_template" value="/profile/me/badges"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="USER_REVIEW"/>
+            <column name="event_type" value="USER_REVIEW"/>
+            <column name="name" value="Yeni Değerlendirme"/>
+            <column name="title_template" value="Yeni bir değerlendirme aldın"/>
+            <column name="body_template" value="{{rating}} yıldız: {{reviewText}}"/>
+            <column name="route_template" value="/profile/me/reviews"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="EVENT_PUBLISHED"/>
+            <column name="event_type" value="EVENT_PUBLISHED"/>
+            <column name="name" value="Etkinlik Yayınlandı"/>
+            <column name="title_template" value="Etkinliğin yayınlandı"/>
+            <column name="body_template" value="{{eventName}}"/>
+            <column name="route_template" value="/event/{{eventId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20260821120000-8" author="bialem">
+        <sql>
+            UPDATE app_notification SET idempotency_key = 'LEGACY:' || id WHERE idempotency_key IS NULL;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
