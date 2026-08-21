@@ -4,3 +4,23 @@
 
 expo-env.d.ts
 # @end expo-cli
+
+
+######################
+# Android Build
+######################
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties/
+mobile/android/.idea/
+
+######################
+# iOS Build
+######################
+mobile/ios/App/build/
+mobile/ios/DerivedData/
+mobile/ios/Pods/
+mobile/ios/*.xcworkspace/xcuserdata/
+mobile/ios/*.xcodeproj/xcuserdata/
+mobile/ios/**/xcuserdata/

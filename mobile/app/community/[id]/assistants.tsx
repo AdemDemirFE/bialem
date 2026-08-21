@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
+import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../../src/components/AppAlert";
 
 type Assistant = {
   assignment_id: string;
@@ -86,16 +87,22 @@ export default function CommunityAssistantsScreen() {
     setBusyId(null);
   };
 
-  const removeAssistant = async (assignmentId: string) => {
+  const removeAssistant = async (assignmentId: string, displayName: string) => {
+    const confirmed = await showAppConfirmDelete(`${displayName} adlı moderatör yardımcısını kaldırmak istediğinize emin misiniz?`);
+    if (!confirmed) return;
+
     setBusyId(assignmentId);
     setError(null);
     setNotice(null);
     const { error: removeError } = await api.rpc("remove_community_moderator_assistant", {
       target_assignment_id: assignmentId
     });
-    if (removeError) setError(formatError(removeError.message));
-    else {
-      setNotice("Moderatör yardımcısı kaldırıldı.");
+    if (removeError) {
+      const message = formatError(removeError.message);
+      setError(message);
+      void showAppError(message);
+    } else {
+      void showAppSuccess("Moderatör yardımcısı kaldırıldı.");
       await loadAssistants();
     }
     setBusyId(null);
@@ -148,7 +155,7 @@ export default function CommunityAssistantsScreen() {
                   assistant={assistant}
                   busy={busyId === assistant.assignment_id}
                   onSave={(nextPermissions) => saveAssistant(assistant.email, nextPermissions, assistant.assignment_id)}
-                  onRemove={() => removeAssistant(assistant.assignment_id)}
+                  onRemove={() => removeAssistant(assistant.assignment_id, assistant.display_name)}
                 />
               ))}
             </View>

@@ -116,7 +116,6 @@ public class CommunityMemberService {
         variables.put("recipientUserId", applicantId);
         notificationEventPublisher.publish(new NotificationEvent(type, idempotencyKey, variables));
     }
-}
 
     /**
      * Partially update a communityMember.

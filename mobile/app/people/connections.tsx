@@ -11,11 +11,24 @@ import { colors } from "../../src/theme/colors";
 
 type ConnectionTab = "followers" | "following";
 
+function useConnectionParams() {
+  const params = useLocalSearchParams<{ userId: string; tab?: string }>();
+  if (typeof window !== "undefined") {
+    const search = new URLSearchParams(window.location.search);
+    return {
+      userId: search.get("userId") ?? params.userId,
+      tab: search.get("tab") ?? params.tab
+    };
+  }
+  return { userId: params.userId, tab: params.tab };
+}
+
 export default function FollowConnectionsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ userId: string; tab?: string }>();
+  const params = useConnectionParams();
   const { user } = useAuth();
-  const userId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const rawUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const userId = rawUserId || user?.id;
   const initialTab = (Array.isArray(params.tab) ? params.tab[0] : params.tab) === "following" ? "following" : "followers";
   const [tab, setTab] = useState<ConnectionTab>(initialTab);
   const [people, setPeople] = useState<PublicPerson[]>([]);

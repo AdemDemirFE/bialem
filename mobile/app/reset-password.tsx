@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { api } from "../src/lib/api";
 import { colors } from "../src/theme/colors";
+import { showAppSuccess, showAppError } from "../src/components/AppAlert";
 
 const PASSWORD_HINT = "En az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam";
 
@@ -95,17 +96,16 @@ export default function ResetPasswordScreen() {
 
     if (updateError) {
       const message = updateError.message || "";
-      if (/reset|token|key|kod|süresi|geçersiz|expired|invalid/i.test(message)) {
-        setError(
-          "Şifre sıfırlama kodunun süresi dolmuş veya kod geçersiz.\n\nYeni bir kod talep edebilirsiniz."
-        );
-      } else {
-        setError(message);
-      }
+      const displayMessage = /reset|token|key|kod|süresi|geçersiz|expired|invalid/i.test(message)
+        ? "Şifre sıfırlama kodunun süresi dolmuş veya kod geçersiz.\n\nYeni bir kod talep edebilirsiniz."
+        : message;
+      setError(displayMessage);
+      void showAppError(displayMessage);
       return;
     }
 
     setSuccess(true);
+    void showAppSuccess("Şifreniz başarıyla güncellendi.");
     setTimeout(() => router.replace("/"), 1600);
   };
 

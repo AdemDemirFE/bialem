@@ -5,6 +5,7 @@ import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, Te
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth";
 import { colors } from "../src/theme/colors";
+import { showAppConfirmDelete, showAppSuccess, showAppError } from "../src/components/AppAlert";
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
 const CONFIRMATION_TEXT = "HESABIMI SİL";
@@ -59,25 +60,35 @@ export default function AccountScreen() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      void showAppSuccess("Şifren başarıyla güncellendi.");
     } else if (authError) {
       setError(authError);
+      void showAppError(authError);
     }
   };
 
   const deleteAccount = async () => {
     if (confirmation.trim().toLocaleUpperCase("tr-TR") !== CONFIRMATION_TEXT || busy) return;
 
+    const confirmed = await showAppConfirmDelete(
+      "Hesabın, profilin, paylaşımların, hikâyelerin, yorumların ve puanların silinecek. Sahibi olduğun topluluk ve etkinlikler de kaldırılacak. Bu işlem geri alınamaz. Devam etmek istiyor musun?"
+    );
+    if (!confirmed) return;
+
     setBusy(true);
     setError(null);
     const { data, error: functionError } = await api.functions.invoke("delete-account", { body: {} });
 
     if (functionError || !data?.deleted) {
-      setError(data?.error || functionError?.message || "Hesap silinemedi. Lütfen tekrar deneyin.");
+      const message = data?.error || functionError?.message || "Hesap silinemedi. Lütfen tekrar deneyin.";
+      setError(message);
+      void showAppError(message);
       setBusy(false);
       return;
     }
 
-    await api.auth.signOut({ scope: "local" });
+    void showAppSuccess("Hesabın silindi.");
+    await api.auth.signOut();
     router.replace("/");
   };
 

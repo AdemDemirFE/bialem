@@ -73,8 +73,7 @@ public class AppNotification implements Serializable {
     @Column(name = "event_id", length = 120)
     private String eventId;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-    @Column(name = "payload")
+    @Column(name = "payload", columnDefinition = "text")
     private String payload;
 
     @Column(name = "scheduled_at")

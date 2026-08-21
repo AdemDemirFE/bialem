@@ -6,6 +6,7 @@ import { useAuth } from "../../src/lib/auth";
 import { removeStoryImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
+import { showAppConfirmDelete, showAppSuccess, showAppError } from "../../src/components/AppAlert";
 
 type StoryDetail = {
   story_id: string;
@@ -29,7 +30,6 @@ export default function StoryViewerScreen() {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export default function StoryViewerScreen() {
   goNextRef.current = goNext;
 
   useEffect(() => {
-    if (!story || loading || confirmDelete) return;
+    if (!story || loading) return;
     elapsedRef.current = 0;
     lastTickRef.current = null;
     setProgress(0);
@@ -118,7 +118,7 @@ export default function StoryViewerScreen() {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [story?.story_id, loading, confirmDelete]);
+  }, [story?.story_id, loading, deleting]);
 
   const syncPaused = () => {
     const next = holdPausedRef.current || buttonPausedRef.current;
@@ -140,21 +140,19 @@ export default function StoryViewerScreen() {
     syncPaused();
   };
 
-  const requestDelete = () => {
+  const requestDelete = async () => {
     if (!story || !user || story.author_id !== user.id || deleting) return;
+
     buttonPausedRef.current = true;
     syncPaused();
-    setConfirmDelete(true);
-  };
 
-  const cancelDelete = () => {
-    setConfirmDelete(false);
-    buttonPausedRef.current = false;
-    syncPaused();
-  };
+    const confirmed = await showAppConfirmDelete("Bu anıyı kaldırmak istediğine emin misin? Artık hiç kimse tarafından görüntülenemeyecek.");
+    if (!confirmed) {
+      buttonPausedRef.current = false;
+      syncPaused();
+      return;
+    }
 
-  const confirmDeleteStory = async () => {
-    if (!story || !user || story.author_id !== user.id) return;
     setDeleting(true);
     setError(null);
     const result = await api
@@ -165,8 +163,12 @@ export default function StoryViewerScreen() {
       .select("id");
 
     if (result.error || !result.data?.length) {
-      setError(result.error?.message || "Anı silinemedi. Lütfen tekrar dene.");
+      const message = result.error?.message || "Anı silinemedi. Lütfen tekrar dene.";
+      setError(message);
+      void showAppError(message);
       setDeleting(false);
+      buttonPausedRef.current = false;
+      syncPaused();
       return;
     }
 
@@ -178,6 +180,7 @@ export default function StoryViewerScreen() {
       }
     }
 
+    void showAppSuccess("Anı kaldırıldı.");
     const remaining = queue.filter((item) => item.story_id !== story.story_id);
     if (!remaining.length) {
       router.replace("/(tabs)/feed");
@@ -185,7 +188,6 @@ export default function StoryViewerScreen() {
     }
     setQueue(remaining);
     setIndex((current) => Math.min(current, remaining.length - 1));
-    setConfirmDelete(false);
     buttonPausedRef.current = false;
     setDeleting(false);
     syncPaused();
@@ -298,22 +300,6 @@ export default function StoryViewerScreen() {
         {paused ? "Duraklatıldı" : "Bu anlık 24 saat sonra kaybolur."}
       </Text>
 
-      {confirmDelete ? (
-        <View style={styles.confirmScrim}>
-          <View style={styles.confirmCard}>
-            <Text style={styles.confirmTitle}>Anını kaldır</Text>
-            <Text style={styles.confirmBody}>Bu anı hemen kaldırılacak ve artık hiç kimse tarafından görüntülenemeyecek.</Text>
-            <View style={styles.confirmRow}>
-              <Pressable style={styles.confirmCancel} onPress={cancelDelete}>
-                <Text style={styles.confirmCancelText}>Vazgeç</Text>
-              </Pressable>
-              <Pressable style={styles.confirmDelete} onPress={() => void confirmDeleteStory()} disabled={deleting}>
-                <Text style={styles.confirmDeleteText}>{deleting ? "Siliniyor..." : "Anıyı sil"}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -356,13 +342,4 @@ const styles = StyleSheet.create({
   error: { color: colors.onBrand, textAlign: "center", fontSize: 16, lineHeight: 23 },
   closeButton: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, backgroundColor: colors.action },
   closeText: { color: colors.actionText, fontWeight: "900" },
-  confirmScrim: { ...StyleSheet.absoluteFillObject, zIndex: 20, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "rgba(3,12,35,0.72)" },
-  confirmCard: { width: "100%", maxWidth: 360, borderRadius: 22, padding: 20, gap: 12, backgroundColor: colors.surface },
-  confirmTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
-  confirmBody: { color: colors.muted, fontSize: 14, lineHeight: 20, fontWeight: "600" },
-  confirmRow: { flexDirection: "row", gap: 10, marginTop: 8 },
-  confirmCancel: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.page },
-  confirmCancelText: { color: colors.ink, fontWeight: "800" },
-  confirmDelete: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#c42d4a" },
-  confirmDeleteText: { color: colors.onBrand, fontWeight: "800" }
 });

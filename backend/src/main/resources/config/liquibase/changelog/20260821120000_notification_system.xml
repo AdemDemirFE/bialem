@@ -216,17 +216,18 @@
             constraintName="fk_app_notification_template_id"
             referencedColumnNames="id"
             referencedTableName="notification_template"/>
+    </changeSet>
 
-        <createIndex indexName="idx_app_notification_user_created" tableName="app_notification">
-            <column name="user_id"/>
-            <column name="created_at"/>
-        </createIndex>
+    <changeSet id="20260821120000-5a" author="bialem" dbms="postgresql">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_app_notification_user_created ON public.app_notification(user_id, created_at);
+        </sql>
+    </changeSet>
 
-        <createIndex indexName="idx_app_notification_user_read" tableName="app_notification">
-            <column name="user_id"/>
-            <column name="is_read"/>
-            <column name="created_at"/>
-        </createIndex>
+    <changeSet id="20260821120000-5b" author="bialem" dbms="postgresql">
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_app_notification_user_read ON public.app_notification(user_id, is_read, created_at);
+        </sql>
     </changeSet>
 
     <changeSet id="20260821120000-6" author="bialem">

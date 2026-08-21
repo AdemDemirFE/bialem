@@ -28,6 +28,7 @@ import {
   type PickedImage
 } from "../src/lib/storage";
 import { api } from "../src/lib/api";
+import { showAppSuccess, showAppError } from "../src/components/AppAlert";
 import { colors } from "../src/theme/colors";
 
 type CommunityOption = {
@@ -353,18 +354,20 @@ export default function OrganizerRequestScreen() {
         await removeUploadedImage("event-covers", uploadedCover.bucketPath).catch(() => undefined);
       }
       setError(error.message);
+      void showAppError(error.message);
       setSubmitting(false);
       return;
     }
 
     const result = (data ?? [])[0] as { event_status?: string; creation_mode?: "direct" | "proposal" } | undefined;
-    setNotice(
+    const successMessage =
       result?.creation_mode === "proposal"
         ? "Etkinlik öneriniz grup moderatörünün onayına gönderildi."
         : result?.event_status === "published"
           ? "Etkinlik oluşturuldu ve yayınlandı."
-          : "Etkinlik oluşturuldu. Yeni partner güven kontrolünden sonra yayınlanacak."
-    );
+          : "Etkinlik oluşturuldu. Yeni partner güven kontrolünden sonra yayınlanacak.";
+    setNotice(successMessage);
+    void showAppSuccess(successMessage);
     setTitle("");
     setDescription("");
     setCoverImage(null);

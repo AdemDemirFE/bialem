@@ -108,6 +108,15 @@ public class AppNotificationService {
         appNotificationRepository.markAllReadForUser(userId, Instant.now());
     }
 
+    public void deleteCurrentUser(Long id) {
+        Long userId = currentUserId();
+        AppNotification notification = appNotificationRepository
+            .findByIdAndUser_Id(id, userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bildirim bulunamadı"));
+        notificationOutboxRepository.deleteByNotification_Id(notification.getId());
+        appNotificationRepository.delete(notification);
+    }
+
     public AppNotificationDTO sendTestToCurrentUser() {
         Long userId = currentUserId();
         return sendToUser(
@@ -138,6 +147,7 @@ public class AppNotificationService {
         notification.setNotificationType(type != null ? type : "GENERIC");
         notification.setReferenceId(referenceId);
         notification.setRoute(route);
+        notification.setPayload("");
         notification.setIsRead(false);
         notification.setCreatedAt(now);
         notification = appNotificationRepository.saveAndFlush(notification);

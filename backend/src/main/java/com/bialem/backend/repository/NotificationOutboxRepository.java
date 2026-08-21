@@ -54,4 +54,8 @@ public interface NotificationOutboxRepository extends JpaRepository<Notification
     List<NotificationOutbox> findByStatusAndScheduledAtBefore(NotificationOutboxStatus status, Instant scheduledAt);
 
     long countByStatus(NotificationOutboxStatus status);
+
+    @Modifying
+    @Query("DELETE FROM NotificationOutbox o WHERE o.notification.id = :notificationId")
+    int deleteByNotification_Id(@Param("notificationId") Long notificationId);
 }

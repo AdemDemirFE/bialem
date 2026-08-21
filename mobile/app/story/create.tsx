@@ -1,7 +1,8 @@
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
+import { showAppAlert, showAppConfirm } from "../../src/components/AppAlert";
 import {
   pickImageFromLibrary,
   requestCameraPermission,
@@ -72,25 +73,29 @@ export default function CreateStoryScreen() {
       setError("Fotoğraf çekmek için kamera izni vermen gerekiyor.");
 
       if (permission.canAskAgain) {
-        Alert.alert(
-          "Kamera izni gerekli",
-          "Kamerayı kullanabilmek için izin vermelisin. İstersen tekrar deneyebilir veya galeriden fotoğraf seçebilirsin.",
-          [
-            { text: "Vazgeç", style: "cancel" },
-            { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-            { text: "Tekrar dene", onPress: () => void takePhoto() }
-          ]
-        );
+        const confirmed = await showAppConfirm({
+          title: "Kamera izni gerekli",
+          text: "Kamerayı kullanabilmek için izin vermelisin. İstersen tekrar deneyebilir veya galeriden fotoğraf seçebilirsin.",
+          confirmText: "Tekrar dene",
+          cancelText: "Galeriden seç"
+        });
+        if (confirmed) {
+          void takePhoto();
+        } else {
+          void chooseImageFromLibrary();
+        }
       } else {
-        Alert.alert(
-          "Kamera izni kapalı",
-          "Kamera izni kalıcı olarak kapatılmış. Telefon ayarlarından Bialem için kamera iznini açabilir veya galeriden fotoğraf seçebilirsin.",
-          [
-            { text: "Vazgeç", style: "cancel" },
-            { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-            { text: "Ayarları aç", onPress: () => void Linking.openSettings() }
-          ]
-        );
+        const confirmed = await showAppConfirm({
+          title: "Kamera izni kapalı",
+          text: "Kamera izni kalıcı olarak kapatılmış. Telefon ayarlarından Bialem için kamera iznini açabilir veya galeriden fotoğraf seçebilirsin.",
+          confirmText: "Ayarları aç",
+          cancelText: "Galeriden seç"
+        });
+        if (confirmed) {
+          void Linking.openSettings();
+        } else {
+          void chooseImageFromLibrary();
+        }
       }
       return;
     }
@@ -99,7 +104,7 @@ export default function CreateStoryScreen() {
     setSelectedImage(selected);
   };
 
-  const chooseImageSource = () => {
+  const chooseImageSource = async () => {
     setMode("image");
     setError(null);
 
@@ -108,11 +113,16 @@ export default function CreateStoryScreen() {
       return;
     }
 
-    Alert.alert("Anını fotoğrafla paylaş", "Yeni bir fotoğraf çekebilir veya galerinden seçebilirsin.", [
-      { text: "Kamerayı aç", onPress: () => void takePhoto() },
-      { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-      { text: "Vazgeç", style: "cancel" }
-    ]);
+    const choice = await showAppAlert({
+      title: "Anını fotoğrafla paylaş",
+      text: "Yeni bir fotoğraf çekebilir veya galeriden seçebilirsin.",
+      confirmText: "Kamerayı aç"
+    });
+    if (choice.isConfirmed) {
+      void takePhoto();
+    } else {
+      void chooseImageFromLibrary();
+    }
   };
 
   const shareStory = async () => {

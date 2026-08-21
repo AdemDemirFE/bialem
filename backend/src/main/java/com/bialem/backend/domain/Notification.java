@@ -41,8 +41,7 @@ public class Notification implements Serializable {
     @Column(name = "body", length = 2000)
     private String body;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-    @Column(name = "payload")
+    @Column(name = "payload", columnDefinition = "text")
     private String payload;
 
     @Size(max = 80)
