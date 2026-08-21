@@ -59,4 +59,4 @@ mobile/ios/DerivedData/
 mobile/ios/Pods/
 mobile/ios/*.xcworkspace/xcuserdata/
 mobile/ios/*.xcodeproj/xcuserdata/
-mobile/ios/**/xcuserdata/
+mobile/ios/**/xcuserdata/*.dump
