@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
+import { ImageViewerModal } from "../../src/components/ImageViewerModal";
 import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { profileStatusLabel } from "../../src/lib/profile-status";
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
   const [error, setError] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("plans");
+  const [viewerVisible, setViewerVisible] = useState(false);
 
   const changeProfilePhoto = async () => {
     if (!user || uploadingAvatar) return;
@@ -190,7 +192,12 @@ export default function ProfileScreen() {
       setMediaPosts((mediaPostsResult.data ?? []) as MediaPostRecord[]);
       setReliability((reliabilityResult.data ?? null) as Reliability | null);
       setHonorBadges((badgesResult.data ?? []) as HonorBadge[]);
-      setFollowSummary((followSummaryResult.data ?? { follower_count: 0, following_count: 0, is_following: false }) as FollowSummary);
+      const rawSummary = (followSummaryResult.data ?? { followers: 0, following: 0 }) as { followers?: number; following?: number };
+      setFollowSummary({
+        follower_count: Number(rawSummary.followers ?? 0),
+        following_count: Number(rawSummary.following ?? 0),
+        is_following: false
+      });
       setPendingFollowRequestCount(followRequestsCountResult.count ?? 0);
       setTeamRole(teamIdentityResult.role);
     }
@@ -234,9 +241,16 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.page}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadProfileData("refresh")} tintColor={colors.accent} />}
     >
+      <ImageViewerModal
+        visible={viewerVisible}
+        uri={profile?.avatar_url ?? null}
+        onClose={() => setViewerVisible(false)}
+        onEdit={() => void changeProfilePhoto()}
+      />
+
       <View style={styles.hero}>
         <View style={styles.profileIdentity}>
-          <Pressable style={styles.avatarButton} onPress={() => void changeProfilePhoto()}>
+          <Pressable style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
             {profile?.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
@@ -350,6 +364,23 @@ export default function ProfileScreen() {
             );
           })}
         </View>
+      </View>
+
+      <View style={styles.panel}>
+        <View style={styles.appearanceHeader}>
+          <View style={[styles.appearanceIcon, { backgroundColor: colors.accentSoft }]}>
+            <Ionicons name="notifications-outline" size={22} color={colors.accent} />
+          </View>
+          <View style={styles.appearanceCopy}>
+            <Text style={styles.panelTitle}>Bildirim Ayarları</Text>
+            <Text style={styles.emptyText}>Hangi bildirimleri almak istediğini yönet.</Text>
+          </View>
+        </View>
+        <Link href={"/notification-settings" as never} asChild>
+          <Pressable style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Ayarları aç</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <View style={styles.statsGrid}>

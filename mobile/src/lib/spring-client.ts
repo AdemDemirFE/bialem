@@ -217,6 +217,9 @@ export function createSpringClient(options: SpringClientOptions) {
       },
       put<T>(path: string, json?: unknown) {
         return request<T>(path, { method: "PUT", json });
+      },
+      delete<T>(path: string) {
+        return request<T>(path, { method: "DELETE" });
       }
     },
     from(table: string) {

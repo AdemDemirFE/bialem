@@ -16,9 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service Implementation for managing {@link com.bialem.backend.domain.PushDeviceToken}.
- */
 @Service
 @Transactional
 public class PushDeviceTokenService {
@@ -48,7 +45,7 @@ public class PushDeviceTokenService {
         Instant now = Instant.now();
         PushPlatform platform = request.getPlatform() != null ? request.getPlatform() : PushPlatform.ANDROID;
 
-        Optional<PushDeviceToken> existing = pushDeviceTokenRepository.findByToken(request.getToken());
+        Optional<PushDeviceToken> existing = findExistingDevice(request);
         PushDeviceToken pushDeviceToken = existing.orElseGet(PushDeviceToken::new);
         if (pushDeviceToken.getCreatedAt() == null) {
             pushDeviceToken.setCreatedAt(now);
@@ -57,7 +54,51 @@ public class PushDeviceTokenService {
         pushDeviceToken.setPlatform(platform);
         pushDeviceToken.setUser(user);
         pushDeviceToken.setUpdatedAt(now);
+        pushDeviceToken.setActive(true);
+        pushDeviceToken.setLastSeenAt(now);
+        if (request.getFirebaseInstallationId() != null) {
+            pushDeviceToken.setFirebaseInstallationId(request.getFirebaseInstallationId());
+        }
+        if (request.getDeviceUuid() != null) {
+            pushDeviceToken.setDeviceUuid(request.getDeviceUuid());
+        }
+        if (request.getAppVersion() != null) {
+            pushDeviceToken.setAppVersion(request.getAppVersion());
+        }
+        if (request.getNotificationsEnabled() != null) {
+            pushDeviceToken.setNotificationsEnabled(request.getNotificationsEnabled());
+        }
 
         return pushDeviceTokenMapper.toDto(pushDeviceTokenRepository.save(pushDeviceToken));
+    }
+
+    public void deactivateCurrentUserDevice() {
+        String login = SecurityUtils.getCurrentUserLogin().orElseThrow();
+        User user = userRepository.findOneByLogin(login).orElseThrow();
+        pushDeviceTokenRepository
+            .findByUser_Id(user.getId())
+            .forEach(device -> {
+                device.setActive(false);
+                device.setUpdatedAt(Instant.now());
+                pushDeviceTokenRepository.save(device);
+            });
+    }
+
+    private Optional<PushDeviceToken> findExistingDevice(PushDeviceTokenRequest request) {
+        if (request.getFirebaseInstallationId() != null && !request.getFirebaseInstallationId().isBlank()) {
+            return pushDeviceTokenRepository
+                .findAll()
+                .stream()
+                .filter(d -> request.getFirebaseInstallationId().equals(d.getFirebaseInstallationId()))
+                .findFirst();
+        }
+        if (request.getDeviceUuid() != null && !request.getDeviceUuid().isBlank()) {
+            return pushDeviceTokenRepository
+                .findAll()
+                .stream()
+                .filter(d -> request.getDeviceUuid().equals(d.getDeviceUuid()))
+                .findFirst();
+        }
+        return pushDeviceTokenRepository.findByToken(request.getToken());
     }
 }

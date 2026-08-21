@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthProvider } from "../src/lib/auth";
 import { colors } from "../src/theme/colors";
 import { ThemeProvider, useTheme } from "../src/theme/theme";
+import { useSwipeBack } from "../src/lib/swipe-back";
 
 export default function RootLayout() {
   return (
@@ -17,6 +18,7 @@ export default function RootLayout() {
 function RootNavigator() {
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
+  useSwipeBack(true);
 
   useEffect(() => {
     bindRouter(

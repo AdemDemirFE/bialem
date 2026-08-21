@@ -42,6 +42,7 @@ type AuthContextValue = {
   resendSignUpEmail: (email: string) => Promise<boolean>;
   saveProfile: (input: ProfileInput) => Promise<boolean>;
   updateAvatar: (avatarUrl: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   clearError: () => void;
   clearNotice: () => void;
@@ -228,6 +229,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return true;
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      await api.rest.post("/api/account/change-password", { currentPassword, newPassword });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setError(mapErrorMessage(message));
+      return false;
+    }
+  };
+
   const signOut = async () => {
     await api.auth.signOut();
     setSession(null);
@@ -250,6 +262,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         resendSignUpEmail,
         saveProfile,
         updateAvatar,
+        changePassword,
         signOut,
         clearError: () => setError(null),
         clearNotice: () => setNotice(null)

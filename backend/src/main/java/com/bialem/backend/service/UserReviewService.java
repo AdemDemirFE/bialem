@@ -1,11 +1,16 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.domain.UserReview;
+import com.bialem.backend.domain.enumeration.NotificationEventType;
+import com.bialem.backend.notification.NotificationEvent;
+import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.repository.UserReviewRepository;
+import com.bialem.backend.service.dto.ProfileDTO;
 import com.bialem.backend.service.dto.UserReviewDTO;
 import com.bialem.backend.service.mapper.UserReviewMapper;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -26,9 +31,16 @@ public class UserReviewService {
 
     private final UserReviewMapper userReviewMapper;
 
-    public UserReviewService(UserReviewRepository userReviewRepository, UserReviewMapper userReviewMapper) {
+    private final NotificationEventPublisher notificationEventPublisher;
+
+    public UserReviewService(
+        UserReviewRepository userReviewRepository,
+        UserReviewMapper userReviewMapper,
+        NotificationEventPublisher notificationEventPublisher
+    ) {
         this.userReviewRepository = userReviewRepository;
         this.userReviewMapper = userReviewMapper;
+        this.notificationEventPublisher = notificationEventPublisher;
     }
 
     /**
@@ -41,7 +53,36 @@ public class UserReviewService {
         LOG.debug("Request to save UserReview : {}", userReviewDTO);
         UserReview userReview = userReviewMapper.toEntity(userReviewDTO);
         userReview = userReviewRepository.save(userReview);
+        publishUserReviewEvent(userReviewDTO);
         return userReviewMapper.toDto(userReview);
+    }
+
+    private void publishUserReviewEvent(UserReviewDTO review) {
+        if (review.getReviewedUser() == null || review.getReviewer() == null) {
+            return;
+        }
+        Long recipientUserId = userIdOf(review.getReviewedUser());
+        if (recipientUserId == null) {
+            return;
+        }
+        String idempotencyKey = "USER_REVIEW:" + review.getId() + ":" + recipientUserId;
+        Map<String, Object> variables = new java.util.HashMap<>();
+        variables.put("recipientUserId", recipientUserId);
+        variables.put("reviewerId", userIdOf(review.getReviewer()));
+        variables.put("reviewerName", displayNameOf(review.getReviewer()));
+        variables.put("reviewedUserId", recipientUserId);
+        variables.put("rating", review.getRating());
+        variables.put("reviewText", review.getReviewText());
+        variables.put("reviewId", review.getId());
+        notificationEventPublisher.publish(new NotificationEvent(NotificationEventType.USER_REVIEW, idempotencyKey, variables));
+    }
+
+    private Long userIdOf(ProfileDTO profile) {
+        return profile != null && profile.getUser() != null ? profile.getUser().getId() : null;
+    }
+
+    private String displayNameOf(ProfileDTO profile) {
+        return profile != null && profile.getDisplayName() != null ? profile.getDisplayName() : "Bir kullanıcı";
     }
 
     /**

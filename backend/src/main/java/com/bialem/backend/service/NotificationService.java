@@ -2,18 +2,14 @@ package com.bialem.backend.service;
 
 import com.bialem.backend.domain.Notification;
 import com.bialem.backend.domain.Profile;
-import com.bialem.backend.domain.PushToken;
 import com.bialem.backend.repository.NotificationRepository;
 import com.bialem.backend.repository.ProfileRepository;
-import com.bialem.backend.repository.PushTokenRepository;
 import com.bialem.backend.service.dto.AppNotificationDTO;
 import com.bialem.backend.service.dto.NotificationDTO;
 import com.bialem.backend.service.dto.UnreadCountDTO;
 import com.bialem.backend.service.mapper.NotificationMapper;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Service Implementation for managing {@link com.bialem.backend.domain.Notification}.
+ * Service Implementation for managing legacy {@link com.bialem.backend.domain.Notification}.
  */
 @Service
 @Transactional
@@ -37,26 +33,18 @@ public class NotificationService {
 
     private final ProfileRepository profileRepository;
 
-    private final PushTokenRepository pushTokenRepository;
-
-    private final FirebasePushService firebasePushService;
-
-    private final AppSupport appSupport;
+    private final AppNotificationService appNotificationService;
 
     public NotificationService(
         NotificationRepository notificationRepository,
         NotificationMapper notificationMapper,
         ProfileRepository profileRepository,
-        PushTokenRepository pushTokenRepository,
-        FirebasePushService firebasePushService,
-        AppSupport appSupport
+        AppNotificationService appNotificationService
     ) {
         this.notificationRepository = notificationRepository;
         this.notificationMapper = notificationMapper;
         this.profileRepository = profileRepository;
-        this.pushTokenRepository = pushTokenRepository;
-        this.firebasePushService = firebasePushService;
-        this.appSupport = appSupport;
+        this.appNotificationService = appNotificationService;
     }
 
     public NotificationDTO save(NotificationDTO notificationDTO) {
@@ -98,81 +86,31 @@ public class NotificationService {
         notificationRepository.deleteById(id);
     }
 
-    public AppNotificationDTO sendToUser(
-        Long userId,
-        String title,
-        String body,
-        String type,
-        String referenceId,
-        String route
-    ) {
+    public AppNotificationDTO sendToUser(Long userId, String title, String body, String type, String referenceId, String route) {
         Profile profile = resolveProfile(userId);
-        Instant now = Instant.now();
-        Notification notification = new Notification();
-        notification.setUser(profile);
-        notification.setTitle(title);
-        notification.setBody(body);
-        notification.setType(type != null ? type : "GENERIC");
-        notification.setNotificationType(type != null ? type : "GENERIC");
-        notification.setReferenceId(referenceId);
-        notification.setRoute(route);
-        notification.setIsRead(false);
-        notification.setCreatedAt(now);
-        notification = notificationRepository.saveAndFlush(notification);
-
-        Map<String, String> data = new HashMap<>();
-        data.put("type", notification.getType());
-        data.put("referenceId", referenceId != null ? referenceId : "");
-        data.put("route", route != null ? route : "");
-        data.put("notificationId", String.valueOf(notification.getId()));
-
-        List<PushToken> tokens = pushTokenRepository.findByUser_IdAndIsActiveTrue(profile.getId());
-        for (PushToken pushToken : tokens) {
-            firebasePushService.sendToToken(pushToken.getDeviceToken(), title, body, data);
-        }
-        return toInboxDto(notification);
+        return appNotificationService.sendToUser(profile.getUser().getId(), title, body, type, referenceId, route);
     }
 
     @Transactional(readOnly = true)
     public List<AppNotificationDTO> listCurrentUser() {
-        Long profileId = appSupport.currentProfile().getId();
-        return notificationRepository.findByUser_IdOrderByCreatedAtDesc(profileId).stream().map(this::toInboxDto).toList();
+        return appNotificationService.listCurrentUser();
     }
 
     @Transactional(readOnly = true)
     public UnreadCountDTO unreadCountCurrentUser() {
-        Long profileId = appSupport.currentProfile().getId();
-        return new UnreadCountDTO(notificationRepository.countByUser_IdAndIsReadFalse(profileId));
+        return appNotificationService.unreadCountCurrentUser();
     }
 
     public AppNotificationDTO markCurrentUserRead(Long id) {
-        Long profileId = appSupport.currentProfile().getId();
-        Notification notification = notificationRepository
-            .findByIdAndUser_Id(id, profileId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (!Boolean.TRUE.equals(notification.getIsRead())) {
-            notification.setIsRead(true);
-            notification.setReadAt(Instant.now());
-            notification = notificationRepository.save(notification);
-        }
-        return toInboxDto(notification);
+        return appNotificationService.markCurrentUserRead(id);
     }
 
     public void markAllCurrentUserRead() {
-        Long profileId = appSupport.currentProfile().getId();
-        notificationRepository.markAllReadForUser(profileId, Instant.now());
+        appNotificationService.markAllCurrentUserRead();
     }
 
     public AppNotificationDTO sendTestToCurrentUser() {
-        Long profileId = appSupport.currentProfile().getId();
-        return sendToUser(
-            profileId,
-            "Bialem Test Bildirimi 🔔",
-            "Push notification sistemi başarıyla çalışıyor.",
-            "TEST",
-            "0",
-            "/"
-        );
+        return appNotificationService.sendTestToCurrentUser();
     }
 
     private Profile resolveProfile(Long userId) {
@@ -180,20 +118,5 @@ public class NotificationService {
             .findById(userId)
             .or(() -> profileRepository.findOneByUser_Id(userId))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profil bulunamadı"));
-    }
-
-    private AppNotificationDTO toInboxDto(Notification notification) {
-        AppNotificationDTO dto = new AppNotificationDTO();
-        dto.setId(notification.getId());
-        dto.setTitle(notification.getTitle());
-        dto.setBody(notification.getBody());
-        dto.setNotificationType(
-            notification.getNotificationType() != null ? notification.getNotificationType() : notification.getType()
-        );
-        dto.setReferenceId(notification.getReferenceId());
-        dto.setRoute(notification.getRoute());
-        dto.setRead(Boolean.TRUE.equals(notification.getIsRead()));
-        dto.setCreatedAt(notification.getCreatedAt());
-        return dto;
     }
 }

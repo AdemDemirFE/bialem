@@ -1,4 +1,5 @@
 import { bindRouter } from "./shims/expo-router";
+import { App as CapacitorApp } from "@capacitor/app";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootLayout from "../app/_layout";
@@ -43,12 +44,35 @@ import { type ReactNode, useEffect } from "react";
 
 function RouterBinder({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+
   useEffect(() => {
     bindRouter(
       (to, opts) => navigate(to, { replace: opts?.replace }),
       () => navigate(-1)
     );
   }, [navigate]);
+
+  useEffect(() => {
+    let listener: { remove: () => void } | null = null;
+    const setup = async () => {
+      try {
+        listener = await CapacitorApp.addListener("backButton", ({ canGoBack }) => {
+          if (canGoBack) {
+            navigate(-1);
+          } else {
+            void CapacitorApp.exitApp();
+          }
+        });
+      } catch {
+        // Plugin web ortamında yüklü olmayabilir; sessizce geç.
+      }
+    };
+    void setup();
+    return () => {
+      listener?.remove();
+    };
+  }, [navigate]);
+
   return children;
 }
 
