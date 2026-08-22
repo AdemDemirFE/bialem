@@ -23,6 +23,7 @@ import {
 } from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
 import { SkeletonList } from "../../src/components/SkeletonList";
+import { decrementUnreadCount, refreshUnreadCount, setUnreadCount } from "../../src/lib/notificationUnreadStore";
 
 const PAGE_SIZE = 20;
 
@@ -71,6 +72,7 @@ export default function NotificationsScreen() {
           setPage(nextPage);
         }
         setHasMore(content.length === PAGE_SIZE && nextPage + 1 < data.totalPages);
+        void refreshUnreadCount();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi");
       }
@@ -102,6 +104,7 @@ export default function NotificationsScreen() {
     try {
       await markAllNotificationsAsRead();
       setItems((current) => current.map((item) => ({ ...item, read: true })));
+      setUnreadCount(0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "İşlem başarısız");
     }
@@ -112,6 +115,7 @@ export default function NotificationsScreen() {
       try {
         await markNotificationAsRead(item.id);
         setItems((current) => current.map((entry) => (entry.id === item.id ? { ...entry, read: true } : entry)));
+        decrementUnreadCount();
       } catch (err) {
         console.warn("Failed to mark notification as read", err);
       }
@@ -224,7 +228,6 @@ export default function NotificationsScreen() {
           <SkeletonList rows={5} />
         ) : (
           <View style={styles.stateCard}>
-            <Text style={styles.emptyMark}>B</Text>
             <Text style={styles.emptyTitle}>{searchQuery.trim() ? "Eşleşen bildirim bulunamadı" : "Henüz bildirim yok"}</Text>
             <Text style={styles.stateText}>{searchQuery.trim() ? "Farklı bir kelimeyle tekrar arayabilirsin." : "Yeni bir hareket olduğunda burada göreceksin."}</Text>
           </View>
@@ -297,7 +300,6 @@ const styles = StyleSheet.create({
   cardText: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   cardMeta: { color: colors.accent, fontSize: 11, fontWeight: "700", marginTop: 2 },
   stateCard: { minHeight: 230, padding: 24, gap: 10, alignItems: "center", justifyContent: "center", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  emptyMark: { width: 58, height: 58, borderRadius: 22, textAlign: "center", textAlignVertical: "center", backgroundColor: colors.action, color: colors.ink, fontSize: 24, fontWeight: "900" },
   emptyTitle: { color: colors.ink, fontSize: 20, fontWeight: "800" },
   stateText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: "center" },
   footerLoader: { paddingVertical: 16, alignItems: "center" }

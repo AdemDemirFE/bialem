@@ -13,6 +13,7 @@ export type AgendaPlan = {
   event_id: string; title: string; starts_at: string; ends_at: string | null;
   location_name: string | null; event_status: string; participation_status: string;
   community_name: string; event_type?: string; source?: "participating" | "community";
+  route?: string;
 };
 
 type Props = { plans: AgendaPlan[]; onRangeChange: (start: string, end: string) => void };
@@ -32,7 +33,7 @@ export function AgendaCalendar({ plans, onRangeChange }: Props) {
     extendedProps: { plan } })), [plans]);
   const selectedPlans = useMemo(() => selectedDate ? plans.filter((p) => localDateKey(p.starts_at) === selectedDate)
     .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at)) : [], [plans, selectedDate]);
-  const openEvent = (id: string) => router.push(`/event/${id}`);
+  const openEvent = (id: string) => { const plan = plans.find(item => item.event_id === id); router.push((plan?.route || `/event/${id}`) as never); };
 
   return <section className="agenda-shell">
     <header className="agenda-toolbar">

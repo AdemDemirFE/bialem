@@ -216,7 +216,10 @@ export function Tabs({
       <View style={{ flex: 1 }}>
         <Outlet />
       </View>
-      <View style={[{ flexDirection: "row", justifyContent: "space-around", alignItems: "center" }, screenOptions?.tabBarStyle]}>
+      <View style={[{
+        flexDirection: "row", justifyContent: "space-around", alignItems: "center", zIndex: 20,
+        boxShadow: "0 -8px 28px rgba(11, 23, 48, 0.08)"
+      }, screenOptions?.tabBarStyle]}>
         {screens.map((screen) => {
           const path = `/${screen.props.name}`;
           const active = location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -229,18 +232,23 @@ export function Tabs({
               hitSlop={4}
               onPress={() => navigate(path)}
               style={({ pressed }) => ({
-                minHeight: 44,
+                minHeight: 52,
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 2,
+                gap: 3,
                 paddingHorizontal: 6,
                 paddingVertical: 4,
                 flex: 1,
-                opacity: pressed ? 0.72 : 1,
-                transform: [{ scale: pressed ? 0.96 : 1 }]
+                marginHorizontal: 2,
+                borderRadius: 17,
+                backgroundColor: active ? screenOptions?.tabBarActiveBackgroundColor : "transparent",
+                opacity: pressed ? 0.8 : 1,
+                transform: [{ translateY: active ? -1 : 0 }, { scale: pressed ? 0.95 : 1 }],
+                transitionProperty: "background-color, transform, opacity",
+                transitionDuration: "180ms"
               })}
             >
-              {screen.props.options?.tabBarIcon?.({ color, size: active ? 21 : 20 })}
+              {screen.props.options?.tabBarIcon?.({ color, size: active ? 21 : 20, focused: active })}
               <Text style={[{ color, fontSize: 10, fontWeight: "700" }, screenOptions?.tabBarLabelStyle]}>
                 {screen.props.options?.tabBarLabel || screen.props.options?.title || screen.props.name}
               </Text>

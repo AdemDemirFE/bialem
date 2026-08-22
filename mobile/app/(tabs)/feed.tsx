@@ -3,6 +3,7 @@ import { Link, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CityDiscovery } from "../../src/components/CityDiscovery";
+import { NotificationButton } from "../../src/components/NotificationButton";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -165,6 +166,7 @@ export default function FeedScreen() {
             <Text style={styles.brandTagline}>Birlikte daha fazlası</Text>
           </View>
           <View style={styles.heroActions}>
+            <NotificationButton />
             <Link href={"/people" as never} asChild>
               <Pressable style={styles.peopleSearchButton}>
                 <Ionicons name="search" size={19} color={colors.ink} />

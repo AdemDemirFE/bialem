@@ -1,9 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/lib/auth";
 import { colors } from "../../src/theme/colors";
 import { useTheme } from "../../src/theme/theme";
+
+function TabIcon({ name, focused, color, size }: { name: string; focused: boolean; color: string; size: number }) {
+  return (
+    <View style={[styles.iconShell, focused && styles.iconShellActive]}>
+      <Ionicons name={name} color={color} size={focused ? size + 1 : size} />
+      {focused ? <View style={styles.activeDot} /> : null}
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   const { user, profile, loading } = useAuth();
@@ -36,18 +46,29 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 58 + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 6),
-          paddingTop: 4
+          height: 70 + insets.bottom,
+          paddingHorizontal: 8,
+          paddingBottom: Math.max(insets.bottom, 8),
+          paddingTop: 7,
+          shadowColor: colors.brandInk,
+          shadowOffset: { width: 0, height: -5 },
+          shadowOpacity: 0.08,
+          shadowRadius: 14,
+          elevation: 16
         },
-        tabBarActiveTintColor: colors.action as string,
+        tabBarActiveTintColor: colors.brandInk as string,
         tabBarInactiveTintColor: colors.muted as string,
+        tabBarActiveBackgroundColor: colors.accentSoft as string,
         tabBarLabelStyle: {
-          fontWeight: "700",
-          fontSize: 9
+          fontWeight: "800",
+          fontSize: 10,
+          marginTop: 1
         },
         tabBarItemStyle: {
-          minWidth: 58
+          minWidth: 58,
+          minHeight: 52,
+          marginHorizontal: 2,
+          borderRadius: 17
         },
         tabBarHideOnKeyboard: true,
         sceneStyle: {
@@ -60,7 +81,7 @@ export default function TabsLayout() {
         options={{
           title: "Keşfet",
           tabBarLabel: "Keşfet",
-          tabBarIcon: ({ color, size }) => <Ionicons name="compass" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "compass" : "compass-outline"} focused={focused} color={color} size={size} />
         }}
       />
       <Tabs.Screen
@@ -68,7 +89,15 @@ export default function TabsLayout() {
         options={{
           title: "Topluluklar",
           tabBarLabel: "Topluluk",
-          tabBarIcon: ({ color, size }) => <Ionicons name="people" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "people" : "people-outline"} focused={focused} color={color} size={size} />
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: "Takvim",
+          tabBarLabel: "Takvim",
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "calendar" : "calendar-outline"} focused={focused} color={color} size={size} />
         }}
       />
       <Tabs.Screen
@@ -76,15 +105,7 @@ export default function TabsLayout() {
         options={{
           title: "Bialem Asistan",
           tabBarLabel: "Asistan",
-          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" color={color} size={size} />
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Bildirimler",
-          tabBarLabel: "Bildirim",
-          tabBarIcon: ({ color, size }) => <Ionicons name="notifications" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "sparkles" : "sparkles-outline"} focused={focused} color={color} size={size} />
         }}
       />
       <Tabs.Screen
@@ -92,9 +113,15 @@ export default function TabsLayout() {
         options={{
           title: "Profil",
           tabBarLabel: "Profil",
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "person-circle" : "person-circle-outline"} focused={focused} color={color} size={size} />
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconShell: { width: 30, height: 27, alignItems: "center", justifyContent: "center" },
+  iconShellActive: { transform: [{ translateY: -1 }] },
+  activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.action }
+});

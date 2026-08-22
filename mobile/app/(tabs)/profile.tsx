@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleS
 import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { ImageViewerModal } from "../../src/components/ImageViewerModal";
+import { NotificationButton } from "../../src/components/NotificationButton";
 import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { profileStatusLabel } from "../../src/lib/profile-status";
@@ -247,6 +248,8 @@ export default function ProfileScreen() {
         onClose={() => setViewerVisible(false)}
         onEdit={() => void changeProfilePhoto()}
       />
+
+      <View style={{ alignItems: "flex-end" }}><NotificationButton /></View>
 
       <View style={styles.hero}>
         <View style={styles.profileIdentity}>
