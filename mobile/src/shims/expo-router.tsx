@@ -19,6 +19,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
+import { BackButton } from "../components/IconButton";
 
 function normalizeHref(href: string) {
   return href.replace("/(tabs)", "").replace(/^\/tabs/, "") || "/";
@@ -27,10 +28,17 @@ function normalizeHref(href: string) {
 function resolveTarget(to: string | { pathname?: string; params?: Record<string, string> }) {
   if (typeof to === "string") return normalizeHref(to);
   let path = normalizeHref(to.pathname || "/");
+  const search = new URLSearchParams();
   Object.entries(to.params || {}).forEach(([key, value]) => {
-    path = path.replace(`[${key}]`, encodeURIComponent(value));
+    const placeholder = `[${key}]`;
+    if (path.includes(placeholder)) {
+      path = path.replace(placeholder, encodeURIComponent(String(value)));
+    } else if (value !== undefined && value !== null && String(value).length > 0) {
+      search.set(key, String(value));
+    }
   });
-  return path;
+  const query = search.toString();
+  return query ? `${path}${path.includes("?") ? "&" : "?"}${query}` : path;
 }
 
 const HeaderContext = createContext<(options: Record<string, unknown>) => void>(() => undefined);
@@ -139,18 +147,57 @@ export function Stack({ children, screenOptions }: { children?: ReactNode; scree
 
 Stack.Screen = function StackScreen({ options }: { options?: Record<string, unknown> }) {
   const setOptions = useContext(HeaderContext);
+  const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (options?.title) document.title = String(options.title);
     setOptions(options || {});
   }, [options, setOptions]);
   if (options?.headerShown === false) return null;
   if (!options?.title) return null;
+  const showBack = options?.headerBackVisible !== false;
+  const goBack = () => {
+    const historyIndex = typeof window !== "undefined" ? Number(window.history.state?.idx ?? 0) : 0;
+    if (historyIndex > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate(resolveBackFallback(location.pathname), { replace: true });
+  };
   return (
-    <View style={{ paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#d7e0f5" }}>
-      <Text style={{ fontWeight: "800", fontSize: 18 }}>{String(options.title)}</Text>
+    <View
+      style={{
+        minHeight: 56,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 9,
+        borderBottomWidth: 1,
+        borderBottomColor: "var(--bialem-border)",
+        backgroundColor: "var(--bialem-surface)"
+      }}
+    >
+      {showBack && (
+        <BackButton onPress={goBack} />
+      )}
+      <Text numberOfLines={1} style={{ flex: 1, color: "var(--bialem-ink)", fontWeight: "800", fontSize: 17 }}>
+        {String(options.title)}
+      </Text>
     </View>
   );
 };
+
+function resolveBackFallback(pathname: string) {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments[0] === "event" && segments.length > 2) return `/event/${segments[1]}`;
+  if (segments[0] === "community" && segments.length > 2) return `/community/${segments[1]}`;
+  if (segments[0] === "advantages" && segments.length > 1) return "/advantages";
+  if (segments[0] === "messages" && segments.length > 1) return "/messages";
+  if (segments[0] === "people" && segments.length > 1) return "/people";
+  if (["settings", "account", "my-plans", "blocked-users", "profile"].includes(segments[0] || "")) return "/profile";
+  return "/feed";
+}
 
 export function Tabs({
   children,

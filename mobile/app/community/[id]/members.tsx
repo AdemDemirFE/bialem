@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { BackButton } from "../../../src/components/IconButton";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
 
@@ -104,9 +105,7 @@ export default function CommunityMembersScreen() {
         ListHeaderComponent={(
           <View style={styles.headerStack}>
             <View style={styles.header}>
-              <Pressable accessibilityLabel="Geri dön" style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={23} color={colors.ink} />
-              </Pressable>
+              <BackButton onPress={() => router.back()} />
               <View style={styles.headerCopy}>
                 <Text style={styles.kicker}>TOPLULUK ÜYELERİ</Text>
                 <Text style={styles.title} numberOfLines={2}>{communityName || "Üyeler"}</Text>

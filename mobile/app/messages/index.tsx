@@ -11,6 +11,7 @@ import {
 } from "../../src/lib/messagingApi";
 import { colors } from "../../src/theme/colors";
 import { SkeletonList } from "../../src/components/SkeletonList";
+import { BackButton, IconButton } from "../../src/components/IconButton";
 
 type Filter = "ALL" | "UNREAD";
 
@@ -54,17 +55,18 @@ export default function MessagesScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.ink} /></Pressable>
+        <BackButton size={44} onPress={() => router.back()} backgroundColor={colors.surface as string} />
         <View style={styles.headerCopy}><Text style={styles.kicker}>BAĞLANTILARIN</Text><Text style={styles.title}>Mesajlarım</Text></View>
-        <Pressable style={styles.composeButton} onPress={() => { setComposeMode((value) => !value); setQuery(""); }}>
-          <Ionicons name={composeMode ? "close" : "create-outline"} size={22} color={colors.actionText} />
-        </Pressable>
+        <IconButton icon={composeMode ? "close" : "create-outline"} accessibilityLabel={composeMode ? "Yeni mesajı kapat" : "Yeni mesaj"}
+          size={44} color={colors.actionText as string} backgroundColor={colors.action as string} borderColor="transparent"
+          onPress={() => { setComposeMode((value) => !value); setQuery(""); }} />
       </View>
 
       <View style={styles.searchBox}>
         <Ionicons name="search" size={20} color={colors.muted} />
         <TextInput value={query} onChangeText={setQuery} placeholder={composeMode ? "Mesaj göndereceğin kişiyi ara" : "Kişi veya mesaj ara"} placeholderTextColor={colors.muted} style={styles.searchInput} autoCapitalize="none" />
-        {query ? <Pressable onPress={() => setQuery("")}><Ionicons name="close-circle" size={20} color={colors.muted} /></Pressable> : null}
+        {query ? <IconButton icon="close-circle" accessibilityLabel="Aramayı temizle" size={36} iconSize={20}
+          color={colors.muted as string} backgroundColor="transparent" borderColor="transparent" onPress={() => setQuery("")} /> : null}
       </View>
 
       {!composeMode ? (

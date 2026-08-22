@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BackButton, IconButton } from "../../src/components/IconButton";
 import { useAuth } from "../../src/lib/auth";
 import { getDirectMessages, markConversationRead, sendDirectMessage, type DirectMessage } from "../../src/lib/messagingApi";
 import { colors } from "../../src/theme/colors";
@@ -60,7 +61,7 @@ export default function DirectChatScreen() {
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <Pressable style={styles.back} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.ink} /></Pressable>
+        <BackButton onPress={() => router.back()} />
         {avatar ? <Image source={{ uri: avatar }} style={styles.avatar} /> : <View style={styles.avatarFallback}><Text style={styles.avatarText}>{name.slice(0, 1).toLocaleUpperCase("tr-TR")}</Text></View>}
         <View style={styles.headerCopy}><Text style={styles.name} numberOfLines={1}>{name}</Text><Text style={styles.status}>Bialem mesajları</Text></View>
       </View>
@@ -84,7 +85,7 @@ export default function DirectChatScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <TextInput value={body} onChangeText={setBody} placeholder="Mesajını yaz..." placeholderTextColor={colors.muted} multiline maxLength={2000} style={styles.input} />
-        <Pressable style={[styles.send, (!body.trim() || sending) && styles.disabled]} onPress={() => void send()}><Ionicons name="send" size={20} color={colors.actionText} /></Pressable>
+        <IconButton icon="send" accessibilityLabel="Mesajı gönder" size={44} backgroundColor={colors.action} borderColor={colors.action} color={colors.actionText} disabled={!body.trim() || sending} loading={sending} onPress={() => void send()} />
       </View>
     </KeyboardAvoidingView>
   );

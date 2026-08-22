@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BackButton, IconButton } from "../../../src/components/IconButton";
 import { TeamIdentityBadge } from "../../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../../src/lib/auth";
 import { api } from "../../../src/lib/api";
@@ -114,7 +115,7 @@ export default function EventChatScreen() {
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.ink} /></Pressable>
+        <BackButton onPress={() => router.back()} />
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>KATILIMCILARA ÖZEL</Text>
           <Text style={styles.title} numberOfLines={1}>{eventTitle}</Text>
@@ -158,9 +159,7 @@ export default function EventChatScreen() {
       {canAccess ? (
         <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 14) }]}>
           <TextInput value={body} onChangeText={setBody} placeholder="Katılımcılara mesaj yaz..." placeholderTextColor={colors.muted} style={styles.input} multiline maxLength={1000} />
-          <Pressable style={[styles.sendButton, (!body.trim() || sending) && styles.disabled]} onPress={() => void sendMessage()}>
-            <Ionicons name="send" size={20} color={colors.actionText} />
-          </Pressable>
+          <IconButton icon="send" accessibilityLabel="Mesajı gönder" size={44} backgroundColor={colors.action} borderColor={colors.action} color={colors.actionText} disabled={!body.trim() || sending} loading={sending} onPress={() => void sendMessage()} />
         </View>
       ) : null}
     </KeyboardAvoidingView>

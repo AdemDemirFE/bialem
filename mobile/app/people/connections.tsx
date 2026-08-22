@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../../src/components/IconButton";
 import { PeopleListItem, type PublicPerson } from "../../src/components/PeopleListItem";
 import { useAuth } from "../../src/lib/auth";
 import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows";
@@ -14,8 +15,9 @@ type ConnectionTab = "followers" | "following";
 export default function FollowConnectionsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ userId: string; tab?: string }>();
-  const { user } = useAuth();
-  const userId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const { user, profile } = useAuth();
+  const routeUserId = Array.isArray(params.userId) ? params.userId[0] : params.userId;
+  const userId = routeUserId || profile?.id || user?.id;
   const initialTab = (Array.isArray(params.tab) ? params.tab[0] : params.tab) === "following" ? "following" : "followers";
   const [tab, setTab] = useState<ConnectionTab>(initialTab);
   const [people, setPeople] = useState<PublicPerson[]>([]);
@@ -63,6 +65,10 @@ export default function FollowConnectionsScreen() {
     void loadConnections();
   }, [tab, userId]);
 
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
+
   const toggleFollow = async (person: PublicPerson) => {
     if (!user || busyUserId || person.user_id === user.id) return;
     setBusyUserId(person.user_id);
@@ -91,9 +97,7 @@ export default function FollowConnectionsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
+        <BackButton onPress={() => router.back()} />
         <Text style={styles.title}>Takip bağlantıları</Text>
       </View>
 

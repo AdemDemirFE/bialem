@@ -8,6 +8,7 @@ import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows"
 import { api } from "../../src/lib/api";
 import { getPlatformTeamIdentityMap } from "../../src/lib/team-identities";
 import { colors } from "../../src/theme/colors";
+import { BackButton, IconButton } from "../../src/components/IconButton";
 
 export default function PeopleDiscoveryScreen() {
   const router = useRouter();
@@ -76,9 +77,7 @@ export default function PeopleDiscoveryScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
+        <BackButton size={44} onPress={() => router.back()} backgroundColor={colors.surface as string} />
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>BİALEM İNSANLARI</Text>
           <Text style={styles.title}>Kişi bul</Text>
@@ -101,12 +100,11 @@ export default function PeopleDiscoveryScreen() {
             style={styles.input}
           />
           {query ? (
-            <Pressable onPress={() => {
+            <IconButton icon="close-circle" accessibilityLabel="Aramayı temizle" size={36} iconSize={20}
+              color={colors.muted as string} backgroundColor="transparent" borderColor="transparent" onPress={() => {
               setQuery("");
               void searchPeople("");
-            }}>
-              <Ionicons name="close-circle" size={20} color={colors.muted} />
-            </Pressable>
+            }} />
           ) : null}
         </View>
         <Pressable style={styles.searchButton} onPress={() => void searchPeople()}>

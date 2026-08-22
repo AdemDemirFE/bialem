@@ -3,6 +3,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../../../src/components/IconButton";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
 
@@ -100,7 +101,7 @@ export default function EventCheckInScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRoster(true)} tintColor={colors.accent} />}>
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}><Ionicons name="arrow-back" size={22} color={colors.ink} /></Pressable>
+        <BackButton onPress={() => router.back()} />
         <View style={{ flex: 1 }}><Text style={styles.kicker}>ORGANİZATÖR MERKEZİ</Text><Text style={styles.title}>{eventTitle}</Text></View>
       </View>
 

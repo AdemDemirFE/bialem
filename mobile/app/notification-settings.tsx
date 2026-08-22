@@ -8,6 +8,7 @@ import {
   type NotificationPreference
 } from "../src/lib/notificationApi";
 import { colors } from "../src/theme/colors";
+import { BackButton } from "../src/components/IconButton";
 
 const KNOWN_TYPES = [
   { type: "NEW_FOLLOWER", label: "Yeni takipçiler", icon: "person-add-outline" },
@@ -82,9 +83,7 @@ export default function NotificationSettingsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <View style={styles.hero}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
+        <BackButton onPress={() => router.back()} backgroundColor={colors.surface as string} />
         <Text style={styles.kicker}>Bildirim Ayarları</Text>
         <Text style={styles.title}>Bildirim tercihlerini yönet</Text>
         <Text style={styles.description}>Hangi olaylar için uygulama içi ve push bildirimi alacağını buradan belirleyebilirsin.</Text>

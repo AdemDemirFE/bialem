@@ -4,6 +4,7 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BackButton } from "../../../src/components/IconButton";
 import QRCode from "react-native-qrcode-svg";
 import { captureRef } from "react-native-view-shot";
 import { eventPublicUrl } from "../../../src/lib/links";
@@ -122,7 +123,7 @@ export default function EventPosterScreen() {
     >
       <View style={styles.topBar}>
         <Link href={`/event/${id}` as never} asChild>
-          <Pressable style={styles.backButton}><Ionicons name="arrow-back" size={20} color={colors.ink} /></Pressable>
+          <BackButton />
         </Link>
         <View style={styles.topCopy}>
           <Text style={styles.kicker}>AFİŞ STÜDYOSU</Text>

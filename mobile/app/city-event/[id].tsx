@@ -121,7 +121,7 @@ export default function CityEventDetailScreen() {
   return (
     <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 28 }]}>
       <Link href="/(tabs)/feed" asChild>
-        <Pressable style={styles.backButton}><Ionicons name="arrow-back" size={18} color={colors.ink} /><Text style={styles.backText}>Şehir Radarı</Text></Pressable>
+        <Pressable style={styles.backButton}><Ionicons name="chevron-back" size={18} color={colors.ink} /><Text style={styles.backText}>Şehir Radarı</Text></Pressable>
       </Link>
 
       <View style={styles.hero}>

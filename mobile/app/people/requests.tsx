@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BackButton } from "../../src/components/IconButton";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -72,9 +73,7 @@ export default function FollowRequestsScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRequests(true)} tintColor={colors.accent as string} />}
     >
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.ink} />
-        </Pressable>
+        <BackButton onPress={() => router.back()} />
         <View style={styles.headerCopy}>
           <Text style={styles.kicker}>GİZLİ HESAP</Text>
           <Text style={styles.title}>Takip istekleri</Text>
