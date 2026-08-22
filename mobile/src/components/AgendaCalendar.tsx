@@ -14,6 +14,7 @@ export type AgendaPlan = {
   location_name: string | null; event_status: string; participation_status: string;
   community_name: string; event_type?: string; source?: "participating" | "community";
   route?: string;
+  description?: string | null; image_url?: string | null; price_label?: string | null; username?: string | null; calculated_age?: number | null;
 };
 
 type Props = { plans: AgendaPlan[]; onRangeChange: (start: string, end: string) => void };
@@ -61,17 +62,18 @@ export function AgendaCalendar({ plans, onRangeChange }: Props) {
     </div>
     {selectedDate && <div className="agenda-modal-backdrop" role="presentation" onClick={() => setSelectedDate(null)}>
       <section className="agenda-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <div className="agenda-sheet-handle" /><header className="agenda-sheet-header"><div><small className="agenda-eyebrow">SEÇİLEN GÜN</small><h3 className="agenda-sheet-title">{formatSelectedDate(selectedDate)}</h3></div>
+        <div className="agenda-sheet-handle" /><header className="agenda-sheet-header"><div><small className="agenda-eyebrow">SEÇİLEN GÜN</small><h3 className="agenda-sheet-title">{formatSelectedDate(selectedDate)} • Şehrinde Neler Var?</h3></div>
         <button className="agenda-icon-button" onClick={() => setSelectedDate(null)}><Ionicons name="close" size={19} color={colors.ink} /></button></header>
         {selectedPlans.length === 0 ? <div className="agenda-day-empty"><Ionicons name="calendar-outline" size={28} color={colors.aqua} /><span>Bu güne ait etkinlik bulunmuyor.</span></div>
           : selectedPlans.map((plan) => <button key={plan.event_id} className="agenda-day-event" onClick={() => openEvent(plan.event_id)}>
-            <i className="agenda-day-color" style={{ backgroundColor: eventColor(plan) }} /><span className="agenda-day-copy"><small className="agenda-day-time">{formatTime(plan.starts_at)} · {plan.community_name || "Bialem"}</small>
-            <strong className="agenda-day-title">{plan.title}</strong><small className="agenda-day-meta">{plan.location_name || participationLabel(plan.participation_status)}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted} /></button>)}
+            {plan.image_url ? <img className="agenda-day-image" src={plan.image_url} alt="" /> : <span className="agenda-day-icon" style={{ backgroundColor: eventColor(plan) }}><Ionicons name={plan.event_type === "BIRTHDAY" ? "gift-outline" : plan.event_type === "CITY_EVENT" ? "location-outline" : "calendar-outline"} size={19} color="#fff" /></span>}
+            <span className="agenda-day-copy"><small className="agenda-day-time">{plan.event_type === "BIRTHDAY" ? `@${plan.username || "bialem"} · ${plan.calculated_age || "Yeni"} yaşında` : `${formatTime(plan.starts_at)} · ${plan.community_name || "Bialem"}`}</small>
+            <strong className="agenda-day-title">{plan.title}</strong>{plan.description ? <small className="agenda-day-description">{plan.description}</small> : null}<small className="agenda-day-meta">{[plan.location_name,plan.price_label].filter(Boolean).join(" · ") || participationLabel(plan.participation_status)}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted} /></button>)}
       </section></div>}
   </section>;
 }
 
-function eventColor(p: AgendaPlan) { if (p.event_status === "cancelled") return String(colors.danger); if (["approved","checked_in"].includes(p.participation_status)) return String(colors.success); if (["pending","waitlisted"].includes(p.participation_status)) return String(colors.action); return p.event_type === "group" ? String(colors.aqua) : String(colors.ink); }
+function eventColor(p: AgendaPlan) { if (p.event_type === "BIRTHDAY") return String(colors.action); if (p.event_type === "CITY_EVENT") return String(colors.aqua); if (p.event_status === "cancelled") return String(colors.danger); if (["approved","checked_in"].includes(p.participation_status)) return String(colors.success); if (["pending","waitlisted"].includes(p.participation_status)) return String(colors.action); return String(colors.ink); }
 function eventIcon(p: AgendaPlan) { if (p.event_status === "cancelled") return "×"; if (["approved","checked_in"].includes(p.participation_status)) return "✓"; return p.source === "community" ? "◆" : "•"; }
 function localDateKey(value: string) { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset()*60000).toISOString().slice(0,10); }
 function formatSelectedDate(value: string) { return new Date(`${value}T12:00:00`).toLocaleDateString("tr-TR", { weekday:"long",day:"numeric",month:"long" }); }

@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -47,6 +48,9 @@ public class Profile implements Serializable {
     @Size(max = 100)
     @Column(name = "city", length = 100)
     private String city;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -153,6 +157,10 @@ public class Profile implements Serializable {
     public void setCity(String city) {
         this.city = city;
     }
+
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+    public Profile birthDate(LocalDate birthDate) { this.birthDate = birthDate; return this; }
 
     public ProfileStatus getStatus() {
         return this.status;

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+  <changeSet id="20260822233000-1" author="bialem"><addColumn tableName="profile"><column name="birth_date" type="date"/></addColumn></changeSet>
+  <changeSet id="20260822233000-2" author="bialem"><createIndex tableName="profile" indexName="idx_profile_birth_date"><column name="birth_date"/></createIndex><createIndex tableName="event" indexName="idx_event_calendar"><column name="status"/><column name="starts_at"/></createIndex><createIndex tableName="city_event" indexName="idx_city_event_calendar"><column name="city"/><column name="status"/><column name="starts_at"/></createIndex></changeSet>
+</databaseChangeLog>

@@ -39,6 +39,10 @@ public interface ProfileRepository extends JpaRepository<Profile, Long>, JpaSpec
     Optional<Profile> findOneWithToOneRelationships(@Param("id") Long id);
 
     Optional<Profile> findOneByUser_Id(Long id);
+    Optional<Profile> findOneByUser_Login(String login);
+
+    @Query(value = "select distinct p.* from profile p join account_preferences ap on ap.profile_id=p.id join generate_series(cast(:startDate as date), cast(:endDate as date), interval '1 day') d on extract(month from p.birth_date)=extract(month from d) and extract(day from p.birth_date)=extract(day from d) where p.birth_date is not null and p.status='ACTIVE' and ap.discoverable=true", nativeQuery = true)
+    List<Profile> findBirthdaysInRange(@Param("startDate") java.time.LocalDate startDate, @Param("endDate") java.time.LocalDate endDate);
 
     boolean existsByUsernameIgnoreCase(String username);
 

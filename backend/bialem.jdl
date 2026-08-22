@@ -69,6 +69,7 @@ entity Profile {
   avatarUrl String maxlength(2048)
   bio String maxlength(2000)
   city String maxlength(100)
+  birthDate LocalDate
   status ProfileStatus required
   isVerified Boolean required
   createdAt Instant required

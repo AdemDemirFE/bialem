@@ -4,6 +4,7 @@ import com.bialem.backend.domain.enumeration.ProfileStatus;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Objects;
 
 /**
@@ -30,6 +31,7 @@ public class ProfileDTO implements Serializable {
 
     @Size(max = 100)
     private String city;
+    private LocalDate birthDate;
 
     @NotNull
     private ProfileStatus status;
@@ -93,6 +95,8 @@ public class ProfileDTO implements Serializable {
     public void setCity(String city) {
         this.city = city;
     }
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 
     public ProfileStatus getStatus() {
         return status;
@@ -165,6 +169,7 @@ public class ProfileDTO implements Serializable {
             ", avatarUrl='" + getAvatarUrl() + "'" +
             ", bio='" + getBio() + "'" +
             ", city='" + getCity() + "'" +
+            ", birthDate='" + getBirthDate() + "'" +
             ", status='" + getStatus() + "'" +
             ", isVerified='" + getIsVerified() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
