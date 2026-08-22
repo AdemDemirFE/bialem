@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface FollowRepository extends JpaRepository<Follow, Long> {}
+public interface FollowRepository extends JpaRepository<Follow, Long> {
+    boolean existsByFollower_IdAndFollowed_Id(Long followerId, Long followedId);
+}

@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface BlockRepository extends JpaRepository<Block, Long> {}
+public interface BlockRepository extends JpaRepository<Block, Long> {
+    boolean existsByBlocker_IdAndBlockedUser_Id(Long blockerId, Long blockedUserId);
+}

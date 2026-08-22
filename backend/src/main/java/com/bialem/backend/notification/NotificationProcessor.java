@@ -123,9 +123,9 @@ public class NotificationProcessor {
         notification.setIsRead(false);
         notification.setCreatedAt(now);
 
-        if (inAppEnabled) {
-            notification = appNotificationRepository.save(notification);
-        }
+        // Persist the inbox record before creating the Firebase outbox entry. This keeps
+        // every push traceable and guarantees that FCM payloads reference a real record.
+        notification = appNotificationRepository.save(notification);
 
         if (pushEnabled && template.getPushEnabled()) {
             createOutboxEntry(notification, user, template, scheduledAt, idempotencyKey + ":PUSH");

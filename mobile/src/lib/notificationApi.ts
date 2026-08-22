@@ -24,6 +24,33 @@ export type PagedNotifications = {
   number: number;
 };
 
+type NotificationsResponse = PagedNotifications | AppNotification[];
+
+function normalizeNotificationsResponse(
+  data: NotificationsResponse | null | undefined,
+  page: number,
+  size: number
+): PagedNotifications {
+  if (Array.isArray(data)) {
+    const hasNextPage = data.length === size;
+    return {
+      content: data,
+      totalPages: hasNextPage ? page + 2 : page + 1,
+      totalElements: page * size + data.length,
+      size,
+      number: page
+    };
+  }
+
+  return {
+    content: Array.isArray(data?.content) ? data.content : [],
+    totalPages: typeof data?.totalPages === "number" ? data.totalPages : 0,
+    totalElements: typeof data?.totalElements === "number" ? data.totalElements : 0,
+    size: typeof data?.size === "number" ? data.size : size,
+    number: typeof data?.number === "number" ? data.number : page
+  };
+}
+
 export type NotificationPreference = {
   id?: number;
   notificationType: string;
@@ -92,8 +119,8 @@ export async function getNotifications(
 ): Promise<PagedNotifications> {
   const path = `/api/app/notifications?filter=${encodeURIComponent(filter)}&page=${page}&size=${size}&sort=createdAt,desc`;
   try {
-    const data = await api.rest.get<PagedNotifications>(path);
-    return data ?? { content: [], totalPages: 0, totalElements: 0, size, number: page };
+    const data = await api.rest.get<NotificationsResponse>(path);
+    return normalizeNotificationsResponse(data, page, size);
   } catch (error) {
     await logAndRethrow("get notifications", path, error);
     return { content: [], totalPages: 0, totalElements: 0, size, number: page };

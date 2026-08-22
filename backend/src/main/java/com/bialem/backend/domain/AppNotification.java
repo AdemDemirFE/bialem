@@ -7,8 +7,6 @@ import java.io.Serializable;
 import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * An AppNotification.
@@ -73,8 +71,7 @@ public class AppNotification implements Serializable {
     @Column(name = "event_id", length = 120)
     private String eventId;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-    @Column(name = "payload")
+    @Column(name = "payload", columnDefinition = "text")
     private String payload;
 
     @Column(name = "scheduled_at")

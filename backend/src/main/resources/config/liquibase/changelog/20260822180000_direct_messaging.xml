@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260822180000-1" author="bialem">
+        <createTable tableName="direct_conversation">
+            <column name="id" type="bigint"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="participant_one_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="participant_two_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="created_at" type="${datetimeType}"><constraints nullable="false"/></column>
+            <column name="updated_at" type="${datetimeType}"><constraints nullable="false"/></column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="direct_conversation" baseColumnNames="participant_one_id" referencedTableName="profile" referencedColumnNames="id" constraintName="fk_direct_conversation_participant_one"/>
+        <addForeignKeyConstraint baseTableName="direct_conversation" baseColumnNames="participant_two_id" referencedTableName="profile" referencedColumnNames="id" constraintName="fk_direct_conversation_participant_two"/>
+        <addUniqueConstraint tableName="direct_conversation" columnNames="participant_one_id, participant_two_id" constraintName="ux_direct_conversation_participants"/>
+        <createIndex tableName="direct_conversation" indexName="idx_direct_conversation_one"><column name="participant_one_id"/></createIndex>
+        <createIndex tableName="direct_conversation" indexName="idx_direct_conversation_two"><column name="participant_two_id"/></createIndex>
+    </changeSet>
+
+    <changeSet id="20260822180000-2" author="bialem">
+        <createTable tableName="direct_message">
+            <column name="id" type="bigint"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="conversation_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="sender_id" type="bigint"><constraints nullable="false"/></column>
+            <column name="body" type="varchar(2000)"><constraints nullable="false"/></column>
+            <column name="created_at" type="${datetimeType}"><constraints nullable="false"/></column>
+            <column name="read_at" type="${datetimeType}"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="direct_message" baseColumnNames="conversation_id" referencedTableName="direct_conversation" referencedColumnNames="id" constraintName="fk_direct_message_conversation"/>
+        <addForeignKeyConstraint baseTableName="direct_message" baseColumnNames="sender_id" referencedTableName="profile" referencedColumnNames="id" constraintName="fk_direct_message_sender"/>
+        <createIndex tableName="direct_message" indexName="idx_direct_message_conversation_created"><column name="conversation_id"/><column name="created_at"/></createIndex>
+        <createIndex tableName="direct_message" indexName="idx_direct_message_unread"><column name="conversation_id"/><column name="read_at"/></createIndex>
+    </changeSet>
+</databaseChangeLog>

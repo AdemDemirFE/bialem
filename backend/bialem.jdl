@@ -397,6 +397,17 @@ entity UserRole {
   createdAt Instant required
 }
 
+entity DirectConversation {
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity DirectMessage {
+  body String required maxlength(2000)
+  createdAt Instant required
+  readAt Instant
+}
+
 relationship OneToOne {
   Profile{user(login) required} to User with builtInEntity
   AccountPreferences{profile required} to Profile{preferences}
@@ -465,6 +476,10 @@ relationship ManyToOne {
   PlatformTeamMember{assignedBy} to Profile
   UserRole{user} to Profile
   UserRole{role} to Role
+  DirectConversation{participantOne required} to Profile
+  DirectConversation{participantTwo required} to Profile
+  DirectMessage{conversation required} to DirectConversation
+  DirectMessage{sender required} to Profile
 }
 
 paginate Profile, Community, Event, Post, Story, PartnerVenue, PartnerOffer, CityEvent, Notification, Report, UserReview, Comment with pagination

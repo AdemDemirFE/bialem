@@ -41,4 +41,7 @@ public interface ProfileRepository extends JpaRepository<Profile, Long>, JpaSpec
     Optional<Profile> findOneByUser_Id(Long id);
 
     boolean existsByUsernameIgnoreCase(String username);
+
+    @Query("select p from Profile p where p.id <> :profileId and (lower(p.displayName) like lower(concat('%', :query, '%')) or lower(p.username) like lower(concat('%', :query, '%'))) order by p.displayName")
+    Page<Profile> searchMessageRecipients(@Param("profileId") Long profileId, @Param("query") String query, Pageable pageable);
 }

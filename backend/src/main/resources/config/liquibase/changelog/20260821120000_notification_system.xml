@@ -197,6 +197,8 @@
     </changeSet>
 
     <changeSet id="20260821120000-5" author="bialem">
+        <!-- This changeSet was already deployed before optional notification columns were extended. -->
+        <validCheckSum>9:b44c985d6f5a87099c30fe06f3249560</validCheckSum>
         <addColumn tableName="app_notification">
             <column name="template_id" type="bigint"/>
             <column name="event_id" type="varchar(120)"/>

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -7,6 +8,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View
 } from "react-native";
 import { useAuth } from "../../src/lib/auth";
@@ -16,7 +18,6 @@ import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
-  sendTestNotification,
   type AppNotification,
   type NotificationFilter
 } from "../../src/lib/notificationApi";
@@ -43,6 +44,7 @@ export default function NotificationsScreen() {
   const [filter, setFilter] = useState<FilterValue>("ALL");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadNotifications = useCallback(
     async (refresh = false, nextPage = 0) => {
@@ -59,14 +61,15 @@ export default function NotificationsScreen() {
 
       try {
         const data = await getNotifications(filter, nextPage, PAGE_SIZE);
+        const content = Array.isArray(data.content) ? data.content : [];
         if (refresh || nextPage === 0) {
-          setItems(data.content);
+          setItems(content);
           setPage(0);
         } else {
-          setItems((current) => [...current, ...data.content]);
+          setItems((current) => [...current, ...content]);
           setPage(nextPage);
         }
-        setHasMore(data.content.length === PAGE_SIZE && nextPage + 1 < data.totalPages);
+        setHasMore(content.length === PAGE_SIZE && nextPage + 1 < data.totalPages);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi");
       }
@@ -117,16 +120,16 @@ export default function NotificationsScreen() {
     if (target) router.push(target as never);
   };
 
-  const handleTestNotification = async () => {
-    try {
-      await sendTestNotification();
-      await loadNotifications(true, 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Test bildirimi gönderilemedi");
-    }
-  };
-
   const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items]);
+  const visibleItems = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase("tr-TR");
+    if (!query) return items;
+    return items.filter((item) =>
+      [item.title, item.body, item.notificationType]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLocaleLowerCase("tr-TR").includes(query))
+    );
+  }, [items, searchQuery]);
 
   const renderItem = ({ item }: { item: AppNotification }) => {
     const hasTarget = Boolean(item.route);
@@ -155,20 +158,31 @@ export default function NotificationsScreen() {
   const ListHeader = () => (
     <>
       <View style={styles.hero}>
-        <View style={styles.heroText}>
-          <Text style={styles.kicker}>Bildirim Merkezi</Text>
-          <Text style={styles.title}>{unreadCount > 0 ? `${unreadCount} yeni bildirimin var` : "Her şey güncel"}</Text>
-          <Text style={styles.description}>Etkinlik, yorum ve topluluk hareketlerini tek yerden takip et.</Text>
+        <View style={styles.headingRow}>
+          <View style={styles.heroText}>
+            <Text style={styles.kicker}>Bildirim Merkezi</Text>
+            <Text style={styles.title}>{unreadCount > 0 ? `${unreadCount} yeni bildirim` : "Her şey güncel"}</Text>
+          </View>
+          <Pressable accessibilityLabel="Mesajlarım" style={styles.messageAction} onPress={() => router.push("/messages" as never)}>
+            <Ionicons name="chatbubbles-outline" size={20} color={colors.ink} />
+            <Text style={styles.messageActionText}>Mesajlar</Text>
+          </Pressable>
         </View>
-        <View style={styles.heroActions}>
+
+        <View style={styles.searchInputWrap}>
+          <Ionicons name="search-outline" size={18} color={colors.muted} />
+          <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Bildirimlerde ara" placeholderTextColor={colors.muted} style={styles.searchInput} returnKeyType="search" />
+          {searchQuery ? <Pressable style={styles.clearSearch} onPress={() => setSearchQuery("")}><Ionicons name="close-circle" size={19} color={colors.muted} /></Pressable> : null}
+        </View>
+
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryText}>{searchQuery.trim() ? `${visibleItems.length} sonuç` : `${items.length} bildirim`}</Text>
           {unreadCount > 0 ? (
             <Pressable style={styles.readAllButton} onPress={() => void markAllAsRead()}>
-              <Text style={styles.readAllText}>Tümünü okundu yap</Text>
+              <Ionicons name="checkmark-done" size={15} color={colors.accent} />
+              <Text style={styles.readAllText}>Tümünü oku</Text>
             </Pressable>
           ) : null}
-          <Pressable style={styles.testButton} onPress={() => void handleTestNotification()}>
-            <Text style={styles.testButtonText}>Test bildirimi gönder</Text>
-          </Pressable>
         </View>
       </View>
 
@@ -189,7 +203,7 @@ export default function NotificationsScreen() {
 
   return (
     <FlatList
-      data={items}
+      data={visibleItems}
       keyExtractor={(item) => String(item.id)}
       renderItem={renderItem}
       contentContainerStyle={styles.page}
@@ -202,7 +216,7 @@ export default function NotificationsScreen() {
         ) : null
       }
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadNotifications(true, 0)} tintColor={colors.accent} />}
-      onEndReached={loadMore}
+      onEndReached={searchQuery.trim() ? undefined : loadMore}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
         loading ? (
@@ -213,8 +227,8 @@ export default function NotificationsScreen() {
         ) : (
           <View style={styles.stateCard}>
             <Text style={styles.emptyMark}>B</Text>
-            <Text style={styles.emptyTitle}>Henüz bildirim yok</Text>
-            <Text style={styles.stateText}>Yeni bir hareket olduğunda burada göreceksin.</Text>
+            <Text style={styles.emptyTitle}>{searchQuery.trim() ? "Eşleşen bildirim bulunamadı" : "Henüz bildirim yok"}</Text>
+            <Text style={styles.stateText}>{searchQuery.trim() ? "Farklı bir kelimeyle tekrar arayabilirsin." : "Yeni bir hareket olduğunda burada göreceksin."}</Text>
           </View>
         )
       }
@@ -242,22 +256,26 @@ function formatRelativeDate(value: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, gap: 18, backgroundColor: colors.page },
-  hero: { marginTop: 8, gap: 16 },
-  heroText: { gap: 8 },
-  kicker: { color: colors.accent, fontSize: 13, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase" },
-  title: { color: colors.ink, fontSize: 30, lineHeight: 36, fontWeight: "800" },
-  description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-  heroActions: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  readAllButton: { alignSelf: "flex-start", backgroundColor: colors.action, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 11 },
-  readAllText: { color: colors.actionText, fontSize: 13, fontWeight: "800" },
-  testButton: { alignSelf: "flex-start", backgroundColor: colors.accentSoft, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 11 },
-  testButtonText: { color: colors.accent, fontSize: 13, fontWeight: "800" },
+  page: { flexGrow: 1, padding: 16, gap: 13, backgroundColor: colors.page },
+  hero: { marginTop: 4, gap: 12 },
+  headingRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  heroText: { flex: 1, gap: 3 },
+  kicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1, textTransform: "uppercase" },
+  title: { color: colors.ink, fontSize: 24, lineHeight: 29, fontWeight: "900" },
+  messageAction: { height: 36, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 11, borderRadius: 12, backgroundColor: colors.action },
+  messageActionText: { color: colors.actionText, fontSize: 12, fontWeight: "900" },
+  searchInputWrap: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  searchInput: { flex: 1, color: colors.ink, fontSize: 14 },
+  clearSearch: { padding: 2 },
+  summaryRow: { minHeight: 28, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  summaryText: { color: colors.muted, fontSize: 11, fontWeight: "700" },
+  readAllButton: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.accentSoft },
+  readAllText: { color: colors.accent, fontSize: 11, fontWeight: "900" },
   error: { color: colors.danger, fontSize: 14, fontWeight: "600" },
-  filters: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, flexGrow: 0, flexShrink: 0 },
+  filters: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, flexGrow: 0, flexShrink: 0 },
   filter: {
-    height: 32,
-    paddingHorizontal: 12,
+    height: 30,
+    paddingHorizontal: 10,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -269,17 +287,17 @@ const styles = StyleSheet.create({
   filterActive: { borderColor: colors.brandInk, backgroundColor: colors.brandInk },
   filterText: { color: colors.ink, fontSize: 12, fontWeight: "800" },
   filterTextActive: { color: "#fff" },
-  card: { flexDirection: "row", gap: 13, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 11 },
+  card: { flexDirection: "row", gap: 11, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginBottom: 8 },
   unreadCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  typeMark: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceStrong },
+  typeMark: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceStrong },
   unreadMark: { backgroundColor: colors.action },
-  typeMarkText: { color: colors.ink, fontSize: 16, fontWeight: "900" },
+  typeMarkText: { color: colors.ink, fontSize: 14, fontWeight: "900" },
   cardBody: { flex: 1, gap: 5 },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  cardTitle: { flex: 1, color: colors.ink, fontSize: 16, lineHeight: 21, fontWeight: "800" },
+  cardTitle: { flex: 1, color: colors.ink, fontSize: 15, lineHeight: 19, fontWeight: "800" },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent },
-  cardText: { color: colors.muted, fontSize: 14, lineHeight: 20 },
-  cardMeta: { color: colors.accent, fontSize: 12, fontWeight: "700", marginTop: 3 },
+  cardText: { color: colors.muted, fontSize: 13, lineHeight: 18 },
+  cardMeta: { color: colors.accent, fontSize: 11, fontWeight: "700", marginTop: 2 },
   stateCard: { minHeight: 230, padding: 24, gap: 10, alignItems: "center", justifyContent: "center", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   emptyMark: { width: 58, height: 58, borderRadius: 22, textAlign: "center", textAlignVertical: "center", backgroundColor: colors.action, color: colors.ink, fontSize: 24, fontWeight: "900" },
   emptyTitle: { color: colors.ink, fontSize: 20, fontWeight: "800" },

@@ -8,6 +8,8 @@ import FeedScreen from "../app/(tabs)/feed";
 import CommunitiesScreen from "../app/(tabs)/communities";
 import AssistantScreen from "../app/(tabs)/assistant";
 import NotificationsScreen from "../app/(tabs)/notifications";
+import MessagesScreen from "../app/messages/index";
+import DirectChatScreen from "../app/messages/[id]";
 import ProfileScreen from "../app/(tabs)/profile";
 import HomeScreen from "../app/index";
 import AccountScreen from "../app/account";
@@ -110,6 +112,8 @@ export function App() {
               <Route path="/story/:id" element={<StoryScreen />} />
               <Route path="/user/:id" element={<UserScreen />} />
               <Route path="/people" element={<PeopleScreen />} />
+              <Route path="/messages" element={<MessagesScreen />} />
+              <Route path="/messages/:id" element={<DirectChatScreen />} />
               <Route path="/people/requests" element={<PeopleRequestsScreen />} />
               <Route path="/people/connections" element={<PeopleConnectionsScreen />} />
               <Route path="/blocked-users" element={<BlockedUsersScreen />} />
