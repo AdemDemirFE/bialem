@@ -31,9 +31,13 @@ public class PushDeviceTokenResource {
     }
 
     @DeleteMapping("/current")
-    public ResponseEntity<Void> deactivateCurrentDevice() {
+    public ResponseEntity<Void> deactivateCurrentDevice(
+        @RequestParam(required = false) String token,
+        @RequestParam(required = false) String deviceUuid,
+        @RequestParam(required = false) String firebaseInstallationId
+    ) {
         LOG.debug("REST request to deactivate current push device token");
-        pushDeviceTokenService.deactivateCurrentUserDevice();
+        pushDeviceTokenService.deactivateCurrentUserDevice(token, deviceUuid, firebaseInstallationId);
         return ResponseEntity.noContent().build();
     }
 }

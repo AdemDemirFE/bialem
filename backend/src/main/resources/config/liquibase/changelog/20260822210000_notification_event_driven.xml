@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260822210000-1" author="bialem">
+        <addColumn tableName="app_notification">
+            <column name="actor_user_id" type="bigint"/>
+            <column name="reference_type" type="varchar(80)"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="app_notification" baseColumnNames="actor_user_id"
+            referencedTableName="jhi_user" referencedColumnNames="id" constraintName="fk_app_notification_actor_user_id"/>
+        <createIndex tableName="app_notification" indexName="idx_app_notification_reference">
+            <column name="reference_type"/><column name="reference_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260822210000-2" author="bialem" dbms="postgresql">
+        <sql><![CDATA[
+            INSERT INTO notification_template
+              (id, code, event_type, name, title_template, body_template, route_template, enabled,
+               in_app_enabled, push_enabled, priority, schedule_type, timezone, created_at)
+            SELECT nextval('sequence_generator'), v.type, v.type, v.name, v.title, v.body, '{{route}}',
+                   true, true, true, v.priority, 'IMMEDIATE', 'Europe/Istanbul', CURRENT_TIMESTAMP
+            FROM (VALUES
+              ('FOLLOW_REQUEST','Takip isteği','Yeni takip isteği','{{actorName}} seni takip etmek istiyor.','NORMAL'),
+              ('FOLLOW_ACCEPTED','Takip kabul edildi','Takip isteğin kabul edildi','{{actorName}} takip isteğini kabul etti.','NORMAL'),
+              ('FOLLOW_REJECTED','Takip reddedildi','Takip isteği sonuçlandı','{{actorName}} takip isteğini reddetti.','NORMAL'),
+              ('COMMUNITY_JOIN_REQUEST','Topluluk katılım isteği','Yeni topluluk katılım isteği','{{actorName}} topluluğa katılmak istiyor.','HIGH'),
+              ('COMMUNITY_JOIN_APPROVED','Topluluk katılımı onaylandı','Katılım isteğin onaylandı','Topluluk katılım isteğin onaylandı.','NORMAL'),
+              ('COMMUNITY_JOIN_REJECTED','Topluluk katılımı reddedildi','Katılım isteğin sonuçlandı','Topluluk katılım isteğin reddedildi.','NORMAL'),
+              ('EVENT_JOIN_REQUEST','Etkinlik katılım isteği','Yeni etkinlik katılım isteği','{{actorName}} etkinliğe katılmak istiyor.','HIGH'),
+              ('EVENT_JOIN_APPROVED','Etkinlik katılımı onaylandı','Katılım isteğin onaylandı','Etkinlik katılım isteğin onaylandı.','NORMAL'),
+              ('EVENT_JOIN_REJECTED','Etkinlik katılımı reddedildi','Katılım isteğin sonuçlandı','Etkinlik katılım isteğin reddedildi.','NORMAL'),
+              ('EVENT_UPDATED','Etkinlik güncellendi','Etkinlik bilgileri güncellendi','Katıldığın etkinliğin bilgileri güncellendi.','NORMAL'),
+              ('EVENT_CANCELLED','Etkinlik iptal edildi','Etkinlik iptal edildi','Katıldığın etkinlik iptal edildi. {{reason}}','HIGH'),
+              ('EVENT_REMINDER','Etkinlik hatırlatması','Etkinlik yaklaşıyor','Etkinliğin yakında başlayacak.','HIGH'),
+              ('COMMENT','Yeni yorum','İçeriğine yorum yapıldı','{{actorName}} içeriğine yorum yaptı.','NORMAL'),
+              ('LIKE','Yeni beğeni','İçeriğin beğenildi','{{actorName}} içeriğini beğendi.','NORMAL'),
+              ('MENTION','Yeni bahsetme','Bir içerikte senden bahsedildi','{{actorName}} bir içerikte senden bahsetti.','NORMAL'),
+              ('COMMUNITY_ANNOUNCEMENT','Topluluk duyurusu','Yeni topluluk duyurusu','{{message}}','HIGH'),
+              ('SYSTEM_NOTIFICATION','Sistem bildirimi','{{title}}','{{message}}','HIGH')
+            ) AS v(type,name,title,body,priority)
+            WHERE NOT EXISTS (SELECT 1 FROM notification_template t WHERE t.event_type = v.type);
+        ]]></sql>
+    </changeSet>
+
+    <changeSet id="20260822210000-3" author="bialem">
+        <update tableName="notification_template">
+            <column name="route_template" value="{{route}}"/>
+            <where>event_type = 'NEW_FOLLOWER'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

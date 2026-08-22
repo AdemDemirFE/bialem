@@ -94,7 +94,7 @@ async function uploadCommunityCover(
   const path = `${slug}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await admin.storage
     .from("community-covers")
-    .upload(path, Buffer.from(await file.arrayBuffer()), {
+    .upload(path, await file.arrayBuffer(), {
       contentType: file.type,
       upsert: false
     });

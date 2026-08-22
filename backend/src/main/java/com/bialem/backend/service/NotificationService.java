@@ -109,10 +109,6 @@ public class NotificationService {
         appNotificationService.markAllCurrentUserRead();
     }
 
-    public AppNotificationDTO sendTestToCurrentUser() {
-        return appNotificationService.sendTestToCurrentUser();
-    }
-
     private Profile resolveProfile(Long userId) {
         return profileRepository
             .findById(userId)

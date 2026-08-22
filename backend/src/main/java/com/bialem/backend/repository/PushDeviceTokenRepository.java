@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PushDeviceTokenRepository extends JpaRepository<PushDeviceToken, Long> {
     Optional<PushDeviceToken> findByToken(String token);
+    Optional<PushDeviceToken> findByFirebaseInstallationId(String firebaseInstallationId);
+    Optional<PushDeviceToken> findByDeviceUuid(String deviceUuid);
 
     List<PushDeviceToken> findByUser_Id(Long userId);
 
@@ -28,4 +30,11 @@ public interface PushDeviceTokenRepository extends JpaRepository<PushDeviceToken
     int deactivateById(@Param("id") Long id);
 
     long countByActiveTrue();
+
+    @Modifying
+    @Query("update PushDeviceToken d set d.active = false, d.updatedAt = :now where d.user.id = :userId and " +
+        "((:token is not null and d.token = :token) or (:deviceUuid is not null and d.deviceUuid = :deviceUuid) or " +
+        "(:installationId is not null and d.firebaseInstallationId = :installationId))")
+    int deactivateCurrentDevice(@Param("userId") Long userId, @Param("token") String token,
+        @Param("deviceUuid") String deviceUuid, @Param("installationId") String installationId, @Param("now") Instant now);
 }

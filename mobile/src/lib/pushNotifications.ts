@@ -58,6 +58,7 @@ function registerPushListenersOnce() {
     const tokenPreview = token.value ? `${token.value.slice(0, 8)}...` : "(empty)";
     console.log("[PUSH] registration token received", { tokenPreview });
     try {
+      if (typeof localStorage !== "undefined") localStorage.setItem("bialem.push.token", token.value);
       const platform = Capacitor.getPlatform().toUpperCase();
       await registerPushTokenApi(token.value, platform, {
         deviceUuid: getDeviceUuid(),
@@ -98,7 +99,9 @@ function registerPushListenersOnce() {
 function getDeviceUuid(): string | undefined {
   try {
     if (typeof globalThis !== "undefined" && (globalThis as { deviceUuid?: string }).deviceUuid) {
-      return (globalThis as { deviceUuid?: string }).deviceUuid;
+      const value = (globalThis as { deviceUuid?: string }).deviceUuid;
+      if (value && typeof localStorage !== "undefined") localStorage.setItem("bialem.push.deviceUuid", value);
+      return value;
     }
   } catch {
     // ignore

@@ -1,211 +1,28 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link, Stack } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Stack } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AgendaCalendar, type AgendaPlan } from "../src/components/AgendaCalendar";
 import { api } from "../src/lib/api";
 import { colors } from "../src/theme/colors";
 
-type PlanFilter = "upcoming" | "past" | "all";
-
-type ProfilePlan = {
-  event_id: string;
-  title: string;
-  starts_at: string;
-  ends_at: string | null;
-  location_name: string | null;
-  cover_image_url: string | null;
-  event_status: string;
-  participation_status: string;
-  community_name: string;
-};
-
-const filters: { value: PlanFilter; label: string }[] = [
-  { value: "upcoming", label: "Yaklaşan" },
-  { value: "past", label: "Geçmiş" },
-  { value: "all", label: "Tümü" }
-];
-
 export default function MyPlansScreen() {
-  const [plans, setPlans] = useState<ProfilePlan[]>([]);
-  const [filter, setFilter] = useState<PlanFilter>("upcoming");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [plans,setPlans] = useState<AgendaPlan[]>([]); const [loading,setLoading] = useState(true); const [initialized,setInitialized] = useState(false); const [error,setError] = useState<string|null>(null);
+  const requestId = useRef(0); const lastRange = useRef<{key:string;start:string;end:string}|null>(null);
+  const loadRange = useCallback(async (start:string,end:string,force=false) => {
+    const key=`${start}|${end}`; if (!force && lastRange.current?.key===key) return; lastRange.current={key,start,end}; const current=++requestId.current;
+    setLoading(true); setError(null); const result=await api.rpc("get_my_profile_plans",{range_start:start,range_end:end}); if(current!==requestId.current)return;
+    if(result.error){setError("Ajandan şu anda yüklenemedi. Lütfen tekrar dene.");setPlans([]);} else setPlans(Array.isArray(result.data)?result.data as AgendaPlan[]:[]); setLoading(false); setInitialized(true);
+  },[]);
+  useEffect(()=>{const now=new Date();const start=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),-6));const end=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,8));void loadRange(start.toISOString(),end.toISOString());},[loadRange]);
+  const upcoming=useMemo(()=>plans.filter(p=>Date.parse(p.starts_at)>=Date.now()&&p.event_status!=="cancelled").sort((a,b)=>Date.parse(a.starts_at)-Date.parse(b.starts_at)).slice(0,3),[plans]);
 
-  const load = async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
-    setError(null);
-
-    const result = await api.rpc("get_my_profile_plans");
-    if (result.error) {
-      setError("Planların şu anda yüklenemedi. Lütfen tekrar dene.");
-    } else {
-      setPlans((result.data ?? []) as ProfilePlan[]);
-    }
-
-    setLoading(false);
-    setRefreshing(false);
-  };
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const visiblePlans = useMemo(() => {
-    const now = Date.now();
-    return plans
-      .filter((plan) => {
-        if (filter === "all") return true;
-        const startsAt = new Date(plan.starts_at).getTime();
-        return filter === "upcoming" ? startsAt >= now : startsAt < now;
-      })
-      .sort((a, b) => {
-        const difference = new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
-        return filter === "past" ? -difference : difference;
-      });
-  }, [filter, plans]);
-
-  const groupedPlans = useMemo(() => {
-    const groups = new Map<string, ProfilePlan[]>();
-    visiblePlans.forEach((plan) => {
-      const key = new Date(plan.starts_at).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
-      groups.set(key, [...(groups.get(key) ?? []), plan]);
-    });
-    return Array.from(groups.entries());
-  }, [visiblePlans]);
-
-  return (
-    <>
-      <Stack.Screen options={{ headerShown: true, title: "Planlarım" }} />
-      <ScrollView
-        contentContainerStyle={styles.page}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
-      >
-        <View style={styles.hero}>
-          <View style={styles.heroIcon}>
-            <Ionicons name="calendar" size={24} color={colors.actionText} />
-          </View>
-          <Text style={styles.kicker}>Kişisel Takvim</Text>
-          <Text style={styles.title}>Katılacağın anları tek yerde gör.</Text>
-          <Text style={styles.description}>Onaylanan, bekleyen ve geçmiş etkinlik planlarını ay ay takip et.</Text>
-        </View>
-
-        <View style={styles.filters}>
-          {filters.map((item) => {
-            const selected = filter === item.value;
-            return (
-              <Pressable key={item.value} style={[styles.filter, selected && styles.filterActive]} onPress={() => setFilter(item.value)}>
-                <Text style={[styles.filterText, selected && styles.filterTextActive]}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {loading ? (
-          <View style={styles.stateCard}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.stateText}>Planların hazırlanıyor...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.stateCard}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : groupedPlans.length === 0 ? (
-          <View style={styles.stateCard}>
-            <Ionicons name="calendar-outline" size={38} color={colors.accent} />
-            <Text style={styles.stateTitle}>Bu bölümde henüz plan yok.</Text>
-            <Text style={styles.stateText}>Keşfet ekranından yeni etkinliklere katıldığında takvimin burada oluşacak.</Text>
-            <Link href="/(tabs)/feed" asChild>
-              <Pressable style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Etkinlikleri keşfet</Text>
-              </Pressable>
-            </Link>
-          </View>
-        ) : (
-          <View style={styles.groups}>
-            {groupedPlans.map(([month, monthPlans]) => (
-              <View key={month} style={styles.group}>
-                <Text style={styles.month}>{month}</Text>
-                {monthPlans.map((plan) => (
-                  <Link key={plan.event_id} href={{ pathname: "/event/[id]", params: { id: plan.event_id } }} asChild>
-                    <Pressable style={styles.planCard}>
-                      {plan.cover_image_url ? (
-                        <Image source={{ uri: plan.cover_image_url }} style={styles.cover} resizeMode="cover" />
-                      ) : (
-                        <View style={styles.coverFallback}>
-                          <Text style={styles.day}>{new Date(plan.starts_at).getDate()}</Text>
-                          <Text style={styles.dayMonth}>{new Date(plan.starts_at).toLocaleDateString("tr-TR", { month: "short" })}</Text>
-                        </View>
-                      )}
-                      <View style={styles.planCopy}>
-                        <Text style={styles.community} numberOfLines={1}>{plan.community_name}</Text>
-                        <Text style={styles.planTitle} numberOfLines={2}>{plan.title}</Text>
-                        <Text style={styles.planMeta}>{formatPlanDate(plan.starts_at)}</Text>
-                        <Text style={styles.planMeta} numberOfLines={1}>{plan.location_name || "Mekân bilgisi etkinlikte"}</Text>
-                        <View style={styles.statusBadge}>
-                          <Text style={styles.statusText}>{participationLabel(plan.participation_status)}</Text>
-                        </View>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={colors.muted} />
-                    </Pressable>
-                  </Link>
-                ))}
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </>
-  );
+  return <><Stack.Screen options={{headerShown:true,title:"Ajandam"}}/><main className="planner-page">
+    <section className="planner-intro"><div className="planner-intro-icon"><Ionicons name="calendar" size={20} color="#fff"/></div><div className="planner-intro-copy"><small className="planner-kicker">KİŞİSEL TAKVİM</small><h1 className="planner-heading">Planların, tek bakışta.</h1><p className="planner-description">Katıldığın ve topluluklarında yayınlanan etkinlikleri ay, hafta, gün veya ajanda görünümünde takip et.</p></div></section>
+    {loading&&!initialized?<CalendarSkeleton/>:error?<section className="planner-state planner-error-state"><Ionicons name="cloud-offline-outline" size={30} color={colors.danger}/><h2 className="planner-state-title">Takvim yüklenemedi</h2><p className="planner-state-copy">{error}</p><button type="button" className="planner-retry" onClick={()=>{const r=lastRange.current;if(r)void loadRange(r.start,r.end,true);}}>Tekrar dene</button></section>:<>
+      <AgendaCalendar plans={plans} onRangeChange={loadRange}/>{loading&&<div className="planner-refresh-pill"><i className="planner-pulse"/><span>Takvim güncelleniyor</span></div>}
+      {upcoming.length>0&&<section className="planner-upcoming"><h2 className="planner-section-title">Sıradaki planlar</h2>{upcoming.map(plan=><button key={plan.event_id} className="planner-upcoming-row" onClick={()=>location.assign(`/event/${plan.event_id}`)}><span className="planner-date-tile"><strong className="planner-date-day">{new Date(plan.starts_at).getDate()}</strong><small className="planner-date-month">{new Date(plan.starts_at).toLocaleDateString("tr-TR",{month:"short"})}</small></span><span className="planner-upcoming-copy"><small className="planner-upcoming-community">{plan.community_name||"Bialem"}</small><strong className="planner-upcoming-title">{plan.title}</strong><small className="planner-upcoming-meta">{formatDate(plan.starts_at)} · {plan.location_name||"Konum etkinlik detayında"}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted}/></button>)}</section>}
+    </>}
+  </main></>;
 }
-
-function formatPlanDate(value: string) {
-  return new Date(value).toLocaleString("tr-TR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function participationLabel(status: string) {
-  if (status === "approved") return "Katılım onaylandı";
-  if (status === "checked_in") return "Katıldın";
-  if (status === "waitlisted") return "Bekleme listesinde";
-  return "Onay bekliyor";
-}
-
-const styles = StyleSheet.create({
-  page: { flexGrow: 1, gap: 14, padding: 16, paddingBottom: 36, backgroundColor: colors.page },
-  hero: { gap: 7, padding: 18, borderRadius: 20, backgroundColor: colors.brandInk },
-  heroIcon: { width: 48, height: 48, alignItems: "center", justifyContent: "center", borderRadius: 17, backgroundColor: colors.action },
-  kicker: { color: colors.action, fontSize: 12, fontWeight: "900", letterSpacing: 1.3, textTransform: "uppercase" },
-  title: { color: "#fff", fontSize: 25, lineHeight: 30, fontWeight: "900", letterSpacing: -0.5 },
-  description: { color: "#cbd6ef", fontSize: 14, lineHeight: 21 },
-  filters: { flexDirection: "row", gap: 8 },
-  filter: { flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  filterActive: { borderColor: colors.brandInk, backgroundColor: colors.brandInk },
-  filterText: { color: colors.ink, fontSize: 12, fontWeight: "800" },
-  filterTextActive: { color: "#fff" },
-  groups: { gap: 22 },
-  group: { gap: 11 },
-  month: { color: colors.ink, fontSize: 20, fontWeight: "900", textTransform: "capitalize" },
-  planCard: { flexDirection: "row", alignItems: "center", gap: 13, padding: 13, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  cover: { width: 82, height: 104, borderRadius: 17, backgroundColor: colors.surfaceStrong },
-  coverFallback: { width: 82, height: 104, alignItems: "center", justifyContent: "center", borderRadius: 17, backgroundColor: colors.accentSoft },
-  day: { color: colors.ink, fontSize: 28, fontWeight: "900" },
-  dayMonth: { color: colors.accent, fontSize: 12, fontWeight: "900", textTransform: "uppercase" },
-  planCopy: { flex: 1, gap: 3 },
-  community: { color: colors.accent, fontSize: 10, fontWeight: "900", textTransform: "uppercase", letterSpacing: 0.8 },
-  planTitle: { color: colors.ink, fontSize: 17, lineHeight: 21, fontWeight: "900" },
-  planMeta: { color: colors.muted, fontSize: 12, lineHeight: 17 },
-  statusBadge: { alignSelf: "flex-start", marginTop: 4, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.accentSoft },
-  statusText: { color: colors.accent, fontSize: 10, fontWeight: "900" },
-  stateCard: { minHeight: 240, alignItems: "center", justifyContent: "center", gap: 10, padding: 26, borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  stateTitle: { color: colors.ink, fontSize: 19, fontWeight: "900", textAlign: "center" },
-  stateText: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: "center" },
-  errorText: { color: colors.danger, fontSize: 14, lineHeight: 21, fontWeight: "700", textAlign: "center" },
-  primaryButton: { marginTop: 7, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, backgroundColor: colors.action },
-  primaryButtonText: { color: colors.actionText, fontSize: 13, fontWeight: "900" }
-});
+function CalendarSkeleton(){return <section className="planner-skeleton"><div className="planner-skeleton-line"/><div className="planner-skeleton-tabs"/><div className="planner-skeleton-grid">{Array.from({length:35},(_,i)=><i key={i} className="planner-skeleton-cell"/>)}</div></section>}
+function formatDate(value:string){return new Date(value).toLocaleString("tr-TR",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}

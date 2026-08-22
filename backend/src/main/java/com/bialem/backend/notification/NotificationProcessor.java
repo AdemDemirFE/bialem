@@ -91,10 +91,17 @@ public class NotificationProcessor {
         }
         User user = userOptional.get();
 
+        Long actorUserId = toLong(event.getVariable("actorUserId"));
+        if (actorUserId != null && actorUserId.equals(recipientId)) {
+            LOG.debug("Self notification skipped for user {} and event {}", recipientId, event.getType());
+            return;
+        }
+
         UserNotificationPreference preference = getOrCreatePreference(user, template);
         boolean muted = preference.getMutedUntil() != null && preference.getMutedUntil().isAfter(Instant.now());
-        boolean inAppEnabled = !Boolean.TRUE.equals(preference.getMandatory()) && Boolean.TRUE.equals(preference.getInAppEnabled()) && !muted;
-        boolean pushEnabled = !Boolean.TRUE.equals(preference.getMandatory()) && Boolean.TRUE.equals(preference.getPushEnabled()) && !muted;
+        boolean mandatory = Boolean.TRUE.equals(preference.getMandatory());
+        boolean inAppEnabled = mandatory || (Boolean.TRUE.equals(preference.getInAppEnabled()) && !muted);
+        boolean pushEnabled = mandatory || (Boolean.TRUE.equals(preference.getPushEnabled()) && !muted);
 
         if (!inAppEnabled && !pushEnabled) {
             LOG.debug("Notifications disabled for user {} and event type {}", recipientId, template.getEventType());
@@ -116,6 +123,9 @@ public class NotificationProcessor {
         notification.setBody(rendered.body());
         notification.setRoute(sanitizeRoute(rendered.route()));
         notification.setEventId(extractEventId(event));
+        notification.setReferenceId(stringValue(event.getVariable("referenceId")));
+        notification.setReferenceType(stringValue(event.getVariable("referenceType")));
+        notification.setActorUserId(actorUserId);
         notification.setPayload(toJson(event.getVariables()));
         notification.setIdempotencyKey(idempotencyKey);
         notification.setCorrelationId(UUID.randomUUID().toString());
@@ -180,6 +190,11 @@ public class NotificationProcessor {
         Object recipientId = event.getVariable("recipientUserId");
         if (recipientId instanceof Number number) {
             return List.of(number.longValue());
+        }
+
+        Object recipientIds = event.getVariable("recipientUserIds");
+        if (recipientIds instanceof Collection<?> collection) {
+            return collection.stream().map(this::toLong).filter(Objects::nonNull).distinct().toList();
         }
         if (recipientId instanceof String string) {
             try {
@@ -250,7 +265,9 @@ public class NotificationProcessor {
             .stream()
             .map(CommunityMember::getUser)
             .filter(Objects::nonNull)
-            .map(Profile::getId)
+            .map(Profile::getUser)
+            .filter(Objects::nonNull)
+            .map(User::getId)
             .distinct()
             .toList();
     }
@@ -267,6 +284,11 @@ public class NotificationProcessor {
             }
         }
         return null;
+    }
+
+
+    private String stringValue(Object value) {
+        return value == null ? null : value.toString();
     }
 
     private Instant resolveScheduledAt(NotificationTemplate template) {

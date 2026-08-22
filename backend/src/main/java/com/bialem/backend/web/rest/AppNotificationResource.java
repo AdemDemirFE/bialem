@@ -44,16 +44,15 @@ public class AppNotificationResource {
         return appNotificationService.listCurrentUser();
     }
 
-    @PostMapping("/test")
-    public ResponseEntity<AppNotificationDTO> sendTestNotification() {
-        LOG.debug("REST request to send test notification to current user");
-        return ResponseEntity.ok(appNotificationService.sendTestToCurrentUser());
-    }
-
     @GetMapping("/unread-count")
     public UnreadCountDTO getUnreadCount() {
         LOG.debug("REST request to get current user unread notification count");
         return appNotificationService.unreadCountCurrentUser();
+    }
+
+    @GetMapping("/{id}")
+    public AppNotificationDTO getNotification(@PathVariable Long id) {
+        return appNotificationService.getCurrentUserNotification(id);
     }
 
     @PutMapping("/read-all")

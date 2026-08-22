@@ -90,4 +90,5 @@
     <include file="config/liquibase/changelog/20260820200000_push_notification_tables.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260821120000_notification_system.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260822180000_direct_messaging.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260822210000_notification_event_driven.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

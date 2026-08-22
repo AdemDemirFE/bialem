@@ -90,6 +90,13 @@ public class AppNotificationService {
         return new UnreadCountDTO(appNotificationRepository.countByUser_IdAndIsReadFalse(userId));
     }
 
+    @Transactional(readOnly = true)
+    public AppNotificationDTO getCurrentUserNotification(Long id) {
+        return appNotificationRepository.findByIdAndUser_Id(id, currentUserId())
+            .map(this::toDto)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
     public AppNotificationDTO markCurrentUserRead(Long id) {
         Long userId = currentUserId();
         AppNotification notification = appNotificationRepository
@@ -106,18 +113,6 @@ public class AppNotificationService {
     public void markAllCurrentUserRead() {
         Long userId = currentUserId();
         appNotificationRepository.markAllReadForUser(userId, Instant.now());
-    }
-
-    public AppNotificationDTO sendTestToCurrentUser() {
-        Long userId = currentUserId();
-        return sendToUser(
-            userId,
-            "Bialem Test Bildirimi \uD83D\uDD14",
-            "Push notification sistemi başarıyla çalışıyor.",
-            "TEST",
-            "0",
-            "/"
-        );
     }
 
     public AppNotificationDTO sendToUser(
@@ -286,9 +281,14 @@ public class AppNotificationService {
         dto.setBody(notification.getBody());
         dto.setNotificationType(notification.getNotificationType());
         dto.setReferenceId(notification.getReferenceId());
+        dto.setReferenceType(notification.getReferenceType());
+        dto.setRecipientUserId(notification.getUser() != null ? notification.getUser().getId() : null);
+        dto.setActorUserId(notification.getActorUserId());
+        dto.setMetadata(notification.getPayload());
         dto.setRoute(notification.getRoute());
         dto.setRead(Boolean.TRUE.equals(notification.getIsRead()));
         dto.setCreatedAt(notification.getCreatedAt());
+        dto.setReadAt(notification.getReadAt());
         dto.setPushStatus(notification.getPushStatus());
         dto.setPushSentAt(notification.getPushSentAt());
         return dto;

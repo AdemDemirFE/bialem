@@ -4,6 +4,8 @@ import com.bialem.backend.domain.*;
 import com.bialem.backend.domain.enumeration.*;
 import com.bialem.backend.security.AuthoritiesConstants;
 import com.bialem.backend.security.SecurityUtils;
+import com.bialem.backend.notification.NotificationEvent;
+import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -35,10 +37,12 @@ public class AppRpcService {
 
     private final AppSupport support;
     private final TransactionTemplate transactions;
+    private final NotificationEventPublisher notificationEvents;
 
-    public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager) {
+    public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents) {
         this.support = support;
         this.transactions = new TransactionTemplate(transactionManager);
+        this.notificationEvents = notificationEvents;
     }
 
     public AppQueryResponse invoke(String name, Map<String, Object> args) {
@@ -76,7 +80,7 @@ public class AppRpcService {
             case "join_community" -> joinCommunity(me, id(args.get("target_community_id")));
             case "leave_community" -> leaveCommunity(me, id(args.get("target_community_id")));
             case "cancel_community_membership_request" -> cancelMembership(me, id(args.get("target_community_id")));
-            case "review_community_membership" -> reviewMembership(id(args.get("target_membership_id")), str(args.get("target_status")));
+            case "review_community_membership" -> reviewMembership(me, id(args.get("target_membership_id")), str(args.get("target_status")));
             case "remove_community_member" -> {
                 remove(CommunityMember.class, id(args.get("target_membership_id")));
                 yield true;
@@ -96,17 +100,17 @@ public class AppRpcService {
             case "get_my_event_creation_groups" -> creationGroups(me);
             case "create_group_event" -> createGroupEvent(me, args);
             case "moderate_group_event" -> moderateEvent(id(args.get("target_event_id")), str(args.get("target_status")), str(args.get("target_rejection_reason")));
-            case "cancel_event" -> cancelEvent(id(args.get("target_event_id")), str(args.get("target_reason")));
+            case "cancel_event" -> cancelEvent(me, id(args.get("target_event_id")), str(args.get("target_reason")));
             case "request_event_participation" -> requestParticipation(me, id(args.get("target_event_id")));
             case "cancel_event_participation" -> cancelParticipation(me, id(args.get("target_event_id")));
             case "get_event_participation_summary" -> participationSummary(id(args.get("target_event_id")));
             case "get_event_participant_roster" -> roster(id(args.get("target_event_id")));
-            case "review_event_participant" -> reviewParticipant(id(args.get("target_participant_id")), str(args.get("target_status")));
+            case "review_event_participant" -> reviewParticipant(me, id(args.get("target_participant_id")), str(args.get("target_status")));
             case "mark_event_participant_no_show" -> setParticipantStatus(id(args.get("target_event_id")), id(args.get("target_user_id")), EventParticipantStatus.NO_SHOW);
             case "check_in_event_participant" -> setParticipantStatus(id(args.get("target_event_id")), id(args.get("target_user_id")), EventParticipantStatus.CHECKED_IN);
             case "get_event_chat_messages" -> chatMessages(id(args.get("target_event_id")));
             case "get_public_event_share" -> eventShare(id(args.get("target_event_id")));
-            case "get_my_profile_plans" -> myPlans(me);
+            case "get_my_profile_plans" -> myPlans(me, instant(args.get("range_start")), instant(args.get("range_end")));
             case "get_story_feed" -> storyFeed(me);
             case "get_story_detail" -> storyDetail(id(args.get("target_story_id")));
             case "mark_story_viewed" -> markStoryViewed(me, id(args.get("target_story_id")));
@@ -212,6 +216,8 @@ public class AppRpcService {
                 created.setTargetUser(target);
                 created.setCreatedAt(Instant.now());
                 em.persist(created);
+                publish(NotificationEventType.FOLLOW_REQUEST, "follow-request:" + created.getId(), me, target.getUser().getId(),
+                    "PROFILE", me.getId(), "/user/" + me.getId(), Map.of());
             }
             return "requested";
         }
@@ -220,6 +226,8 @@ public class AppRpcService {
         follow.setFollowed(target);
         follow.setCreatedAt(Instant.now());
         em.persist(follow);
+        publish(NotificationEventType.NEW_FOLLOWER, "follow:" + me.getId() + ":" + target.getId(), me,
+            target.getUser().getId(), "PROFILE", me.getId(), "/user/" + me.getId(), Map.of());
         return "following";
     }
 
@@ -256,13 +264,18 @@ public class AppRpcService {
         if (request == null || !request.getTargetUser().getId().equals(me.getId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "İstek bulunamadı");
         }
-        if ("approved".equalsIgnoreCase(decision) || "approve".equalsIgnoreCase(decision)) {
+        boolean approved = "approved".equalsIgnoreCase(decision) || "approve".equalsIgnoreCase(decision);
+        Profile requester = request.getRequester();
+        if (approved) {
             Follow follow = new Follow();
             follow.setFollower(request.getRequester());
             follow.setFollowed(me);
             follow.setCreatedAt(Instant.now());
             em.persist(follow);
         }
+        publish(approved ? NotificationEventType.FOLLOW_ACCEPTED : NotificationEventType.FOLLOW_REJECTED,
+            "follow-request-review:" + requestId + ":" + approved, me, requester.getUser().getId(),
+            "PROFILE", me.getId(), "/user/" + me.getId(), Map.of());
         em.remove(request);
         return true;
     }
@@ -333,6 +346,10 @@ public class AppRpcService {
         member.setStatus(open ? CommunityMemberStatus.APPROVED : CommunityMemberStatus.PENDING);
         member.setCreatedAt(Instant.now());
         em.persist(member);
+        if (!open) {
+            publish(NotificationEventType.COMMUNITY_JOIN_REQUEST, "community-join-request:" + member.getId(), me, null,
+                "COMMUNITY", community.getId(), "/communities/" + community.getId(), Map.of("communityId", community.getId()));
+        }
         return member.getStatus().name().toLowerCase();
     }
 
@@ -346,9 +363,14 @@ public class AppRpcService {
         return leaveCommunity(me, communityId);
     }
 
-    private boolean reviewMembership(Long membershipId, String status) {
+    private boolean reviewMembership(Profile actor, Long membershipId, String status) {
         CommunityMember member = em.find(CommunityMember.class, membershipId);
-        member.setStatus(CommunityMemberStatus.valueOf(status.toUpperCase()));
+        CommunityMemberStatus newStatus = CommunityMemberStatus.valueOf(status.toUpperCase());
+        member.setStatus(newStatus);
+        NotificationEventType type = newStatus == CommunityMemberStatus.APPROVED
+            ? NotificationEventType.COMMUNITY_JOIN_APPROVED : NotificationEventType.COMMUNITY_JOIN_REJECTED;
+        publish(type, "community-join-review:" + membershipId + ":" + newStatus, actor, member.getUser().getUser().getId(),
+            "COMMUNITY", member.getCommunity().getId(), "/communities/" + member.getCommunity().getId(), Map.of());
         return true;
     }
 
@@ -509,12 +531,19 @@ public class AppRpcService {
         return true;
     }
 
-    private boolean cancelEvent(Long eventId, String reason) {
+    private boolean cancelEvent(Profile actor, Long eventId, String reason) {
         Event event = em.find(Event.class, eventId);
         event.setStatus(EventStatus.CANCELLED);
         event.setCancelledAt(Instant.now());
         event.setCancellationReason(reason);
         event.setUpdatedAt(Instant.now());
+        List<Long> recipients = em.createQuery(
+            "select distinct p.user.user.id from EventParticipant p where p.event.id = :event and p.status in :statuses", Long.class)
+            .setParameter("event", eventId)
+            .setParameter("statuses", List.of(EventParticipantStatus.APPROVED, EventParticipantStatus.CHECKED_IN, EventParticipantStatus.PENDING))
+            .getResultList();
+        publishMany(NotificationEventType.EVENT_CANCELLED, "event-cancelled:" + eventId + ":" + event.getCancelledAt(), actor,
+            recipients, "EVENT", eventId, "/events/" + eventId, Map.of("reason", reason == null ? "" : reason));
         return true;
     }
 
@@ -533,6 +562,11 @@ public class AppRpcService {
         participant.setCreatedAt(Instant.now());
         participant.setUpdatedAt(Instant.now());
         em.persist(participant);
+        Profile owner = event.getCreatedBy();
+        if (owner != null) {
+            publish(NotificationEventType.EVENT_JOIN_REQUEST, "event-join-request:" + participant.getId(), me,
+                owner.getUser().getId(), "EVENT", eventId, "/events/" + eventId, Map.of());
+        }
         return "pending";
     }
 
@@ -577,11 +611,44 @@ public class AppRpcService {
             .toList();
     }
 
-    private boolean reviewParticipant(Long participantId, String status) {
+    private boolean reviewParticipant(Profile actor, Long participantId, String status) {
         EventParticipant participant = em.find(EventParticipant.class, participantId);
-        participant.setStatus(EventParticipantStatus.valueOf(status.toUpperCase()));
+        EventParticipantStatus newStatus = EventParticipantStatus.valueOf(status.toUpperCase());
+        participant.setStatus(newStatus);
         participant.setUpdatedAt(Instant.now());
+        NotificationEventType type = newStatus == EventParticipantStatus.APPROVED
+            ? NotificationEventType.EVENT_JOIN_APPROVED : NotificationEventType.EVENT_JOIN_REJECTED;
+        publish(type, "event-join-review:" + participantId + ":" + newStatus, actor, participant.getUser().getUser().getId(),
+            "EVENT", participant.getEvent().getId(), "/events/" + participant.getEvent().getId(), Map.of());
         return true;
+    }
+
+    private void publish(NotificationEventType type, String key, Profile actor, Long recipientUserId,
+                         String referenceType, Object referenceId, String route, Map<String, Object> extra) {
+        Map<String, Object> variables = notificationVariables(actor, referenceType, referenceId, route, extra);
+        if (recipientUserId != null) variables.put("recipientUserId", recipientUserId);
+        notificationEvents.publish(new NotificationEvent(type, key, variables));
+    }
+
+    private void publishMany(NotificationEventType type, String key, Profile actor, List<Long> recipients,
+                             String referenceType, Object referenceId, String route, Map<String, Object> extra) {
+        Map<String, Object> variables = notificationVariables(actor, referenceType, referenceId, route, extra);
+        variables.put("recipientUserIds", recipients);
+        notificationEvents.publish(new NotificationEvent(type, key, variables));
+    }
+
+    private Map<String, Object> notificationVariables(Profile actor, String referenceType, Object referenceId,
+                                                       String route, Map<String, Object> extra) {
+        Map<String, Object> variables = new LinkedHashMap<>(extra);
+        if (actor != null && actor.getUser() != null) {
+            variables.put("actorUserId", actor.getUser().getId());
+            variables.put("actorProfileId", actor.getId());
+            variables.put("actorName", actor.getDisplayName() != null ? actor.getDisplayName() : actor.getUsername());
+        }
+        variables.put("referenceType", referenceType);
+        variables.put("referenceId", referenceId);
+        variables.put("route", route);
+        return variables;
     }
 
     private boolean setParticipantStatus(Long eventId, Long userId, EventParticipantStatus status) {
@@ -621,17 +688,30 @@ public class AppRpcService {
         return support.toMap(event);
     }
 
-    private List<Map<String, Object>> myPlans(Profile me) {
-        return em
+    private List<Map<String, Object>> myPlans(Profile me, Instant rangeStart, Instant rangeEnd) {
+        Instant from = rangeStart != null ? rangeStart : Instant.now().minus(6, ChronoUnit.MONTHS);
+        Instant to = rangeEnd != null ? rangeEnd : Instant.now().plus(12, ChronoUnit.MONTHS);
+        List<Event> events = em
             .createQuery(
-                "select p from EventParticipant p left join fetch p.event e left join fetch e.community where p.user = :me",
-                EventParticipant.class
+                "select distinct e from Event e left join fetch e.community c where e.startsAt < :to " +
+                "and ((e.endsAt is null and e.startsAt >= :from) or e.endsAt >= :from) and (" +
+                "exists (select p.id from EventParticipant p where p.event = e and p.user = :me) or " +
+                "exists (select m.id from CommunityMember m where m.community = c and m.user = :me and m.status = :memberStatus))",
+                Event.class
             )
             .setParameter("me", me)
+            .setParameter("from", from)
+            .setParameter("to", to)
+            .setParameter("memberStatus", CommunityMemberStatus.APPROVED)
             .getResultList()
-            .stream()
-            .map(participant -> {
-                Event event = participant.getEvent();
+            ;
+        return events.stream()
+            .map(event -> {
+                EventParticipant participant = one(
+                    "select p from EventParticipant p where p.event = :event and p.user = :me",
+                    EventParticipant.class,
+                    Map.of("event", event, "me", me)
+                );
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("event_id", support.stringify(event.getId()));
                 row.put("title", event.getTitle());
@@ -640,8 +720,15 @@ public class AppRpcService {
                 row.put("location_name", event.getLocationName());
                 row.put("cover_image_url", event.getCoverImageUrl());
                 row.put("event_status", event.getStatus().name().toLowerCase());
-                row.put("participation_status", participant.getStatus().name().toLowerCase());
+                row.put("participation_status", participant == null ? "community" : participant.getStatus().name().toLowerCase());
                 row.put("community_name", event.getCommunity() == null ? "" : event.getCommunity().getName());
+                row.put("source", participant == null ? "community" : "participating");
+                row.put(
+                    "event_type",
+                    event.getCommunity() == null || event.getCommunity().getCommunityType() == null
+                        ? "general"
+                        : event.getCommunity().getCommunityType().name().toLowerCase(Locale.ROOT)
+                );
                 return row;
             })
             .toList();
@@ -909,6 +996,15 @@ public class AppRpcService {
 
     private String str(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private Instant instant(Object value) {
+        if (value == null || String.valueOf(value).isBlank()) return null;
+        try {
+            return Instant.parse(String.valueOf(value));
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz tarih aralığı");
+        }
     }
 
     private boolean bool(Object value) {

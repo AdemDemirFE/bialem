@@ -53,7 +53,12 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/swagger-ui.html")).permitAll()
                     .requestMatchers(mvc.pattern("/swagger-ui/**")).permitAll()
                     .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(AuthoritiesConstants.ADMIN)
-                    .requestMatchers(mvc.pattern("/api/**")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/app/**")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/push-device-tokens/**")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/account")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/account/**")).authenticated()
+                    // Generated entity CRUD endpoints are an administrative surface. Mobile/web clients use /api/app/**.
+                    .requestMatchers(mvc.pattern("/api/**")).hasAuthority(AuthoritiesConstants.ADMIN)
                     .requestMatchers(mvc.pattern("/management/health")).permitAll()
                     .requestMatchers(mvc.pattern("/management/health/**")).permitAll()
                     .requestMatchers(mvc.pattern("/management/info")).permitAll()

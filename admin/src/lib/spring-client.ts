@@ -245,7 +245,7 @@ export function createSpringClient(options: SpringClientOptions) {
     storage: {
       from(bucket: string) {
         return {
-          async upload(path: string, fileData: ArrayBuffer | Blob, fileOptions?: { contentType?: string }) {
+          async upload(path: string, fileData: ArrayBuffer | Blob, fileOptions?: { contentType?: string; upsert?: boolean }) {
             try {
               const form = new FormData();
               form.append("path", path);
@@ -362,7 +362,7 @@ export function createSpringClient(options: SpringClientOptions) {
         authListeners.forEach((listener) => listener("SIGNED_OUT", null));
         return { error: null };
       },
-      async resetPasswordForEmail(email: string) {
+      async resetPasswordForEmail(email: string, _options?: { redirectTo?: string }) {
         try {
           await request("/api/account/reset-password/init", { method: "POST", auth: false, json: email });
           return { error: null };

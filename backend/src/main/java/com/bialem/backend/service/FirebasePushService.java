@@ -132,11 +132,25 @@ public class FirebasePushService {
         MulticastMessage.Builder builder = MulticastMessage.builder()
             .addAllTokens(tokens)
             .putAllData(data)
-            .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build());
+            .setNotification(
+                com.google.firebase.messaging.Notification.builder()
+                    .setTitle(data.get("title"))
+                    .setBody(data.get("body"))
+                    .build()
+            )
+            .setAndroidConfig(
+                AndroidConfig.builder()
+                    .setPriority(priority == NotificationPriority.HIGH ? AndroidConfig.Priority.HIGH : AndroidConfig.Priority.NORMAL)
+                    .setNotification(AndroidNotification.builder().setChannelId("bialem_notifications").setSound("default").build())
+                    .build()
+            );
 
-        if (priority == NotificationPriority.HIGH) {
-            builder.setApnsConfig(ApnsConfig.builder().setAps(Aps.builder().setContentAvailable(true).build()).build());
-        }
+        builder.setApnsConfig(
+            ApnsConfig.builder()
+                .putHeader("apns-priority", priority == NotificationPriority.HIGH ? "10" : "5")
+                .setAps(Aps.builder().setContentAvailable(true).setSound("default").build())
+                .build()
+        );
         return builder.build();
     }
 
@@ -153,6 +167,9 @@ public class FirebasePushService {
         }
         if (outbox.getNotification().getReferenceId() != null) {
             data.put("referenceId", outbox.getNotification().getReferenceId());
+        }
+        if (outbox.getNotification().getReferenceType() != null) {
+            data.put("referenceType", outbox.getNotification().getReferenceType());
         }
         return data;
     }

@@ -72,33 +72,27 @@ public class PushDeviceTokenService {
         return pushDeviceTokenMapper.toDto(pushDeviceTokenRepository.save(pushDeviceToken));
     }
 
-    public void deactivateCurrentUserDevice() {
+    public void deactivateCurrentUserDevice(String token, String deviceUuid, String installationId) {
         String login = SecurityUtils.getCurrentUserLogin().orElseThrow();
         User user = userRepository.findOneByLogin(login).orElseThrow();
-        pushDeviceTokenRepository
-            .findByUser_Id(user.getId())
-            .forEach(device -> {
-                device.setActive(false);
-                device.setUpdatedAt(Instant.now());
-                pushDeviceTokenRepository.save(device);
-            });
+        if (isBlank(token) && isBlank(deviceUuid) && isBlank(installationId)) {
+            LOG.warn("Push device deactivation ignored because no device identifier was supplied for user {}", user.getId());
+            return;
+        }
+        pushDeviceTokenRepository.deactivateCurrentDevice(user.getId(), blankToNull(token), blankToNull(deviceUuid),
+            blankToNull(installationId), Instant.now());
     }
 
     private Optional<PushDeviceToken> findExistingDevice(PushDeviceTokenRequest request) {
         if (request.getFirebaseInstallationId() != null && !request.getFirebaseInstallationId().isBlank()) {
-            return pushDeviceTokenRepository
-                .findAll()
-                .stream()
-                .filter(d -> request.getFirebaseInstallationId().equals(d.getFirebaseInstallationId()))
-                .findFirst();
+            return pushDeviceTokenRepository.findByFirebaseInstallationId(request.getFirebaseInstallationId());
         }
         if (request.getDeviceUuid() != null && !request.getDeviceUuid().isBlank()) {
-            return pushDeviceTokenRepository
-                .findAll()
-                .stream()
-                .filter(d -> request.getDeviceUuid().equals(d.getDeviceUuid()))
-                .findFirst();
+            return pushDeviceTokenRepository.findByDeviceUuid(request.getDeviceUuid());
         }
         return pushDeviceTokenRepository.findByToken(request.getToken());
     }
+
+    private boolean isBlank(String value) { return value == null || value.isBlank(); }
+    private String blankToNull(String value) { return isBlank(value) ? null : value; }
 }

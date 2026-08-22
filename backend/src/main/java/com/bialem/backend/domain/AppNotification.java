@@ -43,6 +43,13 @@ public class AppNotification implements Serializable {
     @Column(name = "reference_id", length = 120)
     private String referenceId;
 
+    @Size(max = 80)
+    @Column(name = "reference_type", length = 80)
+    private String referenceType;
+
+    @Column(name = "actor_user_id")
+    private Long actorUserId;
+
     @Size(max = 500)
     @Column(name = "route", length = 500)
     private String route;
@@ -156,6 +163,11 @@ public class AppNotification implements Serializable {
     public void setReferenceId(String referenceId) {
         this.referenceId = referenceId;
     }
+
+    public String getReferenceType() { return referenceType; }
+    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+    public Long getActorUserId() { return actorUserId; }
+    public void setActorUserId(Long actorUserId) { this.actorUserId = actorUserId; }
 
     public String getRoute() {
         return this.route;

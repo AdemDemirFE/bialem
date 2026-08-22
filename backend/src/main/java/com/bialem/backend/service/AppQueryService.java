@@ -1,6 +1,10 @@
 package com.bialem.backend.service;
 
-import com.bialem.backend.domain.Story;
+import com.bialem.backend.domain.*;
+import com.bialem.backend.domain.enumeration.CommentTargetType;
+import com.bialem.backend.domain.enumeration.NotificationEventType;
+import com.bialem.backend.notification.NotificationEvent;
+import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.web.rest.vm.AppQueryRequest;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppFilter;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
@@ -18,6 +22,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -36,10 +43,13 @@ public class AppQueryService {
 
     private final AppSupport support;
     private final TransactionTemplate transactions;
+    private final NotificationEventPublisher notificationEvents;
+    private static final Pattern MENTION_PATTERN = Pattern.compile("(?<![\\p{L}\\p{N}_])@([\\p{L}\\p{N}_.-]{2,50})");
 
-    public AppQueryService(AppSupport support, PlatformTransactionManager transactionManager) {
+    public AppQueryService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents) {
         this.support = support;
         this.transactions = new TransactionTemplate(transactionManager);
+        this.notificationEvents = notificationEvents;
     }
 
     public AppQueryResponse execute(AppQueryRequest request) {
@@ -115,12 +125,95 @@ public class AppQueryService {
             support.applyPayload(entity, payload);
             Object merged = em.merge(entity);
             em.flush();
+            if (update) publishEntityUpdated(merged, payload);
+            else publishEntityCreated(merged);
             saved.add(support.toMap(merged));
         }
         if (Boolean.TRUE.equals(request.getSingle()) || saved.size() == 1 && update) {
             return new AppQueryResponse(saved.isEmpty() ? null : saved.get(0), null, (long) saved.size());
         }
         return new AppQueryResponse(saved, null, (long) saved.size());
+    }
+
+    private void publishEntityCreated(Object entity) {
+        if (!(entity instanceof Comment comment) || comment.getAuthor() == null || comment.getAuthor().getUser() == null) return;
+        Profile actor = comment.getAuthor();
+        Profile owner = commentOwner(comment);
+        String route = comment.getTargetType() == CommentTargetType.EVENT
+            ? "/events/" + comment.getTargetId() : "/feed/" + comment.getTargetId();
+        if (owner != null && owner.getUser() != null) {
+            publishCommentEvent(NotificationEventType.COMMENT, "comment:" + comment.getId(), comment, actor,
+                owner.getUser().getId(), route);
+        }
+        Matcher matcher = MENTION_PATTERN.matcher(comment.getBody());
+        while (matcher.find()) {
+            Profile mentioned = em.createQuery("select p from Profile p where lower(p.username) = :username", Profile.class)
+                .setParameter("username", matcher.group(1).toLowerCase(Locale.ROOT))
+                .getResultStream().findFirst().orElse(null);
+            if (mentioned != null && mentioned.getUser() != null && (owner == null || !mentioned.getId().equals(owner.getId()))) {
+                publishCommentEvent(NotificationEventType.MENTION,
+                    "mention:" + comment.getId() + ":" + mentioned.getId(), comment, actor, mentioned.getUser().getId(), route);
+            }
+        }
+    }
+
+    private void publishEntityUpdated(Object entity, Map<String, Object> payload) {
+        if (!(entity instanceof Event event) || event.getId() == null || payload.keySet().stream().allMatch(this::isTechnicalField)) return;
+        List<Long> recipients = em.createQuery(
+            "select distinct p.user.user.id from EventParticipant p where p.event.id = :event and p.status in :statuses", Long.class)
+            .setParameter("event", event.getId())
+            .setParameter("statuses", List.of(
+                com.bialem.backend.domain.enumeration.EventParticipantStatus.APPROVED,
+                com.bialem.backend.domain.enumeration.EventParticipantStatus.PENDING,
+                com.bialem.backend.domain.enumeration.EventParticipantStatus.CHECKED_IN))
+            .getResultList();
+        if (recipients.isEmpty()) return;
+        Profile actor = support.currentProfile();
+        NotificationEventType type = event.getStatus() == com.bialem.backend.domain.enumeration.EventStatus.CANCELLED
+            ? NotificationEventType.EVENT_CANCELLED : NotificationEventType.EVENT_UPDATED;
+        Map<String, Object> variables = new LinkedHashMap<>();
+        variables.put("recipientUserIds", recipients);
+        variables.put("actorUserId", actor.getUser().getId());
+        variables.put("actorProfileId", actor.getId());
+        variables.put("actorName", actor.getDisplayName() != null ? actor.getDisplayName() : actor.getUsername());
+        variables.put("referenceType", "EVENT");
+        variables.put("referenceId", event.getId());
+        variables.put("route", "/events/" + event.getId());
+        variables.put("reason", event.getCancellationReason() == null ? "" : event.getCancellationReason());
+        String version = event.getUpdatedAt() != null ? event.getUpdatedAt().toString() : String.valueOf(payload.hashCode());
+        notificationEvents.publish(new NotificationEvent(type, "event-change:" + event.getId() + ":" + version, variables));
+    }
+
+    private boolean isTechnicalField(String field) {
+        return "updated_at".equals(field) || "updatedAt".equals(field);
+    }
+
+    private Profile commentOwner(Comment comment) {
+        Long targetId;
+        try { targetId = Long.valueOf(comment.getTargetId()); } catch (NumberFormatException ex) { return null; }
+        if (comment.getTargetType() == CommentTargetType.POST) {
+            Post post = em.find(Post.class, targetId);
+            return post == null ? null : post.getAuthor();
+        }
+        if (comment.getTargetType() == CommentTargetType.EVENT) {
+            Event event = em.find(Event.class, targetId);
+            return event == null ? null : event.getCreatedBy();
+        }
+        return null;
+    }
+
+    private void publishCommentEvent(NotificationEventType type, String key, Comment comment, Profile actor,
+                                     Long recipientUserId, String route) {
+        Map<String, Object> variables = new LinkedHashMap<>();
+        variables.put("recipientUserId", recipientUserId);
+        variables.put("actorUserId", actor.getUser().getId());
+        variables.put("actorProfileId", actor.getId());
+        variables.put("actorName", actor.getDisplayName() != null ? actor.getDisplayName() : actor.getUsername());
+        variables.put("referenceType", comment.getTargetType().name());
+        variables.put("referenceId", comment.getTargetId());
+        variables.put("commentId", comment.getId());
+        variables.put("route", route);
+        notificationEvents.publish(new NotificationEvent(type, key, variables));
     }
 
     private AppQueryResponse upsert(Class<?> type, AppQueryRequest request) throws Exception {

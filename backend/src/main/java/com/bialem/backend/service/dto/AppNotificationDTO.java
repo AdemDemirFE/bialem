@@ -10,9 +10,14 @@ public class AppNotificationDTO implements Serializable {
     private String body;
     private String notificationType;
     private String referenceId;
+    private String referenceType;
+    private Long recipientUserId;
+    private Long actorUserId;
+    private String metadata;
     private String route;
     private boolean read;
     private Instant createdAt;
+    private Instant readAt;
     private String pushStatus;
     private Instant pushSentAt;
 
@@ -55,6 +60,16 @@ public class AppNotificationDTO implements Serializable {
     public void setReferenceId(String referenceId) {
         this.referenceId = referenceId;
     }
+    public String getType() { return notificationType; }
+    public String getMessage() { return body; }
+    public String getReferenceType() { return referenceType; }
+    public void setReferenceType(String referenceType) { this.referenceType = referenceType; }
+    public Long getRecipientUserId() { return recipientUserId; }
+    public void setRecipientUserId(Long recipientUserId) { this.recipientUserId = recipientUserId; }
+    public Long getActorUserId() { return actorUserId; }
+    public void setActorUserId(Long actorUserId) { this.actorUserId = actorUserId; }
+    public String getMetadata() { return metadata; }
+    public void setMetadata(String metadata) { this.metadata = metadata; }
 
     public String getRoute() {
         return route;
@@ -79,6 +94,8 @@ public class AppNotificationDTO implements Serializable {
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
+    public Instant getReadAt() { return readAt; }
+    public void setReadAt(Instant readAt) { this.readAt = readAt; }
 
     public String getPushStatus() {
         return pushStatus;

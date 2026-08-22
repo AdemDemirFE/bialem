@@ -6,10 +6,17 @@ export type AppNotification = {
   title: string;
   body: string | null;
   notificationType?: string;
+  type?: string;
+  message?: string | null;
+  recipientUserId?: number | null;
+  actorUserId?: number | null;
+  referenceType?: string | null;
+  metadata?: string | null;
   referenceId?: string | null;
   route?: string | null;
   read: boolean;
   createdAt: string;
+  readAt?: string | null;
   pushStatus?: string | null;
   pushSentAt?: string | null;
 };
@@ -103,10 +110,16 @@ export async function registerPushToken(
 }
 
 export async function deactivateCurrentPushDevice() {
-  const path = "/api/push-device-tokens/current";
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("bialem.push.token") : null;
+  const deviceUuid = typeof localStorage !== "undefined" ? localStorage.getItem("bialem.push.deviceUuid") : null;
+  const params = new URLSearchParams();
+  if (token) params.set("token", token);
+  if (deviceUuid) params.set("deviceUuid", deviceUuid);
+  const path = `/api/push-device-tokens/current?${params.toString()}`;
   try {
     await api.rest.delete(path);
     console.log("[PUSH] current device deactivated");
+    if (typeof localStorage !== "undefined") localStorage.removeItem("bialem.push.token");
   } catch (error) {
     await logAndRethrow("device deactivation", path, error);
   }
@@ -138,6 +151,16 @@ export async function getUnreadNotificationCount(): Promise<number> {
   }
 }
 
+export async function getNotificationDetail(id: number): Promise<AppNotification> {
+  const path = `/api/app/notifications/${id}`;
+  try {
+    return await api.rest.get<AppNotification>(path);
+  } catch (error) {
+    await logAndRethrow("notification detail", path, error);
+    throw error;
+  }
+}
+
 export async function markNotificationAsRead(id: number) {
   const path = `/api/app/notifications/${id}/read`;
   try {
@@ -154,16 +177,6 @@ export async function markAllNotificationsAsRead() {
     await api.rest.put(path);
   } catch (error) {
     await logAndRethrow("mark all read", path, error);
-  }
-}
-
-export async function sendTestNotification() {
-  const path = "/api/app/notifications/test";
-  try {
-    return await api.rest.post<AppNotification>(path);
-  } catch (error) {
-    await logAndRethrow("test notification", path, error);
-    throw error;
   }
 }
 

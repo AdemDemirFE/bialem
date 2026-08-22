@@ -5,7 +5,6 @@ import com.bialem.backend.domain.enumeration.NotificationOutboxStatus;
 import com.bialem.backend.domain.enumeration.NotificationPriority;
 import com.bialem.backend.notification.NotificationOutboxScheduler;
 import com.bialem.backend.repository.NotificationOutboxRepository;
-import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.service.AppNotificationService;
 import com.bialem.backend.service.dto.AppNotificationDTO;
 import jakarta.validation.Valid;
@@ -71,23 +70,6 @@ public class AdminNotificationResource {
             request.priority()
         );
         return ResponseEntity.accepted().build();
-    }
-
-    @PostMapping("/test")
-    public ResponseEntity<AppNotificationDTO> sendTestNotification() {
-        LOG.debug("REST request to send test notification to current admin user");
-        Long userId = SecurityUtils.getCurrentUserId().orElseThrow();
-        AppNotificationDTO result = appNotificationService.sendManualNotification(
-            userId,
-            "Bialem Test Bildirimi",
-            "Bu bir test bildirimidir.",
-            "/",
-            true,
-            true,
-            Instant.now(),
-            NotificationPriority.HIGH
-        );
-        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/outbox")

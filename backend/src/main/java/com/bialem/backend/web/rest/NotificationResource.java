@@ -59,12 +59,6 @@ public class NotificationResource {
     }
 
     @Deprecated
-    @PostMapping("/legacy-test")
-    public ResponseEntity<AppNotificationDTO> sendLegacyTestNotification() {
-        return ResponseEntity.ok(notificationService.sendTestToCurrentUser());
-    }
-
-    @Deprecated
     @GetMapping("/legacy-inbox")
     public List<AppNotificationDTO> getLegacyInbox() {
         return notificationService.listCurrentUser();

@@ -241,6 +241,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const signOut = async () => {
+    try {
+      const { deactivateCurrentPushDevice } = await import("./notificationApi");
+      await deactivateCurrentPushDevice();
+    } catch (error) {
+      console.warn("Push device cleanup during logout failed", error);
+    }
     await api.auth.signOut();
     setSession(null);
     setUser(null);
