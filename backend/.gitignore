@@ -58,6 +58,10 @@ local.properties
 classes/
 out/
 .target/
+# Backend build output
+backend/target/
+target/
+**/target/
 
 ######################
 # Visual Studio Code

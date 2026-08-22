@@ -37,3 +37,7 @@ artifacts/
 **/fcm-service-account*.json
 # Local SMTP / secrets (never commit)
 backend/src/main/resources/config/application-mail-local.yml
+# Backend build output
+backend/target/
+target/
+**/target/
