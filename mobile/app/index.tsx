@@ -547,10 +547,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: "100%",
     backgroundColor: colors.page,
-    paddingHorizontal: 22,
-    paddingTop: 36,
-    paddingBottom: 28,
-    gap: 22
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 22,
+    gap: 16
   },
   welcomeBrand: {
     flexDirection: "row",
@@ -558,9 +558,9 @@ const styles = StyleSheet.create({
     gap: 12
   },
   welcomeLogoFrame: {
-    width: 68,
-    height: 68,
-    borderRadius: 23,
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.border,
@@ -590,8 +590,8 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     color: colors.ink,
-    fontSize: 34,
-    lineHeight: 39,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: "900",
     letterSpacing: -0.8
   },
@@ -602,9 +602,9 @@ const styles = StyleSheet.create({
   },
   worldVisualCard: {
     position: "relative",
-    height: 275,
+    height: 238,
     overflow: "hidden",
-    borderRadius: 32,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surfaceStrong,
@@ -628,9 +628,9 @@ const styles = StyleSheet.create({
     gap: 8
   },
   whySection: {
-    gap: 16,
-    padding: 18,
-    borderRadius: 28,
+    gap: 13,
+    padding: 16,
+    borderRadius: 20,
     backgroundColor: colors.brandInk
   },
   whyHeading: {
@@ -749,7 +749,8 @@ const styles = StyleSheet.create({
   welcomeButton: {
     backgroundColor: colors.action,
     borderRadius: 999,
-    paddingVertical: 17,
+    minHeight: 46,
+    paddingVertical: 12,
     paddingHorizontal: 22,
     shadowColor: colors.action,
     shadowOpacity: 0.26,
@@ -782,8 +783,8 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     backgroundColor: colors.page,
-    padding: 24,
-    gap: 24
+    padding: 16,
+    gap: 16
   },
   centeredPage: {
     flex: 1,
@@ -798,10 +799,10 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   hero: {
-    marginTop: 32,
-    gap: 12,
-    padding: 24,
-    borderRadius: 32,
+    marginTop: 18,
+    gap: 10,
+    padding: 18,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -844,15 +845,15 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: "900",
     letterSpacing: -0.6
   },
   description: {
     color: colors.muted,
-    fontSize: 16,
-    lineHeight: 24
+    fontSize: 14,
+    lineHeight: 21
   },
   authSwitch: {
     flexDirection: "row",
@@ -884,9 +885,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 30,
-    padding: 22,
-    gap: 14,
+    borderRadius: 20,
+    padding: 16,
+    gap: 12,
     borderWidth: 1,
     borderColor: colors.border,
     shadowColor: colors.ink,
@@ -962,15 +963,15 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   input: {
-    minHeight: 52,
-    borderRadius: 18,
+    minHeight: 46,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: colors.ink,
-    fontSize: 16
+    fontSize: 15
   },
   inputWithToggle: {
     paddingRight: 48
@@ -978,7 +979,7 @@ const styles = StyleSheet.create({
   eyeButton: {
     position: "absolute",
     right: 12,
-    height: 52,
+    height: 46,
     width: 36,
     alignItems: "center",
     justifyContent: "center"
@@ -1040,7 +1041,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
     backgroundColor: colors.action,
     borderRadius: 999,
-    paddingVertical: 15,
+    minHeight: 46,
+    paddingVertical: 11,
     paddingHorizontal: 18
   },
   primaryButtonText: {

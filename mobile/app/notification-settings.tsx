@@ -151,24 +151,24 @@ export default function NotificationSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, gap: 14, backgroundColor: colors.page },
   hero: { marginTop: 8, gap: 10 },
   backButton: { alignSelf: "flex-start", padding: 8, marginLeft: -8 },
   kicker: { color: colors.accent, fontSize: 13, fontWeight: "800", letterSpacing: 1.1, textTransform: "uppercase" },
-  title: { color: colors.ink, fontSize: 30, lineHeight: 36, fontWeight: "800" },
+  title: { color: colors.ink, fontSize: 25, lineHeight: 31, fontWeight: "800" },
   description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   error: { color: colors.danger, fontSize: 14, fontWeight: "600" },
   stateCard: { minHeight: 160, padding: 24, gap: 10, alignItems: "center", justifyContent: "center", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   stateText: { color: colors.muted, fontSize: 14, lineHeight: 20, textAlign: "center" },
   list: { gap: 12 },
-  card: { padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, gap: 14 },
+  card: { padding: 13, borderRadius: 17, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, gap: 11 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   icon: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSoft },
   label: { flex: 1, color: colors.ink, fontSize: 16, fontWeight: "800" },
   toggles: { gap: 10 },
   toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   toggleLabel: { color: colors.muted, fontSize: 14, fontWeight: "700" },
-  saveButton: { marginTop: 8, backgroundColor: colors.action, borderRadius: 999, paddingVertical: 15, alignItems: "center" },
+  saveButton: { minHeight: 44, marginTop: 6, backgroundColor: colors.action, borderRadius: 14, paddingVertical: 10, alignItems: "center", justifyContent: "center" },
   saveButtonDisabled: { opacity: 0.7 },
   saveButtonText: { color: colors.actionText, fontSize: 16, fontWeight: "900" }
 });

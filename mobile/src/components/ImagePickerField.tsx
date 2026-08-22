@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 190
+    height: 170
   },
   previewFooter: {
     minHeight: 46,
@@ -109,14 +109,14 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   pickButton: {
-    minHeight: 50,
+    minHeight: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: 14,
     backgroundColor: colors.surfaceStrong
   },
   pickButtonText: {

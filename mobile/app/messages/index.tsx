@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   getConversations,
   searchMessageRecipients,
@@ -10,6 +10,7 @@ import {
   type MessageRecipient
 } from "../../src/lib/messagingApi";
 import { colors } from "../../src/theme/colors";
+import { SkeletonList } from "../../src/components/SkeletonList";
 
 type Filter = "ALL" | "UNREAD";
 
@@ -77,7 +78,7 @@ export default function MessagesScreen() {
       ) : <Text style={styles.sectionTitle}>Yeni konuşma</Text>}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {loading ? <View style={styles.center}><ActivityIndicator color={colors.accent} /><Text style={styles.muted}>Yükleniyor...</Text></View> : composeMode ? (
+      {loading ? <SkeletonList rows={5} /> : composeMode ? (
         people.length ? <View style={styles.list}>{people.map((person) => (
           <Pressable key={person.profileId} style={styles.personCard} onPress={() => void openPerson(person)}>
             <Avatar uri={person.avatarUrl} name={person.displayName} />
@@ -116,13 +117,13 @@ function relativeTime(value: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, paddingTop: 30, paddingBottom: 50, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingTop: 20, paddingBottom: 36, gap: 14, backgroundColor: colors.page },
   header: { flexDirection: "row", alignItems: "center", gap: 13 }, iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  headerCopy: { flex: 1 }, kicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }, title: { color: colors.ink, fontSize: 31, fontWeight: "900" },
-  composeButton: { width: 48, height: 48, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
-  searchBox: { minHeight: 54, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, searchInput: { flex: 1, color: colors.ink, fontSize: 15 },
+  headerCopy: { flex: 1 }, kicker: { color: colors.accent, fontSize: 9, fontWeight: "900", letterSpacing: 1.1 }, title: { color: colors.ink, fontSize: 25, lineHeight: 30, fontWeight: "900" },
+  composeButton: { width: 44, height: 44, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
+  searchBox: { minHeight: 46, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 13, borderRadius: 15, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, searchInput: { flex: 1, color: colors.ink, fontSize: 14 },
   filters: { flexDirection: "row", gap: 8 }, filter: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, filterActive: { backgroundColor: colors.brandInk, borderColor: colors.brandInk }, filterText: { color: colors.ink, fontWeight: "800" }, filterTextActive: { color: colors.onBrand }, sectionTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
-  list: { gap: 10 }, conversationCard: { flexDirection: "row", alignItems: "center", gap: 13, padding: 14, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, unreadCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, personCard: { flexDirection: "row", alignItems: "center", gap: 13, padding: 14, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  avatar: { width: 54, height: 54, borderRadius: 20, backgroundColor: colors.surfaceStrong }, avatarFallback: { width: 54, height: 54, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: colors.action }, avatarText: { color: colors.actionText, fontSize: 20, fontWeight: "900" }, cardCopy: { flex: 1, gap: 5 }, cardTop: { flexDirection: "row", alignItems: "center", gap: 8 }, name: { flex: 1, color: colors.ink, fontSize: 16, fontWeight: "900" }, username: { color: colors.muted, fontSize: 13 }, time: { color: colors.muted, fontSize: 11, fontWeight: "700" }, previewRow: { flexDirection: "row", alignItems: "center", gap: 8 }, preview: { flex: 1, color: colors.muted, fontSize: 13 }, previewUnread: { color: colors.ink, fontWeight: "800" }, badge: { minWidth: 22, paddingHorizontal: 6, paddingVertical: 3, textAlign: "center", overflow: "hidden", borderRadius: 11, backgroundColor: colors.accent, color: "#fff", fontSize: 11, fontWeight: "900" },
+  list: { gap: 8 }, conversationCard: { minHeight: 70, flexDirection: "row", alignItems: "center", gap: 11, padding: 11, borderRadius: 17, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, unreadCard: { backgroundColor: colors.accentSoft, borderColor: colors.accent }, personCard: { minHeight: 70, flexDirection: "row", alignItems: "center", gap: 11, padding: 11, borderRadius: 17, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  avatar: { width: 46, height: 46, borderRadius: 16, backgroundColor: colors.surfaceStrong }, avatarFallback: { width: 46, height: 46, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.action }, avatarText: { color: colors.actionText, fontSize: 17, fontWeight: "900" }, cardCopy: { flex: 1, gap: 4 }, cardTop: { flexDirection: "row", alignItems: "center", gap: 8 }, name: { flex: 1, color: colors.ink, fontSize: 15, fontWeight: "900" }, username: { color: colors.muted, fontSize: 12 }, time: { color: colors.muted, fontSize: 10, fontWeight: "700" }, previewRow: { flexDirection: "row", alignItems: "center", gap: 8 }, preview: { flex: 1, color: colors.muted, fontSize: 12 }, previewUnread: { color: colors.ink, fontWeight: "800" }, badge: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 2, textAlign: "center", overflow: "hidden", borderRadius: 10, backgroundColor: colors.accent, color: "#fff", fontSize: 10, fontWeight: "900" },
   center: { alignItems: "center", gap: 10, paddingVertical: 50 }, empty: { alignItems: "center", gap: 9, padding: 30, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }, emptyTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" }, muted: { color: colors.muted, textAlign: "center", lineHeight: 20 }, error: { color: colors.danger, fontWeight: "700" }
 });

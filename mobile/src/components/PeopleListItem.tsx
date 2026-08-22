@@ -76,9 +76,9 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 24,
+    gap: 10,
+    padding: 11,
+    borderRadius: 17,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface
@@ -91,9 +91,9 @@ const styles = StyleSheet.create({
     gap: 12
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
@@ -137,11 +137,12 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   followButton: {
-    minWidth: 82,
+    minWidth: 76,
+    minHeight: 40,
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 999,
+    borderRadius: 13,
     backgroundColor: colors.action,
     borderWidth: 1,
     borderColor: colors.action

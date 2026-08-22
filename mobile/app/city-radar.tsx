@@ -185,8 +185,8 @@ function formatDate(value: string) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.page },
-  page: { gap: 18, padding: 18, paddingBottom: 48 },
-  hero: { overflow: "hidden", gap: 10, padding: 24, borderRadius: 32, backgroundColor: colors.brandInk },
+  page: { gap: 14, padding: 16, paddingBottom: 36 },
+  hero: { overflow: "hidden", gap: 8, padding: 18, borderRadius: 21, backgroundColor: colors.brandInk },
   radarIcon: { width: 52, height: 52, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: colors.accent },
   kicker: { color: colors.action, fontSize: 10, fontWeight: "900", letterSpacing: 1.5 },
   heroTitle: { maxWidth: 310, color: "#fff", fontSize: 34, lineHeight: 39, fontWeight: "900", letterSpacing: -1 },
@@ -202,8 +202,8 @@ const styles = StyleSheet.create({
   resultKicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.3 },
   resultTitle: { color: colors.ink, fontSize: 25, fontWeight: "900" },
   resultCount: { color: colors.muted, fontSize: 12, fontWeight: "800" },
-  list: { gap: 16 },
-  card: { overflow: "hidden", borderRadius: 28, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  list: { gap: 12 },
+  card: { overflow: "hidden", borderRadius: 19, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   cover: { height: 190, overflow: "hidden" },
   fallback: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   coverImage: { width: "100%", height: "100%" },

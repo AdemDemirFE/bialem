@@ -22,6 +22,7 @@ import {
   type NotificationFilter
 } from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
+import { SkeletonList } from "../../src/components/SkeletonList";
 
 const PAGE_SIZE = 20;
 
@@ -220,10 +221,7 @@ export default function NotificationsScreen() {
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
         loading ? (
-          <View style={styles.stateCard}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.stateText}>Bildirimler yükleniyor...</Text>
-          </View>
+          <SkeletonList rows={5} />
         ) : (
           <View style={styles.stateCard}>
             <Text style={styles.emptyMark}>B</Text>

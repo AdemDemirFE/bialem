@@ -586,8 +586,8 @@ function maskUser(userId: string | null | undefined) {
 const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
-    padding: 24,
-    gap: 20,
+    padding: 16,
+    gap: 14,
     backgroundColor: colors.page
   },
   hero: {
@@ -604,9 +604,9 @@ const styles = StyleSheet.create({
     gap: 5
   },
   avatarButton: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 78,
+    height: 78,
+    borderRadius: 39,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.accentSoft,
@@ -616,11 +616,11 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 46
+    borderRadius: 39
   },
   avatarInitial: {
     color: colors.accent,
-    fontSize: 38,
+    fontSize: 30,
     fontWeight: "900"
   },
   cameraBadge: {
@@ -650,8 +650,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.ink,
-    fontSize: 28,
-    lineHeight: 33,
+    fontSize: 24,
+    lineHeight: 29,
     fontWeight: "900",
     letterSpacing: -0.4
   },
@@ -662,20 +662,20 @@ const styles = StyleSheet.create({
   },
   panel: {
     backgroundColor: colors.surface,
-    borderRadius: 28,
+    borderRadius: 19,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 20,
-    gap: 14
+    padding: 15,
+    gap: 11
   },
   socialPanel: {
     overflow: "hidden",
     backgroundColor: colors.surface,
-    borderRadius: 28,
+    borderRadius: 19,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 20,
-    gap: 16
+    padding: 15,
+    gap: 12
   },
   socialHint: {
     color: colors.muted,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   followRequestsButton: {
-    minHeight: 74,
+    minHeight: 62,
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     color: colors.ink,
-    fontSize: 20,
+    fontSize: 17,
     lineHeight: 24,
     fontWeight: "800"
   },
@@ -964,7 +964,7 @@ const styles = StyleSheet.create({
   },
   profileTab: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 50,
     alignItems: "center",
     justifyContent: "center",
     gap: 5,

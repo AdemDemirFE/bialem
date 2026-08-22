@@ -42,10 +42,10 @@ export default function LegalDocumentScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 24, paddingBottom: 48, gap: 14, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingBottom: 36, gap: 12, backgroundColor: colors.page },
   centered: { flex: 1, padding: 24, alignItems: "center", justifyContent: "center", backgroundColor: colors.page },
   kicker: { color: colors.accent, fontSize: 12, fontWeight: "800", letterSpacing: 1.2 },
-  title: { color: colors.ink, fontSize: 32, lineHeight: 39, fontWeight: "900" },
+  title: { color: colors.ink, fontSize: 25, lineHeight: 31, fontWeight: "900" },
   updated: { color: colors.muted, fontSize: 13 },
   notice: { color: colors.ink, backgroundColor: colors.accentSoft, borderRadius: 18, padding: 14, fontSize: 13, lineHeight: 20 },
   section: { marginTop: 8, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 24, padding: 20, gap: 10 },

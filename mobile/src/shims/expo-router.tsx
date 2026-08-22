@@ -5,6 +5,7 @@ import {
   isValidElement,
   useContext,
   useEffect,
+  useRef,
   type CSSProperties,
   type ReactNode
 } from "react";
@@ -17,7 +18,7 @@ import {
   useParams,
   useSearchParams
 } from "react-router-dom";
-import { Pressable, Text, View } from "react-native";
+import { Animated, Easing, Pressable, Text, View } from "react-native";
 
 function normalizeHref(href: string) {
   return href.replace("/(tabs)", "").replace(/^\/tabs/, "") || "/";
@@ -107,9 +108,30 @@ export function Link({
 }
 
 export function Stack({ children, screenOptions }: { children?: ReactNode; screenOptions?: Record<string, unknown> }) {
+  const location = useLocation();
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    progress.setValue(0);
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true
+    }).start();
+  }, [location.pathname, progress]);
+
   return (
     <View style={{ flex: 1, backgroundColor: (screenOptions?.contentStyle as { backgroundColor?: string } | undefined)?.backgroundColor }}>
-      <Outlet />
+      <Animated.View
+        style={{
+          flex: 1,
+          opacity: progress,
+          transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [5, 0] }) }]
+        }}
+      >
+        <Outlet />
+      </Animated.View>
       {children}
     </View>
   );
@@ -153,8 +175,25 @@ export function Tabs({
           const active = location.pathname === path || location.pathname.startsWith(`${path}/`);
           const color = active ? screenOptions?.tabBarActiveTintColor : screenOptions?.tabBarInactiveTintColor;
           return (
-            <Pressable key={screen.props.name} onPress={() => navigate(path)} style={{ alignItems: "center", padding: 8, flex: 1 }}>
-              {screen.props.options?.tabBarIcon?.({ color, size: 22 })}
+            <Pressable
+              key={screen.props.name}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              hitSlop={4}
+              onPress={() => navigate(path)}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+                paddingHorizontal: 6,
+                paddingVertical: 4,
+                flex: 1,
+                opacity: pressed ? 0.72 : 1,
+                transform: [{ scale: pressed ? 0.96 : 1 }]
+              })}
+            >
+              {screen.props.options?.tabBarIcon?.({ color, size: active ? 21 : 20 })}
               <Text style={[{ color, fontSize: 10, fontWeight: "700" }, screenOptions?.tabBarLabelStyle]}>
                 {screen.props.options?.tabBarLabel || screen.props.options?.title || screen.props.name}
               </Text>

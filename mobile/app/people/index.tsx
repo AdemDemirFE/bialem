@@ -149,17 +149,17 @@ export default function PeopleDiscoveryScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, paddingTop: 34, paddingBottom: 48, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingTop: 22, paddingBottom: 36, gap: 14, backgroundColor: colors.page },
   header: { flexDirection: "row", alignItems: "center", gap: 14 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   headerCopy: { flex: 1, gap: 3 },
   kicker: { color: colors.accent, fontSize: 11, fontWeight: "900", letterSpacing: 1.3 },
-  title: { color: colors.ink, fontSize: 32, fontWeight: "900" },
+  title: { color: colors.ink, fontSize: 25, fontWeight: "900" },
   description: { color: colors.muted, fontSize: 16, lineHeight: 24 },
   searchPanel: { gap: 10, padding: 14, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   inputWrap: { minHeight: 52, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.border },
   input: { flex: 1, color: colors.ink, fontSize: 15 },
-  searchButton: { alignItems: "center", padding: 14, borderRadius: 999, backgroundColor: colors.action },
+  searchButton: { minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.action },
   searchButtonText: { color: colors.actionText, fontSize: 14, fontWeight: "900" },
   sectionTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   sectionTitle: { color: colors.ink, fontSize: 20, fontWeight: "900" },

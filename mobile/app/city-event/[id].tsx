@@ -243,11 +243,11 @@ function formatMoney(value: number, currency: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, gap: 16, paddingHorizontal: 20, backgroundColor: colors.page },
+  page: { flexGrow: 1, gap: 14, paddingHorizontal: 16, backgroundColor: colors.page },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24, backgroundColor: colors.page },
   backButton: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 999, backgroundColor: colors.surface },
   backText: { color: colors.ink, fontWeight: "900" },
-  hero: { minHeight: 310, overflow: "hidden", justifyContent: "flex-end", borderRadius: 32, backgroundColor: colors.accent },
+  hero: { minHeight: 270, overflow: "hidden", justifyContent: "flex-end", borderRadius: 21, backgroundColor: colors.accent },
   heroFallback: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   heroImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
   heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(8,26,68,0.48)" },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   trustCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 16, borderRadius: 22, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.aqua },
   trustTitle: { color: colors.ink, fontSize: 14, fontWeight: "900", marginBottom: 4 },
   flex: { flex: 1 },
-  panel: { gap: 13, padding: 20, borderRadius: 28, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  panel: { gap: 11, padding: 15, borderRadius: 19, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   panelTitle: { color: colors.ink, fontSize: 22, fontWeight: "900" },
   ticketPanel: { gap: 15, padding: 20, borderRadius: 28, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.action },
   ticketHeadingRow: { flexDirection: "row", alignItems: "center", gap: 12 },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   togetherKicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.5 },
   togetherTitle: { color: colors.ink, fontSize: 23, lineHeight: 29, fontWeight: "900" },
   muted: { color: colors.muted, fontSize: 13, lineHeight: 20 },
-  primaryButton: { marginTop: 4, alignItems: "center", padding: 15, borderRadius: 999, backgroundColor: colors.action },
+  primaryButton: { minHeight: 44, marginTop: 4, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.action },
   activeButton: { backgroundColor: colors.accent },
   primaryText: { color: colors.ink, fontSize: 14, fontWeight: "900" },
   secondaryButton: { alignItems: "center", padding: 13, borderRadius: 999, backgroundColor: colors.accentSoft },

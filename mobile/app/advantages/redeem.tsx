@@ -99,7 +99,7 @@ export default function AdvantageRedeemScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, gap: 20, padding: 18, backgroundColor: colors.page },
+  page: { flex: 1, gap: 14, padding: 16, backgroundColor: colors.page },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 18, padding: 28, backgroundColor: colors.page },
   cameraFrame: { height: 330, overflow: "hidden", alignItems: "center", justifyContent: "center", borderRadius: 30, backgroundColor: colors.brandInk },
   target: { width: 220, height: 220, borderWidth: 4, borderColor: colors.action, borderRadius: 28 },
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   successText: { color: colors.muted, textAlign: "center", fontSize: 13 },
   errorCard: { alignItems: "center", gap: 10, padding: 20, borderRadius: 24, backgroundColor: "#ffe8ef" },
   error: { color: colors.danger, textAlign: "center", fontWeight: "800" },
-  button: { marginTop: 8, paddingHorizontal: 20, paddingVertical: 13, borderRadius: 15, backgroundColor: colors.action },
+  button: { minHeight: 44, marginTop: 6, justifyContent: "center", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.action },
   buttonText: { color: colors.ink, fontWeight: "900" },
   retry: { paddingHorizontal: 18, paddingVertical: 11, borderRadius: 14, backgroundColor: colors.brandInk },
   retryText: { color: "#fff", fontWeight: "900" }

@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28, gap: 12 },
   muted: { color: colors.muted },
   error: { color: colors.danger, textAlign: "center", lineHeight: 21 },
-  list: { padding: 18, gap: 10, flexGrow: 1 },
+  list: { padding: 14, gap: 8, flexGrow: 1 },
   empty: { color: colors.muted, textAlign: "center", marginTop: 40 },
   message: { maxWidth: "84%", alignSelf: "flex-start", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 20, borderBottomLeftRadius: 6, padding: 13, gap: 6 },
   messageMine: { alignSelf: "flex-end", backgroundColor: colors.accentSoft, borderBottomLeftRadius: 20, borderBottomRightRadius: 6 },
@@ -193,8 +193,8 @@ const styles = StyleSheet.create({
   messageBody: { color: colors.ink, fontSize: 15, lineHeight: 21 },
   report: { color: colors.danger, fontSize: 10, fontWeight: "800", alignSelf: "flex-end" },
   inlineNotice: { color: colors.accent, fontSize: 12, textAlign: "center", paddingHorizontal: 16 },
-  composer: { flexDirection: "row", alignItems: "flex-end", gap: 10, padding: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  input: { flex: 1, maxHeight: 110, minHeight: 48, borderRadius: 22, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 16, paddingVertical: 12, color: colors.ink, backgroundColor: colors.page },
-  sendButton: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
+  composer: { flexDirection: "row", alignItems: "flex-end", gap: 8, padding: 10, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  input: { flex: 1, maxHeight: 100, minHeight: 44, borderRadius: 15, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, paddingVertical: 10, color: colors.ink, backgroundColor: colors.page },
+  sendButton: { width: 44, height: 44, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
   disabled: { opacity: 0.45 }
 });

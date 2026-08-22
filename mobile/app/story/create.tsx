@@ -283,12 +283,12 @@ export default function CreateStoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, gap: 14, backgroundColor: colors.page },
   backButton: { alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   backText: { color: colors.ink, fontWeight: "800" },
   hero: { gap: 8 },
   kicker: { color: colors.accent, fontSize: 12, fontWeight: "900", letterSpacing: 1.4 },
-  title: { color: colors.ink, fontSize: 31, lineHeight: 37, fontWeight: "900" },
+  title: { color: colors.ink, fontSize: 25, lineHeight: 31, fontWeight: "900" },
   description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   modeRow: { flexDirection: "row", padding: 5, gap: 5, borderRadius: 999, backgroundColor: colors.accentSoft },
   modeButton: { flex: 1, paddingVertical: 11, borderRadius: 999 },
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   imageActionRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 9, marginTop: 8 },
   imageActionButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.action },
   imageActionText: { color: colors.actionText, fontSize: 13, fontWeight: "900" },
-  panel: { padding: 18, gap: 11, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  panel: { padding: 14, gap: 10, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   label: { color: colors.ink, fontSize: 14, fontWeight: "900", marginTop: 3 },
   input: { minHeight: 92, padding: 13, borderRadius: 18, backgroundColor: colors.page, borderWidth: 1, borderColor: colors.border, color: colors.ink, fontSize: 15, textAlignVertical: "top" },
   counter: { alignSelf: "flex-end", color: colors.muted, fontSize: 11 },
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   communityText: { color: colors.ink, fontSize: 13, fontWeight: "800" },
   communityTextActive: { color: colors.onBrand },
   error: { color: colors.danger, fontSize: 13, lineHeight: 19, fontWeight: "700" },
-  shareButton: { marginTop: 4, paddingVertical: 15, borderRadius: 999, backgroundColor: colors.action },
+  shareButton: { minHeight: 44, marginTop: 4, justifyContent: "center", paddingVertical: 10, borderRadius: 14, backgroundColor: colors.action },
   shareButtonText: { color: colors.actionText, textAlign: "center", fontSize: 16, fontWeight: "900" },
   disabled: { opacity: 0.55 }
 });

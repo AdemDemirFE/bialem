@@ -93,13 +93,13 @@ export default function BlockedUsersScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.page },
-  page: { gap: 18, padding: 20, paddingBottom: 48 },
-  hero: { gap: 9, padding: 22, borderRadius: 30, backgroundColor: colors.brandInk },
+  page: { gap: 14, padding: 16, paddingBottom: 36 },
+  hero: { gap: 7, padding: 18, borderRadius: 20, backgroundColor: colors.brandInk },
   icon: { width: 52, height: 52, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: colors.action },
-  title: { color: colors.onBrand, fontSize: 29, lineHeight: 35, fontWeight: "900" },
+  title: { color: colors.onBrand, fontSize: 24, lineHeight: 29, fontWeight: "900" },
   description: { color: colors.onBrandMuted, fontSize: 14, lineHeight: 21 },
   error: { padding: 14, borderRadius: 16, color: colors.danger, backgroundColor: colors.surface, fontWeight: "800" },
-  empty: { alignItems: "center", gap: 8, padding: 28, borderRadius: 26, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  empty: { alignItems: "center", gap: 8, padding: 22, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   emptyTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
   emptyText: { color: colors.muted, textAlign: "center", fontSize: 13, lineHeight: 19 },
   list: { gap: 12 },

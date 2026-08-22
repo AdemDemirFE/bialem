@@ -3,6 +3,7 @@ import { AppRegistry } from "react-native";
 import { App } from "./App";
 import { ErrorBoundary } from "./ErrorBoundary";
 import "./components/AppAlert.css";
+import "./theme/global.css";
 
 AppRegistry.registerComponent("bialem", () => App);
 const rootTag = document.getElementById("root");

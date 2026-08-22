@@ -215,7 +215,7 @@ function PasswordField({
 
 const styles = StyleSheet.create({
   keyboardPage: { flex: 1, backgroundColor: colors.page },
-  page: { flexGrow: 1, justifyContent: "center", gap: 14, padding: 24, backgroundColor: colors.page },
+  page: { flexGrow: 1, justifyContent: "center", gap: 12, padding: 16, backgroundColor: colors.page },
   icon: {
     width: 58,
     height: 58,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colors.accentSoft
   },
-  title: { color: colors.ink, fontSize: 28, fontWeight: "900" },
+  title: { color: colors.ink, fontSize: 24, lineHeight: 30, fontWeight: "900" },
   description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   form: { gap: 12, marginTop: 8 },
   label: { color: colors.ink, fontSize: 14, fontWeight: "700", marginTop: 4 },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center"
   },
-  button: { alignItems: "center", padding: 16, borderRadius: 999, backgroundColor: colors.accent, marginTop: 8 },
+  button: { minHeight: 44, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.accent, marginTop: 6 },
   buttonDisabled: { opacity: 0.55 },
   buttonText: { color: colors.onBrand, fontSize: 14, fontWeight: "900" },
   secondaryLink: { alignSelf: "center", paddingVertical: 6 },

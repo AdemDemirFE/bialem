@@ -36,15 +36,15 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 64 + insets.bottom,
-          paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 8
+          height: 58 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 6),
+          paddingTop: 4
         },
         tabBarActiveTintColor: colors.action as string,
         tabBarInactiveTintColor: colors.muted as string,
         tabBarLabelStyle: {
           fontWeight: "700",
-          fontSize: 10
+          fontSize: 9
         },
         tabBarItemStyle: {
           minWidth: 58

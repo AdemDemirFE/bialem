@@ -46,11 +46,11 @@ export function HonorBadges({ badges }: { badges: HonorBadge[] }) {
 const styles = StyleSheet.create({
   panel: {
     backgroundColor: colors.surface,
-    borderRadius: 28,
+    borderRadius: 19,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 20,
-    gap: 16
+    padding: 15,
+    gap: 12
   },
   headingRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   headingIcon: {
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.action
   },
   headingCopy: { flex: 1, gap: 3 },
-  title: { color: colors.ink, fontSize: 22, fontWeight: "800" },
+  title: { color: colors.ink, fontSize: 18, fontWeight: "800" },
   subtitle: { color: colors.muted, fontSize: 13, lineHeight: 18 },
   empty: { color: colors.muted, fontSize: 15, lineHeight: 22 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
     minWidth: 150,
     flexGrow: 1,
     flexBasis: "45%",
-    borderRadius: 22,
-    padding: 15,
+    borderRadius: 16,
+    padding: 12,
     gap: 7,
     backgroundColor: colors.accentSoft,
     borderWidth: 1,

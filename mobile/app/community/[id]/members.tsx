@@ -181,19 +181,19 @@ export default function CommunityMembersScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 20, paddingTop: 26, paddingBottom: 52, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingTop: 20, paddingBottom: 38, backgroundColor: colors.page },
   headerStack: { gap: 16, marginBottom: 18 },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   backButton: { width: 46, height: 46, alignItems: "center", justifyContent: "center", borderRadius: 23, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   headerCopy: { flex: 1, gap: 3 },
   kicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
-  title: { color: colors.ink, fontSize: 26, lineHeight: 31, fontWeight: "900" },
+  title: { color: colors.ink, fontSize: 22, lineHeight: 27, fontWeight: "900" },
   countBadge: { minWidth: 43, height: 43, paddingHorizontal: 10, alignItems: "center", justifyContent: "center", borderRadius: 22, backgroundColor: colors.accentSoft },
   countText: { color: colors.accent, fontSize: 14, fontWeight: "900" },
   searchCard: { padding: 13, gap: 10, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   searchInputRow: { minHeight: 50, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 14, borderRadius: 17, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.page },
   searchInput: { flex: 1, minWidth: 0, color: colors.ink, fontSize: 14, fontWeight: "700" },
-  searchButton: { minHeight: 47, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: colors.action },
+  searchButton: { minHeight: 44, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: colors.action },
   searchButtonText: { color: colors.actionText, fontSize: 13, fontWeight: "900" },
   resultText: { color: colors.muted, fontSize: 12, fontWeight: "700" },
   error: { padding: 13, borderRadius: 16, color: colors.danger, backgroundColor: colors.surfaceStrong, fontSize: 13, lineHeight: 19, fontWeight: "700" },

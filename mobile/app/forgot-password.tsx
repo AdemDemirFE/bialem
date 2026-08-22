@@ -137,7 +137,7 @@ export default function ForgotPasswordScreen() {
 
 const styles = StyleSheet.create({
   keyboardPage: { flex: 1 },
-  page: { flexGrow: 1, padding: 24, gap: 14 },
+  page: { flexGrow: 1, padding: 16, gap: 12 },
   icon: {
     width: 58,
     height: 58,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 12
   },
-  title: { fontSize: 30, fontWeight: "900" },
+  title: { fontSize: 25, lineHeight: 31, fontWeight: "900" },
   description: { fontSize: 15, lineHeight: 22 },
   card: {
     borderRadius: 30,

@@ -15,4 +15,49 @@ export async function getCurrentPositionAsync() {
   });
 }
 
-export default { requestForegroundPermissionsAsync, getCurrentPositionAsync };
+export const Accuracy = {
+  Balanced: 3
+} as const;
+
+type GeocodedAddress = {
+  name?: string;
+  street?: string;
+  district?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+};
+
+export async function reverseGeocodeAsync({ latitude, longitude }: { latitude: number; longitude: number }): Promise<GeocodedAddress[]> {
+  const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) return [];
+  const result = await response.json() as { name?: string; display_name?: string; address?: Record<string, string> };
+  const address = result.address ?? {};
+  return [{
+    name: result.name,
+    street: address.road ?? address.pedestrian,
+    district: address.suburb ?? address.district,
+    city: address.city ?? address.town ?? address.village,
+    region: address.state,
+    country: address.country
+  }];
+}
+
+export async function geocodeAsync(query: string): Promise<Array<{ latitude: number; longitude: number }>> {
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=${encodeURIComponent(query)}`, {
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) return [];
+  const results = await response.json() as Array<{ lat: string; lon: string }>;
+  return results.map((item) => ({ latitude: Number(item.lat), longitude: Number(item.lon) }));
+}
+
+export default {
+  Accuracy,
+  requestForegroundPermissionsAsync,
+  getCurrentPositionAsync,
+  reverseGeocodeAsync,
+  geocodeAsync
+};

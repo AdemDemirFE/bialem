@@ -135,10 +135,10 @@ export default function FollowConnectionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 22, paddingTop: 34, paddingBottom: 48, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingTop: 22, paddingBottom: 36, gap: 14, backgroundColor: colors.page },
   header: { flexDirection: "row", alignItems: "center", gap: 14 },
   iconButton: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  title: { flex: 1, color: colors.ink, fontSize: 27, fontWeight: "900" },
+  title: { flex: 1, color: colors.ink, fontSize: 23, fontWeight: "900" },
   tabs: { flexDirection: "row", padding: 5, borderRadius: 999, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.border },
   tab: { flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 999 },
   tabActive: { backgroundColor: colors.action },

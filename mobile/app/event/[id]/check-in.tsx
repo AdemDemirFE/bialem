@@ -152,12 +152,12 @@ function MiniStat({ label, value }: { label: string; value: number }) { return <
 function statusLabel(status: string) { return ({ pending: "Onay bekliyor", waitlisted: "Bekleme sırasında", approved: "Katılım onaylı", checked_in: "Giriş yaptı", rejected: "Reddedildi", cancelled: "İptal etti", no_show: "Gelmedi" } as Record<string, string>)[status] ?? status; }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 20, paddingTop: 54, gap: 18, backgroundColor: colors.page },
+  page: { flexGrow: 1, padding: 16, paddingTop: 42, gap: 14, backgroundColor: colors.page },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface },
   kicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.2 },
   title: { color: colors.ink, fontSize: 24, fontWeight: "900" },
-  hero: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: 24, backgroundColor: colors.brandInk },
+  hero: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 18, backgroundColor: colors.brandInk },
   heroIcon: { width: 50, height: 50, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
   heroTitle: { color: colors.onBrand, fontSize: 17, fontWeight: "900" },
   body: { color: colors.muted, fontSize: 13, lineHeight: 18 },
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   closeScannerText: { color: colors.onBrand, textAlign: "center", fontWeight: "800" },
   notice: { color: colors.ink, backgroundColor: colors.accentSoft, borderRadius: 16, padding: 12, fontWeight: "700" },
   error: { color: colors.danger, backgroundColor: colors.surfaceStrong, borderRadius: 16, padding: 12, fontWeight: "700" },
-  panel: { padding: 18, gap: 13, borderRadius: 26, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  panel: { padding: 14, gap: 11, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   panelTitle: { color: colors.ink, fontSize: 21, fontWeight: "900" },
   statsRow: { flexDirection: "row", gap: 9 },
   miniStat: { flex: 1, padding: 11, borderRadius: 16, alignItems: "center", backgroundColor: colors.surfaceStrong },

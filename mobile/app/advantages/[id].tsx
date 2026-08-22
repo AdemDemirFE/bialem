@@ -197,9 +197,9 @@ function Rule({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; la
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.page },
-  page: { gap: 18, padding: 18, paddingBottom: 42 },
+  page: { gap: 14, padding: 16, paddingBottom: 36 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: colors.page },
-  cover: { width: "100%", height: 230, borderRadius: 30 },
+  cover: { width: "100%", height: 210, borderRadius: 20 },
   coverFallback: { height: 200, alignItems: "center", justifyContent: "center", borderRadius: 30, backgroundColor: colors.accent },
   identity: { flexDirection: "row", alignItems: "center", gap: 12 },
   logo: { width: 58, height: 58, borderRadius: 18, backgroundColor: colors.surface },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   securityNote: { color: colors.muted, textAlign: "center", fontSize: 10, lineHeight: 15 },
   error: { color: colors.danger, textAlign: "center", fontWeight: "800" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(7,27,68,.7)" },
-  modalCard: { gap: 15, padding: 24, paddingBottom: 34, borderTopLeftRadius: 34, borderTopRightRadius: 34, backgroundColor: colors.surface },
+  modalCard: { gap: 12, padding: 18, paddingBottom: 28, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.surface },
   timerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   modalKicker: { color: colors.accent, fontSize: 11, fontWeight: "900", letterSpacing: 1.5 },
   timer: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: colors.action },

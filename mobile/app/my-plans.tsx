@@ -177,11 +177,11 @@ function participationLabel(status: string) {
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, gap: 18, padding: 20, paddingBottom: 48, backgroundColor: colors.page },
-  hero: { gap: 9, padding: 22, borderRadius: 30, backgroundColor: colors.brandInk },
+  page: { flexGrow: 1, gap: 14, padding: 16, paddingBottom: 36, backgroundColor: colors.page },
+  hero: { gap: 7, padding: 18, borderRadius: 20, backgroundColor: colors.brandInk },
   heroIcon: { width: 48, height: 48, alignItems: "center", justifyContent: "center", borderRadius: 17, backgroundColor: colors.action },
   kicker: { color: colors.action, fontSize: 12, fontWeight: "900", letterSpacing: 1.3, textTransform: "uppercase" },
-  title: { color: "#fff", fontSize: 30, lineHeight: 35, fontWeight: "900", letterSpacing: -0.8 },
+  title: { color: "#fff", fontSize: 25, lineHeight: 30, fontWeight: "900", letterSpacing: -0.5 },
   description: { color: "#cbd6ef", fontSize: 14, lineHeight: 21 },
   filters: { flexDirection: "row", gap: 8 },
   filter: { flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
