@@ -1,1 +1,0 @@
-com.bialem.backend.domain.enumeration.CityEventStatus com.bialem.backend.domain.enumeration.EventParticipantStatus com.bialem.backend.domain.enumeration.EventStatus com.bialem.backend.domain.enumeration.NotificationOutboxStatus com.bialem.backend.domain.enumeration.RedemptionStatus 
