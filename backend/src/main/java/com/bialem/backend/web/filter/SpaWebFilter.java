@@ -17,10 +17,16 @@ public class SpaWebFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         // Request URI includes the contextPath if any, removed it.
         String path = request.getRequestURI().substring(request.getContextPath().length());
+        if (path.equals("/")) {
+            response.sendRedirect(request.getContextPath() + "/swagger-ui/index.html");
+            return;
+        }
+
         if (
             !path.startsWith("/api") &&
             !path.startsWith("/management") &&
             !path.startsWith("/v3/api-docs") &&
+            !path.startsWith("/swagger-ui") &&
             !path.contains(".") &&
             path.matches("/(.*)")
         ) {

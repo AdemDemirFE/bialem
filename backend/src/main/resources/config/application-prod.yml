@@ -92,6 +92,8 @@ spring:
 # ===================================================================
 server:
   port: 8080
+  # Honor X-Forwarded-* headers from the VPS reverse proxy so OpenAPI uses the public HTTPS URL.
+  forward-headers-strategy: framework
   shutdown: graceful # see https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-graceful-shutdown
   compression:
     enabled: true

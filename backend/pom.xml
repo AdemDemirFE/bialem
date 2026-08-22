@@ -70,7 +70,7 @@
         <sonar-maven-plugin.version>5.1.0.4751</sonar-maven-plugin.version>
         <spotless-maven-plugin.version>2.44.4</spotless-maven-plugin.version>
         <spring.profiles.active>dev</spring.profiles.active>
-        <springdoc-openapi-starter-webmvc-api.version>2.8.8</springdoc-openapi-starter-webmvc-api.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.8.8</springdoc-openapi-starter-webmvc-ui.version>
     </properties>
 
     <dependencies>
@@ -168,8 +168,8 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
-            <version>${springdoc-openapi-starter-webmvc-api.version}</version>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>

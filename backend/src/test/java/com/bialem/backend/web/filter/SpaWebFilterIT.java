@@ -2,14 +2,15 @@ package com.bialem.backend.web.filter;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.bialem.backend.IntegrationTest;
-import com.bialem.backend.security.AuthoritiesConstants;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
@@ -21,8 +22,9 @@ class SpaWebFilterIT {
     private MockMvc mockMvc;
 
     @Test
-    void testFilterForwardsToIndex() throws Exception {
-        mockMvc.perform(get("/")).andExpect(status().isOk()).andExpect(forwardedUrl("/index.html"));
+    @WithAnonymousUser
+    void rootRedirectsToSwaggerUi() throws Exception {
+        mockMvc.perform(get("/")).andExpect(status().isFound()).andExpect(redirectedUrl("/swagger-ui/index.html"));
     }
 
     @Test
@@ -31,9 +33,15 @@ class SpaWebFilterIT {
     }
 
     @Test
-    @WithMockUser(authorities = AuthoritiesConstants.ADMIN)
+    @WithAnonymousUser
     void testFilterDoesNotForwardToIndexForV3ApiDocs() throws Exception {
         mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andExpect(forwardedUrl(null));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void swaggerUiIsPubliclyAvailable() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk()).andExpect(forwardedUrl(null));
     }
 
     @Test
@@ -71,18 +79,13 @@ class SpaWebFilterIT {
         mockMvc.perform(get("/foo.js")).andExpect(status().isNotFound());
     }
 
-    /**
-     * This test verifies that any files that aren't permitted by Spring Security will be forbidden.
-     * If you want to change this to return isNotFound(), you need to add a request mapping that
-     * allows this file in SecurityConfiguration.
-     */
     @Test
     void getUnmappedSecondLevelFile() throws Exception {
-        mockMvc.perform(get("/foo/bar.js")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/foo/bar.js")).andExpect(status().isNotFound());
     }
 
     @Test
     void getUnmappedThirdLevelFile() throws Exception {
-        mockMvc.perform(get("/foo/another/bar.js")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/foo/another/bar.js")).andExpect(status().isNotFound());
     }
 }

@@ -19,15 +19,6 @@ spring:
     name: bialem
 
 ---
-# Conditionally disable springdoc on missing api-docs profile
-spring:
-  config:
-    activate:
-      on-profile: '!api-docs'
-springdoc:
-  api-docs:
-    enabled: false
----
 management:
   endpoints:
     web:
@@ -184,6 +175,15 @@ server:
         http-only: true
 
 springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
+    disable-swagger-default-url: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    persist-authorization: true
   show-actuator: true
 
 # Properties to be exposed on the /info management endpoint

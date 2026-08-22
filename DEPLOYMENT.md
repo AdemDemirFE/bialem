@@ -73,6 +73,17 @@ sudo certbot --nginx \
   -d api.bialem.app
 ```
 
+Swagger/OpenAPI is enabled in both `dev` and `prod` by default:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+http://localhost:8080/v3/api-docs
+https://api.bialem.app/swagger-ui/index.html
+https://api.bialem.app/v3/api-docs
+```
+
+Set `SPRINGDOC_SWAGGER_UI_ENABLED=false` and `SPRINGDOC_API_DOCS_ENABLED=false` only when API documentation must be explicitly disabled. The production health check verifies both endpoints after every deployment.
+
 ## Day-to-day
 
 ```bash
