@@ -1,6 +1,6 @@
 import { bindRouter } from "./shims/expo-router";
 import { App as CapacitorApp } from "@capacitor/app";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootLayout from "../app/_layout";
 import TabsLayout from "../app/(tabs)/_layout";
@@ -44,9 +44,11 @@ import LegalScreen from "../app/legal/[document]";
 import ResetPasswordScreen from "../app/reset-password";
 import ForgotPasswordScreen from "../app/forgot-password";
 import { type ReactNode, useEffect } from "react";
+import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 
 function RouterBinder({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     bindRouter(
@@ -76,7 +78,11 @@ function RouterBinder({ children }: { children: ReactNode }) {
     };
   }, [navigate]);
 
-  return children;
+  return (
+    <RouteErrorBoundary resetKey={location.pathname} onReset={() => navigate("/feed", { replace: true })}>
+      {children}
+    </RouteErrorBoundary>
+  );
 }
 
 export function App() {

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/lib/auth";
 import { colors } from "../../src/theme/colors";
@@ -18,10 +18,16 @@ function TabIcon({ name, focused, color, size }: { name: string; focused: boolea
 export default function TabsLayout() {
   const { user, profile, loading } = useAuth();
   const insets = useSafeAreaInsets();
-  useTheme();
+  const { resolvedTheme } = useTheme();
 
   if (loading) {
-    return null;
+    return (
+      <View style={styles.loadingPage} accessibilityRole="progressbar">
+        <View style={styles.loadingMark}><Text style={styles.loadingMarkText}>B</Text></View>
+        <ActivityIndicator color={colors.accent} />
+        <Text style={styles.loadingText}>Bialem hazırlanıyor...</Text>
+      </View>
+    );
   }
 
   if (!user || !profile?.display_name || !profile?.username) {
@@ -56,9 +62,9 @@ export default function TabsLayout() {
           shadowRadius: 14,
           elevation: 16
         },
-        tabBarActiveTintColor: colors.brandInk as string,
+        tabBarActiveTintColor: (resolvedTheme === "dark" ? colors.onBrand : colors.brandInk) as string,
         tabBarInactiveTintColor: colors.muted as string,
-        tabBarActiveBackgroundColor: colors.accentSoft as string,
+        tabBarActiveBackgroundColor: (resolvedTheme === "dark" ? colors.brandInk : colors.accentSoft) as string,
         tabBarLabelStyle: {
           fontWeight: "800",
           fontSize: 10,
@@ -121,6 +127,10 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  loadingPage: { flex: 1, minHeight: "100%", alignItems: "center", justifyContent: "center", gap: 12, backgroundColor: colors.page },
+  loadingMark: { width: 48, height: 48, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: colors.brandInk },
+  loadingMarkText: { color: colors.onBrand, fontSize: 20, fontWeight: "900" },
+  loadingText: { color: colors.muted, fontSize: 13, fontWeight: "700" },
   iconShell: { width: 30, height: 27, alignItems: "center", justifyContent: "center" },
   iconShellActive: { transform: [{ translateY: -1 }] },
   activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.action }

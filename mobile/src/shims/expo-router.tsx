@@ -19,7 +19,7 @@ import {
   useSearchParams
 } from "react-router-dom";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
-import { BackButton } from "../components/IconButton";
+import { AppHeader } from "../components/ui/AppHeader";
 
 function normalizeHref(href: string) {
   return href.replace("/(tabs)", "").replace(/^\/tabs/, "") || "/";
@@ -104,8 +104,7 @@ export function Link({
   const to = resolveTarget(href);
   if (asChild && isValidElement(children)) {
     return cloneElement(children as never, {
-      onPress: () => navigate(to),
-      href: to
+      onPress: () => navigate(to)
     });
   }
   return (
@@ -134,8 +133,8 @@ export function Stack({ children, screenOptions }: { children?: ReactNode; scree
       <Animated.View
         style={{
           flex: 1,
-          opacity: progress,
-          transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [5, 0] }) }]
+          opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }),
+          transform: [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }]
         }}
       >
         <Outlet />
@@ -164,28 +163,7 @@ Stack.Screen = function StackScreen({ options }: { options?: Record<string, unkn
     }
     navigate(resolveBackFallback(location.pathname), { replace: true });
   };
-  return (
-    <View
-      style={{
-        minHeight: 56,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 9,
-        borderBottomWidth: 1,
-        borderBottomColor: "var(--bialem-border)",
-        backgroundColor: "var(--bialem-surface)"
-      }}
-    >
-      {showBack && (
-        <BackButton onPress={goBack} />
-      )}
-      <Text numberOfLines={1} style={{ flex: 1, color: "var(--bialem-ink)", fontWeight: "800", fontSize: 17 }}>
-        {String(options.title)}
-      </Text>
-    </View>
-  );
+  return <AppHeader title={String(options.title)} onBack={showBack ? goBack : undefined} />;
 };
 
 function resolveBackFallback(pathname: string) {

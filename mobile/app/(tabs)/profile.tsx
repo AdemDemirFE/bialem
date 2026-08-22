@@ -249,8 +249,6 @@ export default function ProfileScreen() {
         onEdit={() => void changeProfilePhoto()}
       />
 
-      <View style={{ alignItems: "flex-end" }}><NotificationButton /></View>
-
       <View style={styles.hero}>
         <View style={styles.profileIdentity}>
           <Pressable style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
@@ -269,6 +267,7 @@ export default function ProfileScreen() {
             <TeamIdentityBadge role={teamRole} />
             <Text style={styles.photoHint}>Fotoğrafı değiştirmek için dokun</Text>
           </View>
+          <NotificationButton />
         </View>
         <Text style={styles.description}>
           Burada hesabınızın güven sinyallerini, ürettiğiniz içerikleri ve topluluk içindeki hareketinizi görürsünüz.

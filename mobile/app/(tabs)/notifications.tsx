@@ -23,6 +23,7 @@ import {
 } from "../../src/lib/notificationApi";
 import { colors } from "../../src/theme/colors";
 import { SkeletonList } from "../../src/components/SkeletonList";
+import { BackButton } from "../../src/components/IconButton";
 import { decrementUnreadCount, refreshUnreadCount, setUnreadCount } from "../../src/lib/notificationUnreadStore";
 
 const PAGE_SIZE = 20;
@@ -162,6 +163,9 @@ export default function NotificationsScreen() {
 
   const ListHeader = () => (
     <>
+      <View style={styles.navigationRow}>
+        <BackButton onPress={() => router.back()} />
+      </View>
       <View style={styles.hero}>
         <View style={styles.headingRow}>
           <View style={styles.heroText}>
@@ -228,6 +232,7 @@ export default function NotificationsScreen() {
           <SkeletonList rows={5} />
         ) : (
           <View style={styles.stateCard}>
+            <Ionicons name="notifications-off-outline" size={32} color={colors.accent} />
             <Text style={styles.emptyTitle}>{searchQuery.trim() ? "Eşleşen bildirim bulunamadı" : "Henüz bildirim yok"}</Text>
             <Text style={styles.stateText}>{searchQuery.trim() ? "Farklı bir kelimeyle tekrar arayabilirsin." : "Yeni bir hareket olduğunda burada göreceksin."}</Text>
           </View>
@@ -258,6 +263,7 @@ function formatRelativeDate(value: string) {
 
 const styles = StyleSheet.create({
   page: { flexGrow: 1, padding: 16, gap: 13, backgroundColor: colors.page },
+  navigationRow: { minHeight: 40, flexDirection: "row", alignItems: "center", justifyContent: "flex-start" },
   hero: { marginTop: 4, gap: 12 },
   headingRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   heroText: { flex: 1, gap: 3 },

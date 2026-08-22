@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgendaCalendar, type AgendaPlan } from "../src/components/AgendaCalendar";
 import { api } from "../src/lib/api";
 import { colors } from "../src/theme/colors";
 
 export default function MyPlansScreen() {
+  const router = useRouter();
   const [plans,setPlans] = useState<AgendaPlan[]>([]); const [loading,setLoading] = useState(true); const [initialized,setInitialized] = useState(false); const [error,setError] = useState<string|null>(null);
   const requestId = useRef(0); const lastRange = useRef<{key:string;start:string;end:string}|null>(null);
   const loadRange = useCallback(async (start:string,end:string,force=false) => {
@@ -20,7 +21,7 @@ export default function MyPlansScreen() {
     <section className="planner-intro"><div className="planner-intro-icon"><Ionicons name="calendar" size={20} color="#fff"/></div><div className="planner-intro-copy"><small className="planner-kicker">KİŞİSEL TAKVİM</small><h1 className="planner-heading">Planların, tek bakışta.</h1><p className="planner-description">Katıldığın ve topluluklarında yayınlanan etkinlikleri ay, hafta, gün veya ajanda görünümünde takip et.</p></div></section>
     {loading&&!initialized?<CalendarSkeleton/>:error?<section className="planner-state planner-error-state"><Ionicons name="cloud-offline-outline" size={30} color={colors.danger}/><h2 className="planner-state-title">Takvim yüklenemedi</h2><p className="planner-state-copy">{error}</p><button type="button" className="planner-retry" onClick={()=>{const r=lastRange.current;if(r)void loadRange(r.start,r.end,true);}}>Tekrar dene</button></section>:<>
       <AgendaCalendar plans={plans} onRangeChange={loadRange}/>{loading&&<div className="planner-refresh-pill"><i className="planner-pulse"/><span>Takvim güncelleniyor</span></div>}
-      {upcoming.length>0&&<section className="planner-upcoming"><h2 className="planner-section-title">Sıradaki planlar</h2>{upcoming.map(plan=><button key={plan.event_id} className="planner-upcoming-row" onClick={()=>location.assign(`/event/${plan.event_id}`)}><span className="planner-date-tile"><strong className="planner-date-day">{new Date(plan.starts_at).getDate()}</strong><small className="planner-date-month">{new Date(plan.starts_at).toLocaleDateString("tr-TR",{month:"short"})}</small></span><span className="planner-upcoming-copy"><small className="planner-upcoming-community">{plan.community_name||"Bialem"}</small><strong className="planner-upcoming-title">{plan.title}</strong><small className="planner-upcoming-meta">{formatDate(plan.starts_at)} · {plan.location_name||"Konum etkinlik detayında"}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted}/></button>)}</section>}
+      {upcoming.length>0&&<section className="planner-upcoming"><h2 className="planner-section-title">Sıradaki planlar</h2>{upcoming.map(plan=><button type="button" key={plan.event_id} className="planner-upcoming-row" onClick={()=>router.push(`/event/${plan.event_id}` as never)}><span className="planner-date-tile"><strong className="planner-date-day">{new Date(plan.starts_at).getDate()}</strong><small className="planner-date-month">{new Date(plan.starts_at).toLocaleDateString("tr-TR",{month:"short"})}</small></span><span className="planner-upcoming-copy"><small className="planner-upcoming-community">{plan.community_name||"Bialem"}</small><strong className="planner-upcoming-title">{plan.title}</strong><small className="planner-upcoming-meta">{formatDate(plan.starts_at)} · {plan.location_name||"Konum etkinlik detayında"}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted}/></button>)}</section>}
     </>}
   </main></>;
 }

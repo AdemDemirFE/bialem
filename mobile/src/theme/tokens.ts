@@ -1,53 +1,11 @@
-export const colors = {
-  page: "#f4f6fb",
-  surface: "#ffffff",
-  surfaceStrong: "#eef1f6",
-  ink: "#0a1833",
-  muted: "#44516f",
-  accent: "#7047d7",
-  accentSoft: "#eee9fa",
-  aqua: "#1699b8",
-  border: "#d7dfea",
-  action: "#f6a51c",
-  actionText: "#0a1833"
-};
-
-export const spacing = {
-  xxs: 4,
-  xs: 8,
-  sm: 12,
-  md: 16,
-  lg: 20,
-  xl: 24,
-  xxl: 32
-} as const;
-
-export const radii = {
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 24,
-  pill: 999
-} as const;
-
+export const spacing = { xxs:2, xs:4, sm:8, md:12, lg:16, xl:20, xxl:24, xxxl:32, huge:40, giant:48, section:64 } as const;
+export const radius = { sm:8, md:12, lg:16, xl:24, full:999 } as const;
 export const typography = {
-  caption: 11,
-  bodySmall: 13,
-  body: 15,
-  subtitle: 17,
-  title: 24,
-  display: 28
+  display:{fontSize:30,lineHeight:36,fontWeight:"700" as const}, pageTitle:{fontSize:23,lineHeight:29,fontWeight:"700" as const},
+  sectionTitle:{fontSize:19,lineHeight:25,fontWeight:"600" as const}, cardTitle:{fontSize:17,lineHeight:23,fontWeight:"600" as const},
+  body:{fontSize:16,lineHeight:24,fontWeight:"400" as const}, secondary:{fontSize:14,lineHeight:20,fontWeight:"400" as const},
+  caption:{fontSize:12,lineHeight:17,fontWeight:"500" as const}
 } as const;
-
-export const controls = {
-  compact: 36,
-  default: 44,
-  comfortable: 48,
-  minimumTouchTarget: 44
-} as const;
-
-export const motion = {
-  fast: 160,
-  normal: 220,
-  slow: 280
-} as const;
+export const sizes = { touch:44, input:48, header:56, avatarXs:24, avatarSm:32, avatarMd:40, avatarLg:48, avatarXl:64, avatarProfile:96 } as const;
+export const motion = { fast:160, normal:220, page:260 } as const;
+export const layers = { base:0, sticky:10, dropdown:30, overlay:100, modal:200, toast:300 } as const;

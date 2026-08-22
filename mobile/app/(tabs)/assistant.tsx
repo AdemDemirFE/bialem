@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Image,
@@ -12,6 +13,7 @@ import {
   View
 } from "react-native";
 import { api } from "../../src/lib/api";
+import { IconButton } from "../../src/components/IconButton";
 import { colors } from "../../src/theme/colors";
 import { imageSources } from "../../src/theme/images";
 
@@ -83,7 +85,7 @@ export default function AssistantScreen() {
             {suggestions.map((suggestion) => (
               <Pressable key={suggestion} style={styles.suggestionCard} onPress={() => void sendMessage(suggestion)}>
                 <Text style={styles.suggestionText}>{suggestion}</Text>
-                <Text style={styles.suggestionArrow}>+</Text>
+                <View style={styles.suggestionArrow}><Ionicons name="add" size={20} color={colors.actionText} /></View>
               </Pressable>
             ))}
           </View>
@@ -117,9 +119,7 @@ export default function AssistantScreen() {
           maxLength={2000}
           style={styles.input}
         />
-        <Pressable style={[styles.sendButton, (!input.trim() || sending) && styles.sendButtonDisabled]} onPress={() => void sendMessage()}>
-          <Text style={styles.sendButtonText}>Gönder</Text>
-        </Pressable>
+        <IconButton icon="send" accessibilityLabel="Mesajı gönder" size={44} backgroundColor={colors.action as string} borderColor={colors.action as string} color={colors.actionText as string} disabled={!input.trim() || sending} loading={sending} onPress={() => void sendMessage()} />
       </View>
     </KeyboardAvoidingView>
   );
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   suggestions: { gap: 10 },
   suggestionCard: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   suggestionText: { flex: 1, color: colors.ink, fontSize: 15, lineHeight: 21, fontWeight: "800" },
-  suggestionArrow: { width: 30, height: 30, borderRadius: 15, textAlign: "center", textAlignVertical: "center", color: colors.actionText, backgroundColor: colors.action, fontSize: 20, fontWeight: "900" },
+  suggestionArrow: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: colors.action },
   chat: { gap: 12 },
   bubble: { maxWidth: "88%", padding: 12, borderRadius: 17, gap: 5 },
   userBubble: { alignSelf: "flex-end", backgroundColor: colors.brandInk, borderBottomRightRadius: 7 },
@@ -149,9 +149,6 @@ const styles = StyleSheet.create({
   thinkingBubble: { flexDirection: "row", alignItems: "center", gap: 9 },
   thinkingText: { color: colors.muted, fontSize: 14, fontWeight: "700" },
   error: { color: colors.danger, backgroundColor: colors.surfaceStrong, borderRadius: 16, padding: 12, fontSize: 13, lineHeight: 19, fontWeight: "700" },
-  composer: { flexDirection: "row", alignItems: "flex-end", gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: Platform.OS === "ios" ? 24 : 14, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  composer: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: Platform.OS === "ios" ? 24 : 14, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
   input: { flex: 1, maxHeight: 100, minHeight: 44, borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.page, paddingHorizontal: 13, paddingVertical: 10, color: colors.ink, fontSize: 14 },
-  sendButton: { minHeight: 44, justifyContent: "center", backgroundColor: colors.action, borderRadius: 14, paddingHorizontal: 14 },
-  sendButtonDisabled: { opacity: 0.45 },
-  sendButtonText: { color: colors.actionText, fontSize: 14, fontWeight: "900" }
 });

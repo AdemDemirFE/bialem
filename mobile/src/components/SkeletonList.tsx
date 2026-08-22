@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { colors } from "../theme/colors";
+import { radius, spacing } from "../theme/tokens";
 
 export function SkeletonList({ rows = 4 }: { rows?: number }) {
   const opacity = useRef(new Animated.Value(0.45)).current;
@@ -32,10 +33,10 @@ export function SkeletonList({ rows = 4 }: { rows?: number }) {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: 8 },
-  row: { minHeight: 68, flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  avatar: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.surfaceStrong },
-  copy: { flex: 1, gap: 8 },
+  list: { gap: spacing.sm },
+  row: { minHeight: 68, flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  avatar: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.surfaceStrong },
+  copy: { flex: 1, gap: spacing.sm },
   title: { width: "52%", height: 10, borderRadius: 5, backgroundColor: colors.surfaceStrong },
   line: { width: "84%", height: 8, borderRadius: 4, backgroundColor: colors.surfaceStrong }
 });
