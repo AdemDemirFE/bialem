@@ -33,7 +33,6 @@
 }
 
 .swal2-container { backdrop-filter: blur(5px); }
-.swal2-popup { animation-duration: 220ms !important; }
 
 .bialem-alert-btn-ghost {
   background: var(--bialem-surfaceStrong) !important;

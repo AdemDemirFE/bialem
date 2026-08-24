@@ -2,6 +2,7 @@ package com.bialem.backend.service;
 
 import com.bialem.backend.domain.CommunityMember;
 import com.bialem.backend.domain.enumeration.CommunityMemberStatus;
+import com.bialem.backend.domain.enumeration.CommunityMemberRole;
 import com.bialem.backend.domain.enumeration.NotificationEventType;
 import com.bialem.backend.notification.NotificationEvent;
 import com.bialem.backend.notification.NotificationEventPublisher;
@@ -17,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 /**
  * Service Implementation for managing {@link com.bialem.backend.domain.CommunityMember}.
@@ -171,5 +174,21 @@ public class CommunityMemberService {
     public void delete(Long id) {
         LOG.debug("Request to delete CommunityMember : {}", id);
         communityMemberRepository.deleteById(id);
+    }
+
+    public CommunityMember review(Long communityId, Long memberId, CommunityMemberStatus targetStatus) {
+        if (targetStatus != CommunityMemberStatus.APPROVED && targetStatus != CommunityMemberStatus.REJECTED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz üyelik durumu.");
+        }
+        CommunityMember member = communityMemberRepository.findForManagementUpdate(communityId, memberId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Katılım isteği bulunamadı."));
+        if (member.getStatus() != CommunityMemberStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Katılım isteği daha önce işlenmiş.");
+        }
+        member.setStatus(targetStatus);
+        if (targetStatus == CommunityMemberStatus.APPROVED) member.setRole(CommunityMemberRole.MEMBER);
+        CommunityMember saved = communityMemberRepository.save(member);
+        publishMembershipStatusEvent(saved);
+        return saved;
     }
 }

@@ -75,7 +75,7 @@ export function AgendaCalendar({ plans, onRangeChange }: Props) {
 
 function eventColor(p: AgendaPlan) { if (p.event_type === "BIRTHDAY") return String(colors.action); if (p.event_type === "CITY_EVENT") return String(colors.aqua); if (p.event_status === "cancelled") return String(colors.danger); if (["approved","checked_in"].includes(p.participation_status)) return String(colors.success); if (["pending","waitlisted"].includes(p.participation_status)) return String(colors.action); return String(colors.ink); }
 function eventIcon(p: AgendaPlan) { if (p.event_status === "cancelled") return "×"; if (["approved","checked_in"].includes(p.participation_status)) return "✓"; return p.source === "community" ? "◆" : "•"; }
-function localDateKey(value: string) { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function localDateKey(value: string) { const parts=new Intl.DateTimeFormat("en",{timeZone:"Europe/Istanbul",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(value));const part=(type:Intl.DateTimeFormatPartTypes)=>parts.find(item=>item.type===type)?.value??"";return `${part("year")}-${part("month")}-${part("day")}`; }
 function formatSelectedDate(value: string) { return new Date(`${value}T12:00:00`).toLocaleDateString("tr-TR", { weekday:"long",day:"numeric",month:"long" }); }
-function formatTime(value: string) { return new Date(value).toLocaleTimeString("tr-TR", { hour:"2-digit",minute:"2-digit" }); }
+function formatTime(value: string) { return new Date(value).toLocaleTimeString("tr-TR", { timeZone:"Europe/Istanbul",hour:"2-digit",minute:"2-digit" }); }
 function participationLabel(status: string) { if (status === "approved") return "Katılım onaylandı"; if (status === "checked_in") return "Katıldın"; if (status === "community") return "Topluluk etkinliği"; return "Onay bekliyor"; }

@@ -13,6 +13,10 @@ export type NewManagedUser = Omit<ManagedUser,"id"|"createdDate"> & {langKey?:st
 export type Community = { id?:number; name:string; slug:string; description?:string|null; visibility:string; coverImageUrl?:string|null; communityType:string; partnerTrustLevel:string; isVerifiedPartner:boolean; isDiscoverable:boolean; createdAt?:string; updatedAt?:string; leadModerator?:{id?:number;displayName?:string}|null };
 export type ManagedEvent = { id?:number; title:string; description?:string|null; startsAt:string; endsAt?:string|null; locationName?:string|null; addressText?:string|null; latitude?:number|null; longitude?:number|null; coverImageUrl?:string|null; capacity?:number|null; status:string; rejectionReason?:string|null; publishedAt?:string|null; publishedToDiscovery:boolean; groupModerationStatus:string; platformModerationStatus:string; cancelledAt?:string|null; cancellationReason?:string|null; createdAt?:string; updatedAt?:string; community?:{id?:number;name?:string}|null };
 export type ManagementNotification={id:number;notificationId:number;title:string;body?:string;notificationType:string;source:string;trigger?:string;referenceType?:string;referenceId?:string;recipientUserId:number;firebaseStatus:string;firebaseMessageId?:string;pushSuccessful:number;pushFailed:number;attemptCount:number;firebaseErrors:Record<string,number>;createdAt:string;sentAt?:string;lastError?:string};
+export type CommunityMemberStatus="PENDING"|"APPROVED"|"REJECTED"|"BLOCKED";
+export type CommunityMemberView={id:number;profileId:number;userId:number;displayName:string;username:string;login:string;avatarUrl?:string|null;city?:string|null;bio?:string|null;role:"MEMBER"|"MANAGER"|"OWNER";status:CommunityMemberStatus;createdAt:string};
+export type CommunityMemberStats={pending:number;approved:number;blocked:number};
+export type PageResult<T>={content:T[];number:number;size:number;totalElements:number;totalPages:number;first:boolean;last:boolean};
 
 export const managementApi = {
   context: () => api.rest.get<ManagementContext>("/api/admin/context"),
@@ -28,12 +32,16 @@ export const managementApi = {
   createUser: (user:NewManagedUser) => api.rest.post<ManagedUser>("/api/admin/users",user),
   setUserAuthority: (id:number|string, authority:string) => api.rest.put<ManagedUser>(`/api/admin/users/${id}/authority`,{authority}),
   setUserActivated: (id:number, activated:boolean) => api.rest.post(`/api/admin/users/${id}/${activated?"activate":"deactivate"}`),
-  communities: (page=0,size=20) => api.rest.get<any[]>(`/api/communities?page=${page}&size=${size}&sort=createdAt,desc`),
+  communities: (page=0,size=20) => api.rest.get<Community[]>(`/api/communities?page=${page}&size=${size}&sort=createdAt,desc`),
   getCommunityById: (id:number) => api.rest.get<Community>(`/api/communities/${id}`),
   createCommunity: (value:Community) => api.rest.post<Community>("/api/communities",value),
   updateCommunity: (id:number,value:Community) => api.rest.put<Community>(`/api/communities/${id}`,{...value,id}),
   deleteCommunity: (id:number) => api.rest.delete(`/api/communities/${id}`),
   deactivateCommunity: (value:Community) => value.id?api.rest.put<Community>(`/api/communities/${value.id}`,{...value,isDiscoverable:false,updatedAt:new Date().toISOString()}):Promise.reject(new Error("Topluluk kimliği yok.")),
+  communityMemberStats: (communityId:number) => api.rest.get<CommunityMemberStats>(`/api/admin/communities/${communityId}/members/stats`),
+  communityMembers: (communityId:number,status:CommunityMemberStatus,page=0,size=20,search="") => api.rest.get<PageResult<CommunityMemberView>>(`/api/admin/communities/${communityId}/members?status=${status}&page=${page}&size=${size}&sort=createdAt,desc&search=${encodeURIComponent(search)}`),
+  approveCommunityMember: (communityId:number,memberId:number) => api.rest.post<CommunityMemberView>(`/api/admin/communities/${communityId}/members/${memberId}/approve`),
+  rejectCommunityMember: (communityId:number,memberId:number) => api.rest.post<CommunityMemberView>(`/api/admin/communities/${communityId}/members/${memberId}/reject`),
   events: (page=0,size=20) => api.rest.get<any[]>(`/api/events?page=${page}&size=${size}&sort=startsAt,desc`),
   getEventById: (id:number) => api.rest.get<ManagedEvent>(`/api/events/${id}`),
   createEvent: (value:ManagedEvent) => api.rest.post<ManagedEvent>("/api/events",value),

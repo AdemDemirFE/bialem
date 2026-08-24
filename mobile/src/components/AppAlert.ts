@@ -28,15 +28,18 @@ async function fire(options: {
   showCancel?: boolean;
   cancelText?: string;
   confirmDanger?: boolean;
+  timer?: number;
 }): Promise<SweetAlertResult> {
   Swal.close();
-  const result = await Swal.fire({
+  return Swal.fire({
     title: options.title,
     text: options.text,
     icon: options.icon ?? "info",
     confirmButtonText: options.confirmText ?? "Tamam",
     cancelButtonText: options.cancelText ?? "Vazgeç",
     showCancelButton: Boolean(options.showCancel),
+    timer: options.timer,
+    timerProgressBar: Boolean(options.timer),
     reverseButtons: true,
     buttonsStyling: false,
     customClass: {
@@ -50,12 +53,10 @@ async function fire(options: {
     color: brand.ink,
     background: brand.surface
   });
-  Swal.close();
-  return result;
 }
 
 export function showAppAlert({ title, text, icon = "info", confirmText }: AlertOptions) {
-  return fire({ title, text, icon, confirmText });
+  return fire({ title, text, icon, confirmText, timer: 2000 });
 }
 
 export async function showAppConfirm({

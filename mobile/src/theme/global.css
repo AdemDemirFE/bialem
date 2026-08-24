@@ -81,7 +81,7 @@ input:focus-visible, textarea:focus-visible {
   box-shadow: 0 1px 0 color-mix(in srgb, var(--bialem-ink) 4%, transparent);
 }
 
-[role="dialog"] {
+[role="dialog"]:not(.swal2-popup) {
   animation: ui-dialog-in var(--ui-duration) var(--ui-ease) both;
 }
 
