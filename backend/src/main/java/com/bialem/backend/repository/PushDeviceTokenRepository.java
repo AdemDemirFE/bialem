@@ -31,6 +31,11 @@ public interface PushDeviceTokenRepository extends JpaRepository<PushDeviceToken
 
     long countByActiveTrue();
 
+    long countByActiveTrueAndPlatform(com.bialem.backend.domain.enumeration.PushPlatform platform);
+
+    @Query("select count(distinct d.user.id) from PushDeviceToken d where d.active = true and d.notificationsEnabled = true and d.user.id in :userIds")
+    long countPushEligibleUsers(@Param("userIds") List<Long> userIds);
+
     @Modifying
     @Query("update PushDeviceToken d set d.active = false, d.updatedAt = :now where d.user.id = :userId and " +
         "((:token is not null and d.token = :token) or (:deviceUuid is not null and d.deviceUuid = :deviceUuid) or " +

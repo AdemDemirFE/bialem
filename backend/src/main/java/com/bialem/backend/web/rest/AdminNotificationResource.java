@@ -2,14 +2,15 @@ package com.bialem.backend.web.rest;
 
 import com.bialem.backend.domain.NotificationOutbox;
 import com.bialem.backend.domain.enumeration.NotificationOutboxStatus;
-import com.bialem.backend.domain.enumeration.NotificationPriority;
+import com.bialem.backend.domain.enumeration.PushPlatform;
 import com.bialem.backend.notification.NotificationOutboxScheduler;
 import com.bialem.backend.repository.NotificationOutboxRepository;
 import com.bialem.backend.repository.NotificationDeliveryLogRepository;
 import com.bialem.backend.repository.PushDeviceTokenRepository;
-import com.bialem.backend.service.AppNotificationService;
+import com.bialem.backend.service.AdminNotificationService;
 import com.bialem.backend.service.FirebasePushService;
-import com.bialem.backend.service.dto.AppNotificationDTO;
+import com.bialem.backend.service.dto.AdminNotificationSendRequest;
+import com.bialem.backend.service.dto.AdminNotificationSendSummary;
 import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
@@ -22,16 +23,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/notifications")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SUPER_ADMIN')")
 public class AdminNotificationResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AdminNotificationResource.class);
 
-    private final AppNotificationService appNotificationService;
+    private final AdminNotificationService adminNotificationService;
 
     private final NotificationOutboxRepository notificationOutboxRepository;
 
@@ -41,14 +43,14 @@ public class AdminNotificationResource {
     private final FirebasePushService firebasePushService;
 
     public AdminNotificationResource(
-        AppNotificationService appNotificationService,
+        AdminNotificationService adminNotificationService,
         NotificationOutboxRepository notificationOutboxRepository,
         NotificationOutboxScheduler notificationOutboxScheduler,
         NotificationDeliveryLogRepository deliveryLogRepository,
         PushDeviceTokenRepository pushDeviceTokenRepository,
         FirebasePushService firebasePushService
     ) {
-        this.appNotificationService = appNotificationService;
+        this.adminNotificationService = adminNotificationService;
         this.notificationOutboxRepository = notificationOutboxRepository;
         this.notificationOutboxScheduler = notificationOutboxScheduler;
         this.deliveryLogRepository = deliveryLogRepository;
@@ -57,6 +59,7 @@ public class AdminNotificationResource {
     }
 
     @GetMapping("")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<ManagementNotificationDTO>> list(@RequestParam(required=false) NotificationOutboxStatus status,
         @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         Page<NotificationOutbox> page=status==null?notificationOutboxRepository.findAll(pageable):notificationOutboxRepository.findAll((root,q,cb)->cb.equal(root.get("status"),status),pageable);
@@ -64,6 +67,7 @@ public class AdminNotificationResource {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<ManagementNotificationDTO> detail(@PathVariable Long id) {
         return notificationOutboxRepository.findById(id).map(this::toManagementDto).map(ResponseEntity::ok).orElseGet(()->ResponseEntity.notFound().build());
     }
@@ -80,36 +84,26 @@ public class AdminNotificationResource {
 
     @GetMapping("/integration-status")
     public Map<String,Object> integrationStatus() {
-        return Map.of("firebaseConnected",firebasePushService.isAvailable(),"fcmReady",firebasePushService.isAvailable(),"bigQueryConfigured",false,"bigQueryMessage","BigQuery bağlantısı yapılandırılmamış.");
+        Map<String, Object> status = new java.util.LinkedHashMap<>();
+        status.put("firebaseEnabled", firebasePushService.isEnabled());
+        status.put("firebaseInitialized", firebasePushService.isAvailable());
+        status.put("firebaseConnected", firebasePushService.isAvailable());
+        status.put("fcmReady", firebasePushService.isAvailable());
+        status.put("projectId", firebasePushService.getProjectId());
+        status.put("activePushTokens", pushDeviceTokenRepository.countByActiveTrue());
+        status.put("androidTokens", pushDeviceTokenRepository.countByActiveTrueAndPlatform(PushPlatform.ANDROID));
+        status.put("iosTokens", pushDeviceTokenRepository.countByActiveTrueAndPlatform(PushPlatform.IOS));
+        status.put("bigQueryConfigured", false);
+        status.put("bigQueryMessage", "BigQuery bağlantısı yapılandırılmamış.");
+        return status;
     }
 
     @PostMapping("/send")
-    public ResponseEntity<AppNotificationDTO> sendManualNotification(@Valid @RequestBody ManualNotificationRequest request) {
-        LOG.debug("REST request to send manual notification to {} users", request.userIds().size());
-        if (request.userIds().size() == 1) {
-            AppNotificationDTO result = appNotificationService.sendManualNotification(
-                request.userIds().get(0),
-                request.title(),
-                request.body(),
-                request.route(),
-                request.pushEnabled(),
-                request.inAppEnabled(),
-                request.scheduledAt(),
-                request.priority()
-            );
-            return ResponseEntity.accepted().body(result);
-        }
-        appNotificationService.sendAdminBroadcast(
-            request.userIds(),
-            request.title(),
-            request.body(),
-            request.route(),
-            request.pushEnabled(),
-            request.inAppEnabled(),
-            request.scheduledAt(),
-            request.priority()
-        );
-        return ResponseEntity.accepted().build();
+    public ResponseEntity<AdminNotificationSendSummary> sendManualNotification(
+        @Valid @RequestBody AdminNotificationSendRequest request
+    ) {
+        LOG.info("Admin notification requested for target type {}", request.targetType());
+        return ResponseEntity.accepted().body(adminNotificationService.send(request));
     }
 
     @GetMapping("/outbox")
@@ -170,14 +164,4 @@ public class AdminNotificationResource {
 
     public record ManagementNotificationDTO(Long id,Long notificationId,String title,String body,String notificationType,String source,String trigger,String referenceType,String referenceId,Long recipientUserId,String firebaseStatus,String firebaseMessageId,long pushSuccessful,long pushFailed,Integer attemptCount,Map<String,Long> firebaseErrors,Instant createdAt,Instant sentAt,String lastError) {}
 
-    public record ManualNotificationRequest(
-        List<Long> userIds,
-        String title,
-        String body,
-        String route,
-        boolean pushEnabled,
-        boolean inAppEnabled,
-        Instant scheduledAt,
-        NotificationPriority priority
-    ) {}
 }

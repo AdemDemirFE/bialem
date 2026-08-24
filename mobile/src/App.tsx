@@ -1,5 +1,5 @@
 import { bindRouter } from "./shims/expo-router";
-import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import RootLayout from "../app/_layout";
@@ -71,9 +71,14 @@ function RouterBinder({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
     let listener: { remove: () => void } | null = null;
+    let disposed = false;
     const setup = async () => {
       try {
+        const { App: CapacitorApp } = await import("@capacitor/app");
+        if (disposed) return;
         listener = await CapacitorApp.addListener("backButton", ({ canGoBack }) => {
           if (canGoBack) {
             navigate(-1);
@@ -87,6 +92,7 @@ function RouterBinder({ children }: { children: ReactNode }) {
     };
     void setup();
     return () => {
+      disposed = true;
       listener?.remove();
     };
   }, [navigate]);

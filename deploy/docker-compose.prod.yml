@@ -51,7 +51,11 @@ services:
       SPRING_MAIL_FROM: ${SPRING_MAIL_FROM:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      FIREBASE_ENABLED: ${FIREBASE_ENABLED:-false}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
       FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
+    volumes:
+      - ${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:ro
     ports:
       - "191.215.36.29:8184:8080"
     networks:

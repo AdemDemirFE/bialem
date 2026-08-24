@@ -33,6 +33,7 @@ export default function CityEventDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ticketOffers, setTicketOffers] = useState<TicketOffer[]>([]);
+  const [coverFailed, setCoverFailed] = useState(false);
 
   const loadEvent = async () => {
     const [{ data, error: radarError }, { data: offerData, error: offerError }] = await Promise.all([
@@ -126,8 +127,8 @@ export default function CityEventDetailScreen() {
 
       <View style={styles.hero}>
         <View style={styles.heroFallback}><Ionicons name="images" size={54} color="rgba(255,255,255,0.82)" /></View>
-        {event.cover_image_url ? (
-          <Image source={{ uri: normalizeImageUrl(event.cover_image_url) }} style={styles.heroImage} resizeMode="cover" fadeDuration={180} />
+        {event.cover_image_url && !coverFailed ? (
+          <Image source={{ uri: normalizeImageUrl(event.cover_image_url) }} style={styles.heroImage} resizeMode="cover" fadeDuration={180} onError={() => setCoverFailed(true)} />
         ) : null}
         <View style={styles.heroShade} />
         <View style={styles.heroContent}>

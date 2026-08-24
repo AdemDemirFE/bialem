@@ -29,6 +29,7 @@ export function AgendaCalendar({ plans, onRangeChange }: Props) {
   const [activeView, setActiveView] = useState<(typeof views)[number]["key"]>("dayGridMonth");
   const [title, setTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const events = useMemo(() => plans.map((plan) => ({ id: plan.event_id, title: plan.title, start: plan.starts_at,
     end: plan.ends_at || undefined, backgroundColor: eventColor(plan), borderColor: eventColor(plan), textColor: "#fff",
     extendedProps: { plan } })), [plans]);
@@ -66,7 +67,7 @@ export function AgendaCalendar({ plans, onRangeChange }: Props) {
         <button type="button" className="agenda-icon-button" onClick={() => setSelectedDate(null)}><Ionicons name="close" size={19} color={colors.ink} /></button></header>
         {selectedPlans.length === 0 ? <div className="agenda-day-empty"><Ionicons name="calendar-outline" size={28} color={colors.aqua} /><span>Bu güne ait etkinlik bulunmuyor.</span></div>
           : selectedPlans.map((plan) => <button type="button" key={plan.event_id} className="agenda-day-event" onClick={() => openEvent(plan.event_id)}>
-            {plan.image_url ? <img className="agenda-day-image" src={plan.image_url} alt="" /> : <span className="agenda-day-icon" style={{ backgroundColor: eventColor(plan) }}><Ionicons name={plan.event_type === "BIRTHDAY" ? "gift-outline" : plan.event_type === "CITY_EVENT" ? "location-outline" : "calendar-outline"} size={19} color="#fff" /></span>}
+            {plan.image_url && !failedImages.has(plan.event_id) ? <img className="agenda-day-image" src={plan.image_url} alt="" loading="lazy" onError={() => setFailedImages(current => new Set(current).add(plan.event_id))} /> : <span className="agenda-day-icon" style={{ backgroundColor: eventColor(plan) }}><Ionicons name={plan.event_type === "BIRTHDAY" ? "gift-outline" : plan.event_type === "CITY_EVENT" ? "location-outline" : "calendar-outline"} size={19} color="#fff" /></span>}
             <span className="agenda-day-copy"><small className="agenda-day-time">{plan.event_type === "BIRTHDAY" ? `@${plan.username || "bialem"} · ${plan.calculated_age || "Yeni"} yaşında` : `${formatTime(plan.starts_at)} · ${plan.community_name || "Bialem"}`}</small>
             <strong className="agenda-day-title">{plan.title}</strong>{plan.description ? <small className="agenda-day-description">{plan.description}</small> : null}<small className="agenda-day-meta">{[plan.location_name,plan.price_label].filter(Boolean).join(" · ") || participationLabel(plan.participation_status)}</small></span><Ionicons name="chevron-forward" size={18} color={colors.muted} /></button>)}
       </section></div>}

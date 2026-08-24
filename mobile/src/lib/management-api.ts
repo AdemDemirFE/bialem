@@ -13,6 +13,9 @@ export type NewManagedUser = Omit<ManagedUser,"id"|"createdDate"> & {langKey?:st
 export type Community = { id?:number; name:string; slug:string; description?:string|null; visibility:string; coverImageUrl?:string|null; communityType:string; partnerTrustLevel:string; isVerifiedPartner:boolean; isDiscoverable:boolean; createdAt?:string; updatedAt?:string; leadModerator?:{id?:number;displayName?:string}|null };
 export type ManagedEvent = { id?:number; title:string; description?:string|null; startsAt:string; endsAt?:string|null; locationName?:string|null; addressText?:string|null; latitude?:number|null; longitude?:number|null; coverImageUrl?:string|null; capacity?:number|null; status:string; rejectionReason?:string|null; publishedAt?:string|null; publishedToDiscovery:boolean; groupModerationStatus:string; platformModerationStatus:string; cancelledAt?:string|null; cancellationReason?:string|null; createdAt?:string; updatedAt?:string; community?:{id?:number;name?:string}|null };
 export type ManagementNotification={id:number;notificationId:number;title:string;body?:string;notificationType:string;source:string;trigger?:string;referenceType?:string;referenceId?:string;recipientUserId:number;firebaseStatus:string;firebaseMessageId?:string;pushSuccessful:number;pushFailed:number;attemptCount:number;firebaseErrors:Record<string,number>;createdAt:string;sentAt?:string;lastError?:string};
+export type NotificationTargetType="ALL_ACTIVE_USERS"|"SPECIFIC_USER"|"ROLE"|"COMMUNITY"|"EVENT_PARTICIPANTS"|"CITY";
+export type AdminNotificationSendRequest={title:string;body:string;targetType:NotificationTargetType;userId?:number;role?:string;communityId?:number;eventId?:number;city?:string;notificationType:string;route?:string;referenceType?:string;referenceId?:string;sendPush:boolean;inAppEnabled:boolean;scheduledAt:null;priority:string;requestId:string};
+export type AdminNotificationSendSummary={notificationCreated:boolean;recipientCount:number;pushEligibleCount:number;successCount:number;failureCount:number;withoutTokenCount:number;status:string};
 export type CommunityMemberStatus="PENDING"|"APPROVED"|"REJECTED"|"BLOCKED";
 export type CommunityMemberView={id:number;profileId:number;userId:number;displayName:string;username:string;login:string;avatarUrl?:string|null;city?:string|null;bio?:string|null;role:"MEMBER"|"MANAGER"|"OWNER";status:CommunityMemberStatus;createdAt:string};
 export type CommunityMemberStats={pending:number;approved:number;blocked:number};
@@ -51,8 +54,8 @@ export const managementApi = {
   ,notifications: (page=0,size=20,status?:string) => api.rest.get<ManagementNotification[]>(`/api/admin/notifications?page=${page}&size=${size}&sort=createdAt,desc${status?`&status=${status}`:""}`)
   ,notification: (id:number) => api.rest.get<ManagementNotification>(`/api/admin/notifications/${id}`)
   ,notificationStats: () => api.rest.get<Record<string,number>>("/api/admin/notifications/stats")
-  ,notificationIntegration: () => api.rest.get<{firebaseConnected:boolean;fcmReady:boolean;bigQueryConfigured:boolean;bigQueryMessage:string}>("/api/admin/notifications/integration-status")
-  ,sendNotification: (value:{userIds:number[];title:string;body:string;route?:string;pushEnabled:boolean;inAppEnabled:boolean;scheduledAt:null;priority:string}) => api.rest.post("/api/admin/notifications/send",value)
+  ,notificationIntegration: () => api.rest.get<{firebaseEnabled:boolean;firebaseInitialized:boolean;firebaseConnected:boolean;fcmReady:boolean;projectId?:string|null;activePushTokens:number;androidTokens:number;iosTokens:number;bigQueryConfigured:boolean;bigQueryMessage:string}>("/api/admin/notifications/integration-status")
+  ,sendNotification: (value:AdminNotificationSendRequest) => api.rest.post<AdminNotificationSendSummary>("/api/admin/notifications/send",value)
   ,retryNotification: (id:number) => api.rest.post(`/api/admin/notifications/${id}/retry`)
   ,authorities: () => api.rest.get<Array<{name:string}>>("/api/authorities")
 };

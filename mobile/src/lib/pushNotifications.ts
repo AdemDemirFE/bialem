@@ -1,5 +1,4 @@
 import { Capacitor } from "@capacitor/core";
-import { PushNotifications } from "@capacitor/push-notifications";
 import { registerPushToken as registerPushTokenApi } from "./notificationApi";
 import { router } from "./router";
 
@@ -29,7 +28,19 @@ export async function initializePushNotifications() {
 
   try {
     console.log("[PUSH] initialization started");
-    registerPushListenersOnce();
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    if (Capacitor.getPlatform() === "android") {
+      await PushNotifications.createChannel({
+        id: "bialem_notifications",
+        name: "Bialem bildirimleri",
+        description: "Etkinlik, topluluk ve hesap bildirimleri",
+        importance: 5,
+        visibility: 1,
+        sound: "default",
+        vibration: true
+      });
+    }
+    registerPushListenersOnce(PushNotifications);
 
     const result = await PushNotifications.requestPermissions();
     console.log("[PUSH] permission result", { receive: result.receive });
@@ -47,7 +58,9 @@ export async function initializePushNotifications() {
   }
 }
 
-function registerPushListenersOnce() {
+function registerPushListenersOnce(
+  PushNotifications: typeof import("@capacitor/push-notifications").PushNotifications
+) {
   if (listenersRegistered) {
     console.log("[PUSH] listeners already registered");
     return;

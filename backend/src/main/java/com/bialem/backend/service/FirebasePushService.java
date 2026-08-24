@@ -129,6 +129,14 @@ public class FirebasePushService {
         return firebaseConfig.isAvailable();
     }
 
+    public boolean isEnabled() {
+        return firebaseConfig.isEnabled();
+    }
+
+    public String getProjectId() {
+        return firebaseConfig.getProjectId();
+    }
+
     private MulticastMessage buildMulticastMessage(List<String> tokens, Map<String, String> data, NotificationPriority priority) {
         MulticastMessage.Builder builder = MulticastMessage.builder()
             .addAllTokens(tokens)

@@ -22,10 +22,21 @@ public class FirebaseConfig {
     @Value("${firebase.credentials:}")
     private String credentialsPath;
 
+    @Value("${firebase.enabled:false}")
+    private boolean enabled;
+
+    @Value("${firebase.project-id:}")
+    private String projectId;
+
     private boolean available;
 
     @PostConstruct
     public void init() {
+        if (!enabled) {
+            LOG.info("Firebase Admin SDK is disabled by configuration");
+            available = false;
+            return;
+        }
         if (FirebaseApp.getApps().isEmpty()) {
             try {
                 initialize();
@@ -43,7 +54,7 @@ public class FirebaseConfig {
             Path path = Path.of(credentialsPath);
             if (Files.isRegularFile(path)) {
                 try (InputStream in = new FileInputStream(path.toFile())) {
-                    FirebaseOptions options = FirebaseOptions.builder().setCredentials(GoogleCredentials.fromStream(in)).build();
+                    FirebaseOptions options = options(GoogleCredentials.fromStream(in));
                     FirebaseApp.initializeApp(options);
                     available = true;
                     LOG.info("Firebase Admin SDK initialized from configured credentials");
@@ -56,7 +67,7 @@ public class FirebaseConfig {
 
         try {
             GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
-            FirebaseOptions options = FirebaseOptions.builder().setCredentials(credentials).build();
+            FirebaseOptions options = options(credentials);
             FirebaseApp.initializeApp(options);
             available = true;
             LOG.info("Firebase Admin SDK initialized from Application Default Credentials");
@@ -68,5 +79,19 @@ public class FirebaseConfig {
 
     public boolean isAvailable() {
         return available;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public String getProjectId() {
+        return projectId == null || projectId.isBlank() ? null : projectId;
+    }
+
+    private FirebaseOptions options(GoogleCredentials credentials) {
+        FirebaseOptions.Builder builder = FirebaseOptions.builder().setCredentials(credentials);
+        if (projectId != null && !projectId.isBlank()) builder.setProjectId(projectId.trim());
+        return builder.build();
     }
 }

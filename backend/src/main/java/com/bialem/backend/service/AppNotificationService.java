@@ -11,6 +11,7 @@ import com.bialem.backend.notification.NotificationTemplateService;
 import com.bialem.backend.repository.*;
 import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.service.dto.AppNotificationDTO;
+import com.bialem.backend.service.dto.AdminNotificationSendRequest;
 import com.bialem.backend.service.dto.NotificationPreferenceDTO;
 import com.bialem.backend.service.dto.UnreadCountDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,6 +41,8 @@ public class AppNotificationService {
 
     private final UserRepository userRepository;
 
+    private final ProfileRepository profileRepository;
+
     private final NotificationTemplateRepository notificationTemplateRepository;
 
     private final UserNotificationPreferenceRepository preferenceRepository;
@@ -53,6 +56,7 @@ public class AppNotificationService {
         NotificationOutboxRepository notificationOutboxRepository,
         PushDeviceTokenRepository pushDeviceTokenRepository,
         UserRepository userRepository,
+        ProfileRepository profileRepository,
         NotificationTemplateRepository notificationTemplateRepository,
         UserNotificationPreferenceRepository preferenceRepository,
         NotificationEventPublisher notificationEventPublisher,
@@ -62,6 +66,7 @@ public class AppNotificationService {
         this.notificationOutboxRepository = notificationOutboxRepository;
         this.pushDeviceTokenRepository = pushDeviceTokenRepository;
         this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
         this.notificationTemplateRepository = notificationTemplateRepository;
         this.preferenceRepository = preferenceRepository;
         this.notificationEventPublisher = notificationEventPublisher;
@@ -209,6 +214,63 @@ public class AppNotificationService {
         }
     }
 
+    public void sendAdminBroadcastToAllActiveUsers(
+        String title,
+        String body,
+        String route,
+        boolean pushEnabled,
+        boolean inAppEnabled,
+        Instant scheduledAt,
+        NotificationPriority priority
+    ) {
+        sendAdminBroadcast(
+            userRepository.findAllByActivatedIsTrue().stream().map(User::getId).toList(),
+            title,
+            body,
+            route,
+            pushEnabled,
+            inAppEnabled,
+            scheduledAt,
+            priority
+        );
+    }
+
+    public int createAdminNotifications(List<User> recipients, AdminNotificationSendRequest request) {
+        String correlationId = request.requestId() == null || request.requestId().isBlank()
+            ? UUID.randomUUID().toString()
+            : request.requestId().trim();
+        boolean pushEnabled = !Boolean.FALSE.equals(request.sendPush());
+        boolean inAppEnabled = !Boolean.FALSE.equals(request.inAppEnabled());
+        int created = 0;
+        for (User user : recipients) {
+            String idempotencyKey = "ADMIN:" + correlationId + ":" + user.getId();
+            if (appNotificationRepository.findByIdempotencyKey(idempotencyKey).isPresent()) continue;
+
+            Instant now = Instant.now();
+            AppNotification notification = new AppNotification();
+            notification.setUser(user);
+            notification.setTitle(request.title().trim());
+            notification.setBody(request.body().trim());
+            notification.setNotificationType(
+                request.notificationType() == null || request.notificationType().isBlank()
+                    ? NotificationEventType.ADMIN_BROADCAST.name()
+                    : request.notificationType().trim()
+            );
+            notification.setRoute(sanitizeRoute(request.route()));
+            notification.setReferenceType(blankToNull(request.referenceType()));
+            notification.setReferenceId(blankToNull(request.referenceId()));
+            notification.setCorrelationId(correlationId);
+            notification.setIdempotencyKey(idempotencyKey);
+            notification.setScheduledAt(request.scheduledAt());
+            notification.setIsRead(!inAppEnabled);
+            notification.setCreatedAt(now);
+            notification = appNotificationRepository.save(notification);
+            if (pushEnabled) createOutboxForUser(user, notification, now, request.scheduledAt());
+            created++;
+        }
+        return created;
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationPreferenceDTO> getPreferencesCurrentUser() {
         Long userId = currentUserId();
@@ -263,7 +325,10 @@ public class AppNotificationService {
     }
 
     private User resolveUser(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+        return userRepository
+            .findById(userId)
+            .or(() -> profileRepository.findById(userId).map(Profile::getUser))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı veya profil bulunamadı"));
     }
 
     private Long currentUserId() {
@@ -316,6 +381,10 @@ public class AppNotificationService {
             return null;
         }
         return trimmed;
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     public enum NotificationFilter {

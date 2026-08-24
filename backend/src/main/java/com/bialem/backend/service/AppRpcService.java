@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -80,6 +81,8 @@ public class AppRpcService {
             case "get_public_follow_connections" -> followConnections(me, id(args.get("target_user_id")), str(args.get("target_kind")));
             case "set_profile_block" -> setBlock(me, id(args.get("target_user_id")), bool(args.get("should_block"), true));
             case "get_my_blocked_profiles" -> blockedProfiles(me);
+            case "get_my_community_memberships" -> myCommunityMemberships(me);
+            case "get_communities_with_my_membership" -> communitiesWithMyMembership(me);
             case "join_community" -> joinCommunity(me, id(args.get("target_community_id")));
             case "leave_community" -> leaveCommunity(me, id(args.get("target_community_id")));
             case "cancel_community_membership_request" -> cancelMembership(me, id(args.get("target_community_id")));
@@ -361,6 +364,56 @@ public class AppRpcService {
                 "COMMUNITY", community.getId(), "/communities/" + community.getId(), Map.of("communityId", community.getId()));
         }
         return member.getStatus().name().toLowerCase();
+    }
+
+    private List<Map<String, Object>> myCommunityMemberships(Profile me) {
+        return em
+            .createQuery("select m from CommunityMember m where m.user = :me", CommunityMember.class)
+            .setParameter("me", me)
+            .getResultList()
+            .stream()
+            .map(support::toMap)
+            .toList();
+    }
+
+    private List<Map<String, Object>> communitiesWithMyMembership(Profile me) {
+        List<CommunityMember> membershipRows = em
+            .createQuery("select m from CommunityMember m where m.user = :me", CommunityMember.class)
+            .setParameter("me", me)
+            .getResultList();
+        Map<Long, CommunityMember> memberships = new HashMap<>();
+        for (CommunityMember membership : membershipRows) {
+            Community target = membership.getCommunity();
+            Long rootId = target.getParent() != null
+                ? target.getParent().getId()
+                : target.getCategoryHub() != null ? target.getCategoryHub().getId() : target.getId();
+            memberships.merge(rootId, membership, (current, candidate) ->
+                membershipPriority(candidate) > membershipPriority(current) ? candidate : current);
+        }
+        return em
+            .createQuery("select c from Community c where c.parent is null order by c.createdAt desc", Community.class)
+            .getResultList()
+            .stream()
+            .map(community -> {
+                Map<String, Object> row = new java.util.LinkedHashMap<>(support.toMap(community));
+                CommunityMember membership = memberships.get(community.getId());
+                row.put("id", String.valueOf(community.getId()));
+                row.put("community_id", String.valueOf(community.getId()));
+                row.put("membership_status", membership == null ? null : membership.getStatus().name().toLowerCase(Locale.ROOT));
+                row.put("membership_role", membership == null ? null : membership.getRole().name().toLowerCase(Locale.ROOT));
+                row.put("is_member", membership != null && membership.getStatus() == CommunityMemberStatus.APPROVED);
+                return row;
+            })
+            .toList();
+    }
+
+    private int membershipPriority(CommunityMember membership) {
+        return switch (membership.getStatus()) {
+            case APPROVED -> 4;
+            case PENDING -> 3;
+            case REJECTED -> 2;
+            case BLOCKED -> 1;
+        };
     }
 
     private boolean leaveCommunity(Profile me, Long communityId) {

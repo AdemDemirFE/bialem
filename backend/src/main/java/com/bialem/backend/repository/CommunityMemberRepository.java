@@ -54,4 +54,10 @@ public interface CommunityMemberRepository extends JpaRepository<CommunityMember
         @Param("roles") List<CommunityMemberRole> roles,
         @Param("status") CommunityMemberStatus status
     );
+
+    @Query("select distinct cm.user.user from CommunityMember cm where cm.community.id = :communityId and cm.status = :status and cm.user.user.activated = true")
+    List<com.bialem.backend.domain.User> findRecipientUsers(
+        @Param("communityId") Long communityId,
+        @Param("status") CommunityMemberStatus status
+    );
 }

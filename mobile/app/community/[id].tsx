@@ -276,11 +276,12 @@ export default function CommunityDetailScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.page}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadCommunity("refresh")} tintColor={colors.accent} />}
-    >
+    <>
       <Stack.Screen options={{ headerShown: true, title: community?.name || "Topluluk" }} />
+      <ScrollView
+        contentContainerStyle={styles.page}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadCommunity("refresh")} tintColor={colors.accent} />}
+      >
 
       {loading ? (
         <View style={styles.loadingBox}><ActivityIndicator color={colors.accent} size="large" /></View>
@@ -528,7 +529,8 @@ export default function CommunityDetailScreen() {
           )}
         </>
       )}
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 

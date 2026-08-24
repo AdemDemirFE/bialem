@@ -28,6 +28,9 @@ type Community = {
   partner_trust_level: "new" | "verified" | "trusted";
   is_verified_partner: boolean;
   created_at: string;
+  membership_status?: string | null;
+  membership_role?: Membership["role"] | null;
+  is_member?: boolean;
 };
 
 type Membership = {
@@ -86,31 +89,36 @@ export default function CommunitiesScreen() {
     else setRefreshing(true);
     setError(null);
 
-    const [communitiesResult, membershipsResult, assistantsResult] = await Promise.all([
-      api
+    const [communitiesResult, assistantsResult] = await Promise.all([
+      user ? api.rpc("get_communities_with_my_membership") : api
         .from("communities")
         .select("id, name, slug, description, cover_image_url, community_type, partner_trust_level, is_verified_partner, created_at")
         .is("parent_id", null)
         .order("created_at", { ascending: false }),
       user
-        ? api.from("community_members").select("community_id, role, status").eq("user_id", user.id)
-        : Promise.resolve({ data: [], error: null }),
-      user
         ? api.from("community_moderator_assistants").select("community_id").eq("user_id", user.id)
         : Promise.resolve({ data: [], error: null })
     ]);
 
-    if (communitiesResult.error || membershipsResult.error) {
-      setError(communitiesResult.error?.message || membershipsResult.error?.message || "Topluluklar yüklenemedi.");
+    if (communitiesResult.error) {
+      setError(communitiesResult.error.message || "Topluluklar yüklenemedi.");
     } else {
-      setCommunities((communitiesResult.data ?? []) as Community[]);
+      const loadedCommunities=((communitiesResult.data ?? []) as Array<Community & {community_id?:string|null}>)
+        .map(community => ({ ...community, id: String(community.id ?? community.community_id ?? "") }))
+        .filter(community => community.id !== "" && community.id !== "null" && community.id !== "undefined");
+      setCommunities(loadedCommunities);
       setMemberships(
-        ((membershipsResult.data ?? []) as Membership[]).reduce<Record<string, Membership>>((result, membership) => {
-          result[membership.community_id] = membership;
+        loadedCommunities.reduce<Record<string, Membership>>((result, community) => {
+          if (!community.membership_status) return result;
+          result[community.id] = {
+            community_id: community.id,
+            role: String(community.membership_role ?? "member").toLowerCase() as Membership["role"],
+            status: String(community.membership_status).toLowerCase()
+          };
           return result;
         }, {})
       );
-      setAssistantCommunityIds(assistantsResult.error ? [] : (assistantsResult.data ?? []).map((assistant) => assistant.community_id));
+      setAssistantCommunityIds(assistantsResult.error ? [] : (assistantsResult.data ?? []).map((assistant) => String(assistant.community_id)));
     }
 
     setLoading(false);
@@ -170,7 +178,7 @@ export default function CommunitiesScreen() {
   const localCommunities = communities.filter((community) => community.community_type === "partner_hub");
   const myCommunities = communities.filter((community) => {
     const membership = memberships[community.id];
-    return membership?.status === "approved" || membership?.status === "pending" || assistantCommunityIds.includes(community.id);
+    return community.is_member === true || community.membership_status === "approved" || community.membership_status === "pending" || membership?.status === "approved" || membership?.status === "pending" || assistantCommunityIds.includes(community.id);
   });
 
   const currentCommunities = (activeView === "official"
@@ -213,9 +221,9 @@ export default function CommunitiesScreen() {
 
   const renderCommunityCard = (community: Community, index: number) => {
     const membership = memberships[community.id];
-    const joined = membership?.status === "approved";
-    const requestPending = membership?.status === "pending";
-    const requestBlocked = membership?.status === "blocked";
+    const joined = community.is_member === true || community.membership_status === "approved" || membership?.status === "approved";
+    const requestPending = community.membership_status === "pending" || membership?.status === "pending";
+    const requestBlocked = community.membership_status === "blocked" || membership?.status === "blocked";
     const isModerator = joined && membership.role !== "member";
     const isAssistant = assistantCommunityIds.includes(community.id);
     const canOpen = joined || isAssistant;
@@ -270,10 +278,16 @@ export default function CommunitiesScreen() {
             <Text style={styles.approvalNote}>Katılım isteğin topluluk moderatörünün onayına gönderilir.</Text>
           ) : null}
           {canOpen ? (
-            <Pressable style={styles.openButton} onPress={() => router.push({ pathname: "/community/[id]", params: { id: community.id } })}>
-              <Text style={styles.openButtonText}>{isModerator ? "Başvuruları ve grupları yönet" : "Topluluğu aç"}</Text>
-              <Ionicons name="arrow-forward" size={18} color={colors.actionText} />
-            </Pressable>
+            <>
+              {joined ? <View style={styles.memberNotice}>
+                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                <Text style={styles.memberNoticeText}>{isModerator ? "Bu topluluğun yöneticisisin" : "Bu topluluğun üyesisin"}</Text>
+              </View> : null}
+              <Pressable style={styles.openButton} onPress={() => router.push({ pathname: "/community/[id]", params: { id: community.id } })}>
+                <Text style={styles.openButtonText}>{isModerator ? "Başvuruları ve grupları yönet" : "Topluluğu aç"}</Text>
+                <Ionicons name="arrow-forward" size={18} color={colors.actionText} />
+              </Pressable>
+            </>
           ) : requestPending ? (
             <Pressable
               style={styles.cancelRequestButton}
@@ -444,6 +458,8 @@ const styles = StyleSheet.create({
   filterChipText: { color: colors.muted, fontSize: 12, fontWeight: "800" },
   filterChipTextActive: { color: colors.ink },
   approvalNote: { color: colors.accent, fontSize: 13, lineHeight: 19, fontWeight: "800" },
+  memberNotice: { minHeight: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 12, borderRadius: 14, backgroundColor: colors.accentSoft },
+  memberNoticeText: { color: colors.success, fontSize: 14, fontWeight: "900" },
   errorText: { color: colors.danger, backgroundColor: colors.surfaceStrong, borderRadius: 16, padding: 13, fontSize: 13, lineHeight: 19, fontWeight: "700" },
   loadingBox: { minHeight: 220, alignItems: "center", justifyContent: "center", gap: 12 },
   loadingText: { color: colors.muted, fontSize: 15 },
