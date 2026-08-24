@@ -188,7 +188,11 @@ export function Tabs({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const screens = Children.toArray(children).filter(isValidElement) as Array<{ props: { name: string; options?: any } }>;
+  const screens = Children.toArray(children)
+    .filter(isValidElement)
+    .filter((screen) => (screen as { props: { options?: { href?: string | null } } }).props.options?.href !== null) as Array<{
+      props: { name: string; options?: any };
+    }>;
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -199,7 +203,7 @@ export function Tabs({
         boxShadow: "0 -8px 28px rgba(11, 23, 48, 0.08)"
       }, screenOptions?.tabBarStyle]}>
         {screens.map((screen) => {
-          const path = `/${screen.props.name}`;
+          const path = screen.props.options?.href || `/${screen.props.name}`;
           const active = location.pathname === path || location.pathname.startsWith(`${path}/`);
           const color = active ? screenOptions?.tabBarActiveTintColor : screenOptions?.tabBarInactiveTintColor;
           return (

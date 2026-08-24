@@ -7,6 +7,8 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +52,7 @@ public class AdminUserDTO implements Serializable {
     private Instant lastModifiedDate;
 
     private Set<String> authorities;
+    private Map<String, Boolean> permissions;
 
     public AdminUserDTO() {
         // Empty constructor needed for Jackson.
@@ -69,6 +72,7 @@ public class AdminUserDTO implements Serializable {
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
         this.authorities = user.getAuthorities().stream().map(Authority::getName).collect(Collectors.toSet());
+        this.permissions = permissionsFor(this.authorities);
     }
 
     public Long getId() {
@@ -173,6 +177,31 @@ public class AdminUserDTO implements Serializable {
 
     public void setAuthorities(Set<String> authorities) {
         this.authorities = authorities;
+    }
+
+    public Map<String, Boolean> getPermissions() { return permissions; }
+
+    public void setPermissions(Map<String, Boolean> permissions) { this.permissions = permissions; }
+
+    private static Map<String, Boolean> permissionsFor(Set<String> authorities) {
+        boolean superAdmin = authorities.contains("ROLE_SUPER_ADMIN");
+        boolean admin = superAdmin || authorities.contains("ROLE_ADMIN");
+        Map<String, Boolean> result = new LinkedHashMap<>();
+        result.put("manageUsers", admin);
+        result.put("manageCommunities", admin || authorities.contains("ROLE_COMMUNITY_MANAGER"));
+        result.put("manageEvents", admin || authorities.contains("ROLE_EVENT_MANAGER"));
+        result.put("moderateContent", admin || authorities.contains("ROLE_MODERATOR"));
+        result.put("manageRoles", superAdmin);
+        result.put("manageSystem", superAdmin);
+        result.put("accessManagement", admin);
+        result.put("manageNotifications", admin);
+        result.put("manageCampaigns", admin);
+        result.put("viewAudit", superAdmin);
+        return result;
+    }
+
+    public String getPrimaryAuthority() {
+        return authorities == null || authorities.isEmpty() ? null : authorities.iterator().next();
     }
 
     // prettier-ignore

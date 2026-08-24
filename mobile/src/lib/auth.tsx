@@ -1,5 +1,6 @@
 import { type PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { api } from "./api";
+import { noPermissions, type AccountPermissions } from "./permissions";
 
 type Profile = {
   id: string;
@@ -33,6 +34,7 @@ type AuthContextValue = {
   session: { access_token: string; user: AuthUser } | null;
   user: AuthUser | null;
   profile: Profile | null;
+  permissions: AccountPermissions;
   loading: boolean;
   error: string | null;
   notice: string | null;
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthContextValue["session"]>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [permissions, setPermissions] = useState<AccountPermissions>(noPermissions);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -101,19 +104,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     if (!user) {
       setProfile(null);
+      setPermissions(noPermissions);
       return;
     }
     let mounted = true;
     setLoading(true);
-    void api
+    void Promise.all([api
       .from("profiles")
       .select("*")
       .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data, error: profileError }) => {
+      .maybeSingle(), api.rest.get<{ permissions?: AccountPermissions }>("/api/account")])
+      .then(([{ data, error: profileError }, account]) => {
         if (!mounted) return;
         if (profileError) setError(mapErrorMessage(profileError.message));
         else setProfile((data as Profile) ?? null);
+        setPermissions(account.permissions ?? noPermissions);
         setLoading(false);
       });
     return () => {
@@ -250,7 +255,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await api.auth.signOut();
     setSession(null);
     setUser(null);
-    setProfile(null);
+      setProfile(null);
+    setPermissions(noPermissions);
   };
 
   return (
@@ -259,6 +265,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         session,
         user,
         profile,
+        permissions,
         loading,
         error,
         notice,

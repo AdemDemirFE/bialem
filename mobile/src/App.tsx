@@ -12,6 +12,8 @@ import CalendarScreen from "../app/(tabs)/calendar";
 import MessagesScreen from "../app/messages/index";
 import DirectChatScreen from "../app/messages/[id]";
 import ProfileScreen from "../app/(tabs)/profile";
+import ManagementScreen from "../app/(tabs)/management";
+import ManagementUsersScreen from "../app/management/users";
 import HomeScreen from "../app/index";
 import AccountScreen from "../app/account";
 import SettingsScreen from "../app/settings";
@@ -99,10 +101,12 @@ export function App() {
                 <Route path="/assistant" element={<AssistantScreen />} />
                 <Route path="/calendar" element={<CalendarScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
+                <Route path="/management" element={<ManagementScreen />} />
               </Route>
               <Route path="/notifications" element={<NotificationsScreen />} />
               <Route path="/account" element={<AccountScreen />} />
               <Route path="/settings" element={<SettingsScreen />} />
+              <Route path="/management/users" element={<ManagementUsersScreen />} />
               <Route path="/my-plans" element={<MyPlansScreen />} />
               <Route path="/city-radar" element={<CityRadarScreen />} />
               <Route path="/city-event/:id" element={<CityEventScreen />} />

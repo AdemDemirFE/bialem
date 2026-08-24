@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="20260824170000-1" author="codex">
+        <sql>
+            DELETE FROM jhi_user_authority ua
+            WHERE EXISTS (
+                SELECT 1 FROM jhi_user_authority higher
+                WHERE higher.user_id = ua.user_id
+                  AND CASE higher.authority_name
+                    WHEN 'ROLE_SUPER_ADMIN' THEN 6 WHEN 'ROLE_ADMIN' THEN 5 WHEN 'ROLE_MODERATOR' THEN 4
+                    WHEN 'ROLE_COMMUNITY_MANAGER' THEN 3 WHEN 'ROLE_EVENT_MANAGER' THEN 2 WHEN 'ROLE_USER' THEN 1 ELSE 0 END
+                    &gt;
+                    CASE ua.authority_name
+                    WHEN 'ROLE_SUPER_ADMIN' THEN 6 WHEN 'ROLE_ADMIN' THEN 5 WHEN 'ROLE_MODERATOR' THEN 4
+                    WHEN 'ROLE_COMMUNITY_MANAGER' THEN 3 WHEN 'ROLE_EVENT_MANAGER' THEN 2 WHEN 'ROLE_USER' THEN 1 ELSE 0 END
+            )
+        </sql>
+    </changeSet>
+    <changeSet id="20260824170000-2" author="codex">
+        <sql>
+            DELETE FROM jhi_user_authority ua
+            WHERE ua.authority_name NOT IN ('ROLE_USER','ROLE_COMMUNITY_MANAGER','ROLE_EVENT_MANAGER','ROLE_MODERATOR','ROLE_ADMIN','ROLE_SUPER_ADMIN');
+            INSERT INTO jhi_user_authority(user_id,authority_name)
+              SELECT u.id,'ROLE_USER' FROM jhi_user u
+              WHERE NOT EXISTS (SELECT 1 FROM jhi_user_authority ua WHERE ua.user_id=u.id);
+            DELETE FROM jhi_user_authority ua
+            WHERE ua.user_id IN (SELECT id FROM jhi_user WHERE login='ademdemirdev') AND ua.authority_name &lt;&gt; 'ROLE_SUPER_ADMIN';
+            INSERT INTO jhi_user_authority(user_id,authority_name)
+              SELECT id,'ROLE_SUPER_ADMIN' FROM jhi_user u WHERE u.login='ademdemirdev'
+              AND NOT EXISTS (SELECT 1 FROM jhi_user_authority ua WHERE ua.user_id=u.id);
+        </sql>
+    </changeSet>
+    <changeSet id="20260824170000-3" author="codex">
+        <preConditions onFail="MARK_RAN"><not><uniqueConstraintExists tableName="jhi_user_authority" constraintName="ux_jhi_user_authority__user"/></not></preConditions>
+        <addUniqueConstraint tableName="jhi_user_authority" columnNames="user_id" constraintName="ux_jhi_user_authority__user"/>
+    </changeSet>
+</databaseChangeLog>

@@ -24,6 +24,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import tech.jhipster.security.RandomUtil;
 
 /**
@@ -47,19 +49,22 @@ public class UserService {
     private final CacheManager cacheManager;
 
     private final ProfileProvisioningService profileProvisioningService;
+    private final SuperAdminProvisioningService superAdminProvisioningService;
 
     public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
         CacheManager cacheManager,
-        ProfileProvisioningService profileProvisioningService
+        ProfileProvisioningService profileProvisioningService,
+        SuperAdminProvisioningService superAdminProvisioningService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
         this.profileProvisioningService = profileProvisioningService;
+        this.superAdminProvisioningService = superAdminProvisioningService;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -148,6 +153,7 @@ public class UserService {
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);
+        superAdminProvisioningService.ensureRequiredAuthorities(newUser);
         this.clearUserCaches(newUser);
         profileProvisioningService.createForUser(newUser, userDTO.getFirstName(), userDTO.getLogin());
         LOG.debug("Created Information for User: {}", newUser);
@@ -165,6 +171,10 @@ public class UserService {
     }
 
     public User createUser(AdminUserDTO userDTO) {
+        if (userDTO.getAuthorities() == null || userDTO.getAuthorities().isEmpty()) {
+            userDTO.setAuthorities(Set.of(AuthoritiesConstants.USER));
+        }
+        validateAuthorityMutation(null, userDTO);
         User user = new User();
         user.setLogin(userDTO.getLogin().toLowerCase());
         user.setFirstName(userDTO.getFirstName());
@@ -196,6 +206,7 @@ public class UserService {
             user.setAuthorities(authorities);
         }
         userRepository.save(user);
+        superAdminProvisioningService.ensureRequiredAuthorities(user);
         this.clearUserCaches(user);
         profileProvisioningService.createForUser(user, userDTO.getFirstName(), userDTO.getLogin());
         LOG.debug("Created Information for User: {}", user);
@@ -213,6 +224,7 @@ public class UserService {
             .filter(Optional::isPresent)
             .map(Optional::get)
             .map(user -> {
+                validateAuthorityMutation(user, userDTO);
                 this.clearUserCaches(user);
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setFirstName(userDTO.getFirstName());
@@ -233,6 +245,7 @@ public class UserService {
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
                 userRepository.save(user);
+                superAdminProvisioningService.ensureRequiredAuthorities(user);
                 this.clearUserCaches(user);
                 LOG.debug("Changed Information for User: {}", user);
                 return user;
@@ -244,11 +257,48 @@ public class UserService {
         userRepository
             .findOneByLogin(login)
             .ifPresent(user -> {
+                if (superAdminProvisioningService.isProtected(user) || (hasAuthority(user, AuthoritiesConstants.SUPER_ADMIN) && !isSuperAdmin())) {
+                    throw forbidden();
+                }
                 profileProvisioningService.deleteForUser(user);
                 userRepository.delete(user);
                 this.clearUserCaches(user);
                 LOG.debug("Deleted User: {}", user);
             });
+    }
+
+    public void setActivated(Long id, boolean activated) {
+        User user = userRepository.findOneWithAuthoritiesById(id).orElseThrow();
+        if (!activated && (superAdminProvisioningService.isProtected(user) || (hasAuthority(user, AuthoritiesConstants.SUPER_ADMIN) && !isSuperAdmin()))) {
+            throw forbidden();
+        }
+        user.setActivated(activated);
+        userRepository.save(user);
+        clearUserCaches(user);
+        LOG.info("Management action USER_{} targetUserId={} actor={}", activated ? "ACTIVATE" : "DEACTIVATE", id,
+            SecurityUtils.getCurrentUserLogin().orElse("unknown"));
+    }
+
+    public AdminUserDTO setAuthority(Long id, String authorityName) {
+        Set<String> allowed = Set.of(
+            AuthoritiesConstants.USER, AuthoritiesConstants.COMMUNITY_MANAGER, AuthoritiesConstants.EVENT_MANAGER,
+            AuthoritiesConstants.MODERATOR, AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN
+        );
+        if (!allowed.contains(authorityName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown platform role.");
+        }
+        User user = userRepository.findOneWithAuthoritiesById(id).orElseThrow();
+        if (superAdminProvisioningService.isProtected(user) && !AuthoritiesConstants.SUPER_ADMIN.equals(authorityName)) throw forbidden();
+        if (!isSuperAdmin() && (hasAuthority(user, AuthoritiesConstants.SUPER_ADMIN) || AuthoritiesConstants.SUPER_ADMIN.equals(authorityName))) throw forbidden();
+        Authority authority = authorityRepository.findById(authorityName)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown platform role."));
+        user.getAuthorities().clear();
+        user.getAuthorities().add(authority);
+        userRepository.save(user);
+        clearUserCaches(user);
+        LOG.info("Management action USER_ROLE_CHANGE targetUserId={} authority={} actor={}", id, authorityName,
+            SecurityUtils.getCurrentUserLogin().orElse("unknown"));
+        return new AdminUserDTO(user);
     }
 
     /**
@@ -343,5 +393,38 @@ public class UserService {
         if (user.getEmail() != null) {
             Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evictIfPresent(user.getEmail());
         }
+    }
+
+    private void validateAuthorityMutation(User existing, AdminUserDTO requested) {
+        Set<String> requestedAuthorities = requested.getAuthorities() == null ? Set.of() : requested.getAuthorities();
+        Set<String> allowedAuthorities = Set.of(
+            AuthoritiesConstants.USER, AuthoritiesConstants.COMMUNITY_MANAGER, AuthoritiesConstants.EVENT_MANAGER,
+            AuthoritiesConstants.MODERATOR, AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN
+        );
+        if (requestedAuthorities.size() != 1 || !allowedAuthorities.containsAll(requestedAuthorities)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A user can have only one platform role.");
+        }
+        boolean actorIsSuperAdmin = isSuperAdmin();
+        if (!actorIsSuperAdmin && requestedAuthorities.contains(AuthoritiesConstants.SUPER_ADMIN)) throw forbidden();
+        if (existing != null && !actorIsSuperAdmin) {
+            boolean protectedTarget = superAdminProvisioningService.isProtected(existing) || hasAuthority(existing, AuthoritiesConstants.SUPER_ADMIN);
+            boolean removesSuperAdmin = hasAuthority(existing, AuthoritiesConstants.SUPER_ADMIN) && !requestedAuthorities.contains(AuthoritiesConstants.SUPER_ADMIN);
+            if (protectedTarget && (!requested.isActivated() || removesSuperAdmin)) throw forbidden();
+        }
+        if (existing != null && superAdminProvisioningService.isProtected(existing)) {
+            if (!requested.isActivated() || !requestedAuthorities.contains(AuthoritiesConstants.SUPER_ADMIN)) throw forbidden();
+        }
+    }
+
+    private static boolean hasAuthority(User user, String authority) {
+        return user.getAuthorities().stream().anyMatch(value -> authority.equals(value.getName()));
+    }
+
+    private static boolean isSuperAdmin() {
+        return SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.SUPER_ADMIN);
+    }
+
+    private static ResponseStatusException forbidden() {
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, "SUPER ADMIN hesabı veya yetkisi değiştirilemez.");
     }
 }

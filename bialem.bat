@@ -20,12 +20,13 @@ echo   3  Admin web        http://localhost:3000
 echo   4  Mobil web        http://localhost:5173
 echo   5  Mobil (Capacitor) Android Studio / Xcode
 echo   6  Android APK      Capacitor native derleme
-echo   7  Temiz kurulum    node_modules sil + yeniden kur
-echo   8  Env duzenle      .env dosyalarini Notepad ile ac
-echo   9  Durdur           Acik servisleri kapat
+echo   7  Android Test     npm run 3:android-test
+echo   8  Temiz kurulum    node_modules sil + yeniden kur
+echo   9  Env duzenle      .env dosyalarini Notepad ile ac
+echo  10  Durdur           Acik servisleri kapat
 echo   0  Cikis
 echo.
-set /p CHOICE="Seciminiz (0-9): "
+set /p CHOICE="Seciminiz (0-10 veya B): "
 
 if "%CHOICE%"=="1" goto setup
 if /I "%CHOICE%"=="B" goto create_db
@@ -34,9 +35,10 @@ if "%CHOICE%"=="3" goto web_admin
 if "%CHOICE%"=="4" goto web_mobile
 if "%CHOICE%"=="5" goto mobile_phone
 if "%CHOICE%"=="6" goto build_apk
-if "%CHOICE%"=="7" goto clean_install
-if "%CHOICE%"=="8" goto edit_env
-if "%CHOICE%"=="9" goto stop_all
+if "%CHOICE%"=="7" goto build_android_test
+if "%CHOICE%"=="8" goto clean_install
+if "%CHOICE%"=="9" goto edit_env
+if "%CHOICE%"=="10" goto stop_all
 if "%CHOICE%"=="0" exit /b 0
 goto menu
 
@@ -110,6 +112,17 @@ echo.
 echo === ANDROID (Capacitor) ===
 cd mobile
 call npm.cmd run android
+cd /d "%ROOT%"
+goto menu_pause
+
+:build_android_test
+call :check_node || goto menu_pause
+call :ensure_deps || goto menu_pause
+call :ensure_logo_alias
+echo.
+echo === ANDROID TEST BUILD ===
+cd /d "%ROOT%\mobile"
+call npm.cmd run 3:android-test
 cd /d "%ROOT%"
 goto menu_pause
 

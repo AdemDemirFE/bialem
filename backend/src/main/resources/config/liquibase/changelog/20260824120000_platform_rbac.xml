@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="20260824120000-1" author="codex">
+        <sql splitStatements="true">
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_SUPER_ADMIN' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_SUPER_ADMIN');
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_COMMUNITY_MANAGER' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_COMMUNITY_MANAGER');
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_EVENT_MANAGER' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_EVENT_MANAGER');
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_MODERATOR' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_MODERATOR');
+            INSERT INTO jhi_user_authority(user_id, authority_name)
+              SELECT u.id, a.name FROM jhi_user u CROSS JOIN jhi_authority a
+              WHERE u.login='ademdemirdev' AND a.name IN ('ROLE_USER','ROLE_ADMIN','ROLE_SUPER_ADMIN')
+                AND NOT EXISTS (SELECT 1 FROM jhi_user_authority ua WHERE ua.user_id=u.id AND ua.authority_name=a.name);
+        </sql>
+    </changeSet>
+    <changeSet id="20260824120000-2" author="codex">
+        <preConditions onFail="MARK_RAN"><not><indexExists tableName="community_member" indexName="idx_cm_community_user_status_role"/></not></preConditions>
+        <createIndex tableName="community_member" indexName="idx_cm_community_user_status_role">
+            <column name="community_id"/><column name="user_id"/><column name="status"/><column name="role"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20260824120000-3" author="codex">
+        <preConditions onFail="MARK_RAN"><not><indexExists tableName="community_moderator_assistant" indexName="idx_cma_community_user"/></not></preConditions>
+        <createIndex tableName="community_moderator_assistant" indexName="idx_cma_community_user">
+            <column name="community_id"/><column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="20260824120000-4" author="codex">
+        <preConditions onFail="MARK_RAN"><not><uniqueConstraintExists tableName="community_member" constraintName="ux_community_member__community_user"/></not></preConditions>
+        <sql>DELETE FROM community_member WHERE id NOT IN (SELECT MIN(id) FROM community_member GROUP BY community_id, user_id)</sql>
+        <addUniqueConstraint tableName="community_member" columnNames="community_id,user_id" constraintName="ux_community_member__community_user"/>
+    </changeSet>
+    <changeSet id="20260824120000-5" author="codex">
+        <preConditions onFail="MARK_RAN"><not><uniqueConstraintExists tableName="community_moderator_assistant" constraintName="ux_community_moderator_assistant__community_user"/></not></preConditions>
+        <sql>DELETE FROM community_moderator_assistant WHERE id NOT IN (SELECT MIN(id) FROM community_moderator_assistant GROUP BY community_id, user_id)</sql>
+        <addUniqueConstraint tableName="community_moderator_assistant" columnNames="community_id,user_id" constraintName="ux_community_moderator_assistant__community_user"/>
+    </changeSet>
+</databaseChangeLog>

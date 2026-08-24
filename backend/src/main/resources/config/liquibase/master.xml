@@ -92,4 +92,6 @@
     <include file="config/liquibase/changelog/20260822180000_direct_messaging.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260822210000_notification_event_driven.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260822233000_calendar_aggregate.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260824120000_platform_rbac.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260824170000_single_platform_authority.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { hasPlatformAdminAccess } from "./src/lib/permissions";
 
 const API = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080").replace(/\/+$/, "");
 const TOKEN = "bialem_api_token";
@@ -21,7 +22,7 @@ export async function middleware(request: NextRequest) {
     cache: "no-store"
   }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
 
-  const isAdmin = Boolean(account?.authorities?.includes("ROLE_ADMIN"));
+  const isAdmin = hasPlatformAdminAccess(account?.authorities);
   if (!isAdmin) {
     if (pathname === "/admin/unauthorized") return NextResponse.next();
     return NextResponse.redirect(new URL("/admin/unauthorized", request.url));

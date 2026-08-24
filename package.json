@@ -19,11 +19,11 @@
       },
       "android-test": {
         "apiBaseUrl": "http://191.215.36.29:8184",
-        "publicWebUrl": "https://bialem.app"
+        "publicWebUrl": "http://191.215.36.29:8184"
       },
       "prod": {
-        "apiBaseUrl": "https://api.bialem.app",
-        "publicWebUrl": "https://bialem.app"
+        "apiBaseUrl": "http://191.215.36.29:8184",
+        "publicWebUrl": "http://191.215.36.29:8184"
       }
     }
   },

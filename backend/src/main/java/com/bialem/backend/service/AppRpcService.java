@@ -38,11 +38,14 @@ public class AppRpcService {
     private final AppSupport support;
     private final TransactionTemplate transactions;
     private final NotificationEventPublisher notificationEvents;
+    private final CommunityAuthorizationService communityAuthorization;
 
-    public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents) {
+    public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents,
+        CommunityAuthorizationService communityAuthorization) {
         this.support = support;
         this.transactions = new TransactionTemplate(transactionManager);
         this.notificationEvents = notificationEvents;
+        this.communityAuthorization = communityAuthorization;
     }
 
     public AppQueryResponse invoke(String name, Map<String, Object> args) {
@@ -60,7 +63,7 @@ public class AppRpcService {
 
     private Object dispatch(String name, Map<String, Object> args) {
         if ("is_admin".equals(name)) {
-            return SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN);
+            return SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN);
         }
         Profile me = support.currentProfile();
         return switch (name) {
@@ -82,29 +85,36 @@ public class AppRpcService {
             case "cancel_community_membership_request" -> cancelMembership(me, id(args.get("target_community_id")));
             case "review_community_membership" -> reviewMembership(me, id(args.get("target_membership_id")), str(args.get("target_status")));
             case "remove_community_member" -> {
-                remove(CommunityMember.class, id(args.get("target_membership_id")));
+                Long membershipId = id(args.get("target_membership_id"));
+                CommunityMember member = em.find(CommunityMember.class, membershipId);
+                if (member == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                communityAuthorization.requireManageMembers(member.getCommunity().getId());
+                requireMutableTarget(member.getUser());
+                remove(CommunityMember.class, membershipId);
                 yield true;
             }
             case "get_community_member_directory" -> memberDirectory(id(args.get("target_community_id")));
             case "get_community_member_directory_count" -> (long) memberDirectory(id(args.get("target_community_id"))).size();
-            case "get_managed_community_members" -> memberDirectory(id(args.get("target_community_id")));
-            case "get_pending_managed_community_memberships" -> pendingMemberships(id(args.get("target_root_community_id")));
+            case "get_managed_community_members" -> managedMemberDirectory(id(args.get("target_community_id")));
+            case "get_pending_managed_community_memberships" -> managedPendingMemberships(id(args.get("target_root_community_id")));
             case "get_my_community_assistant_permissions" -> assistantPermissions(me, id(args.get("target_community_id")));
-            case "get_community_moderator_assistants" -> assistants(id(args.get("target_community_id")));
-            case "set_community_moderator_assistant" -> setAssistant(id(args.get("target_community_id")), id(args.get("target_user_id")), args);
+            case "get_community_moderator_assistants" -> managedAssistants(id(args.get("target_community_id")));
+            case "set_community_moderator_assistant" -> setAuthorizedAssistant(id(args.get("target_community_id")), id(args.get("target_user_id")), args);
             case "remove_community_moderator_assistant" -> {
-                removeAssistant(id(args.get("target_community_id")), id(args.get("target_user_id")));
+                Long communityId = id(args.get("target_community_id"));
+                communityAuthorization.requireOwner(communityId);
+                removeAssistant(communityId, id(args.get("target_user_id")));
                 yield true;
             }
-            case "set_community_lead_moderator" -> setLeadModerator(id(args.get("target_community_id")), id(args.get("target_user_id")));
+            case "set_community_lead_moderator" -> setAuthorizedLeadModerator(id(args.get("target_community_id")), id(args.get("target_user_id")));
             case "get_my_event_creation_groups" -> creationGroups(me);
             case "create_group_event" -> createGroupEvent(me, args);
-            case "moderate_group_event" -> moderateEvent(id(args.get("target_event_id")), str(args.get("target_status")), str(args.get("target_rejection_reason")));
+            case "moderate_group_event" -> moderateAuthorizedEvent(id(args.get("target_event_id")), str(args.get("target_status")), str(args.get("target_rejection_reason")));
             case "cancel_event" -> cancelEvent(me, id(args.get("target_event_id")), str(args.get("target_reason")));
             case "request_event_participation" -> requestParticipation(me, id(args.get("target_event_id")));
             case "cancel_event_participation" -> cancelParticipation(me, id(args.get("target_event_id")));
             case "get_event_participation_summary" -> participationSummary(id(args.get("target_event_id")));
-            case "get_event_participant_roster" -> roster(id(args.get("target_event_id")));
+            case "get_event_participant_roster" -> authorizedRoster(id(args.get("target_event_id")));
             case "review_event_participant" -> reviewParticipant(me, id(args.get("target_participant_id")), str(args.get("target_status")));
             case "mark_event_participant_no_show" -> setParticipantStatus(id(args.get("target_event_id")), id(args.get("target_user_id")), EventParticipantStatus.NO_SHOW);
             case "check_in_event_participant" -> setParticipantStatus(id(args.get("target_event_id")), id(args.get("target_user_id")), EventParticipantStatus.CHECKED_IN);
@@ -365,6 +375,9 @@ public class AppRpcService {
 
     private boolean reviewMembership(Profile actor, Long membershipId, String status) {
         CommunityMember member = em.find(CommunityMember.class, membershipId);
+        if (member == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        communityAuthorization.requireManageMembers(member.getCommunity().getId());
+        requireMutableTarget(member.getUser());
         CommunityMemberStatus newStatus = CommunityMemberStatus.valueOf(status.toUpperCase());
         member.setStatus(newStatus);
         NotificationEventType type = newStatus == CommunityMemberStatus.APPROVED
@@ -448,6 +461,27 @@ public class AppRpcService {
         return true;
     }
 
+    private boolean setAuthorizedAssistant(Long communityId, Long userId, Map<String, Object> args) {
+        communityAuthorization.requireOwner(communityId);
+        requireMutableTarget(em.find(Profile.class, userId));
+        return setAssistant(communityId, userId, args);
+    }
+
+    private List<Map<String, Object>> managedAssistants(Long communityId) {
+        communityAuthorization.requireManageCommunity(communityId);
+        return assistants(communityId);
+    }
+
+    private List<Map<String, Object>> managedMemberDirectory(Long communityId) {
+        communityAuthorization.requireManageMembers(communityId);
+        return memberDirectory(communityId);
+    }
+
+    private List<Map<String, Object>> managedPendingMemberships(Long communityId) {
+        communityAuthorization.requireManageMembers(communityId);
+        return pendingMemberships(communityId);
+    }
+
     private void removeAssistant(Long communityId, Long userId) {
         CommunityModeratorAssistant assistant = one(
             "select a from CommunityModeratorAssistant a where a.community.id = :id and a.user.id = :user",
@@ -462,6 +496,12 @@ public class AppRpcService {
         community.setLeadModerator(em.getReference(Profile.class, userId));
         community.setUpdatedAt(Instant.now());
         return true;
+    }
+
+    private boolean setAuthorizedLeadModerator(Long communityId, Long userId) {
+        communityAuthorization.requireOwner(communityId);
+        requireMutableTarget(em.find(Profile.class, userId));
+        return setLeadModerator(communityId, userId);
     }
 
     private List<Map<String, Object>> creationGroups(Profile me) {
@@ -531,8 +571,27 @@ public class AppRpcService {
         return true;
     }
 
+    private boolean moderateAuthorizedEvent(Long eventId, String status, String reason) {
+        Event event = em.find(Event.class, eventId);
+        if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        communityAuthorization.requireReviewEvents(event.getCommunity().getId());
+        return moderateEvent(eventId, status, reason);
+    }
+
+    private void requireMutableTarget(Profile profile) {
+        if (profile == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        boolean targetIsSuperAdmin = profile.getUser().getAuthorities().stream()
+            .anyMatch(authority -> AuthoritiesConstants.SUPER_ADMIN.equals(authority.getName()));
+        if (targetIsSuperAdmin && !communityAuthorization.isSuperAdmin()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "SUPER ADMIN üzerinde işlem yapılamaz.");
+        }
+    }
+
     private boolean cancelEvent(Profile actor, Long eventId, String reason) {
         Event event = em.find(Event.class, eventId);
+        if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        boolean creator = event.getCreatedBy() != null && event.getCreatedBy().getId().equals(actor.getId());
+        if (!creator) communityAuthorization.requireReviewEvents(event.getCommunity().getId());
         event.setStatus(EventStatus.CANCELLED);
         event.setCancelledAt(Instant.now());
         event.setCancellationReason(reason);
@@ -611,8 +670,17 @@ public class AppRpcService {
             .toList();
     }
 
+    private List<Map<String, Object>> authorizedRoster(Long eventId) {
+        Event event = em.find(Event.class, eventId);
+        if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        communityAuthorization.requireManageMembers(event.getCommunity().getId());
+        return roster(eventId);
+    }
+
     private boolean reviewParticipant(Profile actor, Long participantId, String status) {
         EventParticipant participant = em.find(EventParticipant.class, participantId);
+        if (participant == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        communityAuthorization.requireManageMembers(participant.getEvent().getCommunity().getId());
         EventParticipantStatus newStatus = EventParticipantStatus.valueOf(status.toUpperCase());
         participant.setStatus(newStatus);
         participant.setUpdatedAt(Instant.now());
@@ -652,6 +720,9 @@ public class AppRpcService {
     }
 
     private boolean setParticipantStatus(Long eventId, Long userId, EventParticipantStatus status) {
+        Event event = em.find(Event.class, eventId);
+        if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        communityAuthorization.requireManageMembers(event.getCommunity().getId());
         EventParticipant participant = one(
             "select p from EventParticipant p where p.event.id = :event and p.user.id = :user",
             EventParticipant.class,

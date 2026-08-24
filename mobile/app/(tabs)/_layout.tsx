@@ -3,6 +3,7 @@ import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/lib/auth";
+import { canSeeManagement } from "../../src/lib/permissions";
 import { colors } from "../../src/theme/colors";
 import { useTheme } from "../../src/theme/theme";
 
@@ -16,7 +17,8 @@ function TabIcon({ name, focused, color, size }: { name: string; focused: boolea
 }
 
 export default function TabsLayout() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, permissions, loading } = useAuth();
+  const management = canSeeManagement(permissions);
   const insets = useSafeAreaInsets();
   const { resolvedTheme } = useTheme();
 
@@ -117,9 +119,19 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+          href: management ? null : "/profile",
           title: "Profil",
           tabBarLabel: "Profil",
           tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "person-circle" : "person-circle-outline"} focused={focused} color={color} size={size} />
+        }}
+      />
+      <Tabs.Screen
+        name="management"
+        options={{
+          href: management ? "/management" : null,
+          title: "Yönetim Merkezi",
+          tabBarLabel: "Yönetim",
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "shield" : "shield-outline"} focused={focused} color={color} size={size} />
         }}
       />
     </Tabs>

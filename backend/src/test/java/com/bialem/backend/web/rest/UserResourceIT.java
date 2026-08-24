@@ -173,6 +173,21 @@ class UserResourceIT {
 
     @Test
     @Transactional
+    void createUserRejectsMultiplePlatformAuthorities() throws Exception {
+        AdminUserDTO userDTO = new AdminUserDTO();
+        userDTO.setLogin(DEFAULT_LOGIN);
+        userDTO.setEmail(DEFAULT_EMAIL);
+        userDTO.setActivated(true);
+        userDTO.setLangKey(DEFAULT_LANGKEY);
+        userDTO.setAuthorities(Set.of(AuthoritiesConstants.USER, AuthoritiesConstants.ADMIN));
+
+        restUserMockMvc
+            .perform(post("/api/admin/users").contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(userDTO)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Transactional
     void createUserWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = userRepository.findAll().size();
 
