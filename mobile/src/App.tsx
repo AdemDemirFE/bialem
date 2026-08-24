@@ -15,6 +15,7 @@ import ProfileScreen from "../app/(tabs)/profile";
 import ManagementScreen from "../app/(tabs)/management";
 import ManagementUsersScreen from "../app/management/users";
 import ManagementUserDetailScreen from "../app/management/users/[id]";
+import ManagementNewUserScreen from "../app/management/users/new";
 import ManagementCommunitiesScreen from "../app/management/communities";
 import ManagementCommunityDetailScreen from "../app/management/communities/[id]";
 import ManagementEventsScreen from "../app/management/events";
@@ -117,6 +118,7 @@ export function App() {
               <Route path="/account" element={<AccountScreen />} />
               <Route path="/settings" element={<SettingsScreen />} />
               <Route path="/management/users" element={<ManagementUsersScreen />} />
+              <Route path="/management/users/new" element={<ManagementNewUserScreen />} />
               <Route path="/management/users/:id" element={<ManagementUserDetailScreen />} />
               <Route path="/management/communities" element={<ManagementCommunitiesScreen />} />
               <Route path="/management/communities/:id" element={<ManagementCommunityDetailScreen />} />

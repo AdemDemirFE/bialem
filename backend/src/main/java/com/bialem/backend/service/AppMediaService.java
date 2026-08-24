@@ -28,6 +28,9 @@ public class AppMediaService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AppMediaService.class);
     private static final int MAX_PROXY_BYTES = 5 * 1024 * 1024;
+    private static final int MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+    private static final Set<String> UPLOAD_BUCKETS = Set.of("community-covers", "event-covers", "profile-avatars", "post-media", "stories");
+    private static final Set<String> UPLOAD_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
     private static final int MAX_REDIRECTS = 5;
     private static final Set<String> PROXY_HOSTS = Set.of(
         "ticketm.net",
@@ -49,8 +52,18 @@ public class AppMediaService {
     private String uploadDir;
 
     public Map<String, String> save(String bucket, String path, MultipartFile file) {
+        if (!UPLOAD_BUCKETS.contains(bucket)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz medya alanı");
+        }
+        if (file == null || file.isEmpty() || file.getSize() > MAX_UPLOAD_BYTES || !UPLOAD_IMAGE_TYPES.contains(file.getContentType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Görsel JPEG, PNG veya WebP ve en fazla 5 MB olmalıdır");
+        }
         try {
-            Path target = Path.of(uploadDir, bucket, path).normalize();
+            Path bucketRoot = Path.of(uploadDir, bucket).toAbsolutePath().normalize();
+            Path target = bucketRoot.resolve(path).normalize();
+            if (!target.startsWith(bucketRoot)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz yol");
+            }
             Files.createDirectories(target.getParent());
             Files.write(target, file.getBytes());
             String publicUrl = ServletUriComponentsBuilder.fromCurrentContextPath()

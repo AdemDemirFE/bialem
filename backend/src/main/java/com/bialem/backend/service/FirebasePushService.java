@@ -72,13 +72,13 @@ public class FirebasePushService {
                 BatchResponse response = FirebaseMessaging.getInstance().sendEachForMulticast(message);
                 for (int i = 0; i < batch.size(); i++) {
                     PushDeviceToken device = batch.get(i);
-                    if (i < response.getResponses().size() && response.getResponses().get(i).isSuccessful()) {
+                    SendResponse sendResponse = i < response.getResponses().size() ? response.getResponses().get(i) : null;
+                    if (sendResponse != null && sendResponse.isSuccessful()) {
                         successCount++;
                         markDeviceSuccess(device);
                         saveDeliveryLog(outbox, device, NotificationDeliveryStatus.SENT, sendResponse.getMessageId(), null, null, outbox.getAttemptCount());
                     } else {
                         failureCount++;
-                        SendResponse sendResponse = i < response.getResponses().size() ? response.getResponses().get(i) : null;
                         String errorCode = null;
                         String errorMessage = null;
                         if (sendResponse != null && sendResponse.getException() != null) {

@@ -292,7 +292,7 @@ class UserResourceIT {
 
         // Get the user
         restUserMockMvc
-            .perform(get("/api/admin/users/{login}", user.getLogin()))
+            .perform(get("/api/admin/users/by-login/{login}", user.getLogin()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(jsonPath("$.login").value(user.getLogin()))
@@ -307,8 +307,27 @@ class UserResourceIT {
 
     @Test
     @Transactional
+    void getAdminUserByNumericIdUsesSingleHandler() throws Exception {
+        userRepository.saveAndFlush(user);
+
+        restUserMockMvc
+            .perform(get("/api/admin/users/{id}", user.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(user.getId()))
+            .andExpect(jsonPath("$.login").value(user.getLogin()));
+    }
+
+    @Test
+    @Transactional
+    void getNonExistingAdminUserByNumericIdReturns404() throws Exception {
+        restUserMockMvc.perform(get("/api/admin/users/{id}", Long.MAX_VALUE)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
     void getNonExistingUser() throws Exception {
-        restUserMockMvc.perform(get("/api/admin/users/unknown")).andExpect(status().isNotFound());
+        restUserMockMvc.perform(get("/api/admin/users/by-login/unknown")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -483,7 +502,7 @@ class UserResourceIT {
 
         // Delete the user
         restUserMockMvc
-            .perform(delete("/api/admin/users/{login}", user.getLogin()).accept(MediaType.APPLICATION_JSON))
+            .perform(delete("/api/admin/users/by-login/{login}", user.getLogin()).accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
         assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin(), User.class)).isNull();

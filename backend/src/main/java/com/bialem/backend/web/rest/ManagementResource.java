@@ -8,7 +8,9 @@ import com.bialem.backend.service.dto.ManagementContextDTO;
 import com.bialem.backend.service.dto.ManagementDashboardDTO;
 import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tech.jhipster.web.util.ResponseUtil;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -31,9 +33,9 @@ public class ManagementResource {
     @GetMapping("/dashboard")
     public ManagementDashboardDTO dashboard() { return dashboard.getDashboard(); }
 
-    @GetMapping("/users/{id:\\d+}")
-    public com.bialem.backend.service.dto.AdminUserDTO user(@PathVariable Long id) {
-        return users.getManagedUser(id).orElseThrow();
+    @GetMapping("/users/{id}")
+    public ResponseEntity<com.bialem.backend.service.dto.AdminUserDTO> getAdminUserById(@PathVariable("id") Long id) {
+        return ResponseUtil.wrapOrNotFound(users.getManagedUser(id));
     }
 
     @PostMapping("/users/{id}/activate")

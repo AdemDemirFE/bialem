@@ -20,7 +20,7 @@ const brand = {
   surface: "#ffffff"
 };
 
-function fire(options: {
+async function fire(options: {
   title: string;
   text?: string;
   icon?: SweetAlertIcon;
@@ -29,7 +29,8 @@ function fire(options: {
   cancelText?: string;
   confirmDanger?: boolean;
 }): Promise<SweetAlertResult> {
-  return Swal.fire({
+  Swal.close();
+  const result = await Swal.fire({
     title: options.title,
     text: options.text,
     icon: options.icon ?? "info",
@@ -49,6 +50,8 @@ function fire(options: {
     color: brand.ink,
     background: brand.surface
   });
+  Swal.close();
+  return result;
 }
 
 export function showAppAlert({ title, text, icon = "info", confirmText }: AlertOptions) {
