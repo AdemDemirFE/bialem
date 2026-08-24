@@ -10,26 +10,14 @@ const require = createRequire(import.meta.url);
 const bialemEnvPath = path.resolve(root, "../scripts/bialem-env.mjs");
 
 async function loadEnvForMode(mode: string) {
-  try {
-    const mod = await import(pathToFileURL(bialemEnvPath).href);
-    return mod.resolveEnvironment(mode) as {
-      name: string;
-      version: string;
-      versionCode: number;
-      apiBaseUrl: string;
-      publicWebUrl: string;
-    };
-  } catch {
-    // Docker web image may not include scripts/bialem-env.mjs; honor build ARG/ENV.
-    const name = mode === "production" ? "prod" : mode === "android-test" ? "android-test" : "dev";
-    return {
-      name,
-      version: process.env.VITE_APP_VERSION || "0.0.0",
-      versionCode: Number(process.env.VITE_APP_VERSION_CODE || 1),
-      apiBaseUrl: (process.env.VITE_API_BASE_URL || "http://localhost:8080").replace(/\/+$/, ""),
-      publicWebUrl: (process.env.VITE_PUBLIC_WEB_URL || "https://bialem.app").replace(/\/+$/, "")
-    };
-  }
+  const mod = await import(pathToFileURL(bialemEnvPath).href);
+  return mod.resolveEnvironment(mode) as {
+    name: string;
+    version: string;
+    versionCode: number;
+    apiBaseUrl: string;
+    publicWebUrl: string;
+  };
 }
 
 function resolvePackage(id: string) {

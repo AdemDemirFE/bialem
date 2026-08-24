@@ -57,13 +57,22 @@ export function resolveEnvironment(mode) {
   if (!env?.apiBaseUrl) {
     throw new Error(`Unknown or incomplete bialem environment: ${name}`);
   }
-  // Non-empty build ARG / process env overrides win (Docker).
-  const apiBaseUrl =
-    nonEmpty(process.env.VITE_API_BASE_URL) ||
-    nonEmpty(process.env.NEXT_PUBLIC_API_BASE_URL) ||
-    String(env.apiBaseUrl);
-  const publicWebUrl =
-    nonEmpty(process.env.VITE_PUBLIC_WEB_URL) || String(env.publicWebUrl || "");
+  const apiBaseUrl = String(env.apiBaseUrl);
+  const publicWebUrl = String(env.publicWebUrl || "");
+  // Repeated values are accepted, but a mode-specific env file/build arg may
+  // never silently select a different backend than the canonical matrix.
+  for (const [key, value] of [
+    ["VITE_API_BASE_URL", nonEmpty(process.env.VITE_API_BASE_URL)],
+    ["NEXT_PUBLIC_API_BASE_URL", nonEmpty(process.env.NEXT_PUBLIC_API_BASE_URL)]
+  ]) {
+    if (value && value.replace(/\/+$/, "") !== apiBaseUrl.replace(/\/+$/, "")) {
+      throw new Error(`${key} conflicts with canonical ${name} API: ${apiBaseUrl}`);
+    }
+  }
+  const configuredPublicUrl = nonEmpty(process.env.VITE_PUBLIC_WEB_URL);
+  if (configuredPublicUrl && configuredPublicUrl.replace(/\/+$/, "") !== publicWebUrl.replace(/\/+$/, "")) {
+    throw new Error(`VITE_PUBLIC_WEB_URL conflicts with canonical ${name} web URL: ${publicWebUrl}`);
+  }
   return {
     name,
     version: config.version,

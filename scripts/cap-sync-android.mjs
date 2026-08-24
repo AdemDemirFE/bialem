@@ -28,9 +28,9 @@ if (androidTest) {
   config.android = {
     allowMixedContent: true
   };
-  console.log("[bialem] cap sync android (android-test: http://localhost + cleartext)");
+  console.log("[bialem] cap sync android (android-test bundled assets, WebView origin http://localhost, cleartext API allowed)");
 } else {
-  console.log("[bialem] cap sync android (production defaults: https://localhost)");
+  console.log("[bialem] cap sync android (production bundled assets, WebView origin https://localhost)");
 }
 
 // Capacitor CLI cannot load ESM .ts/.js under "type":"module" (exports is not defined).

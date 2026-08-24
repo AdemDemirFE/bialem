@@ -7,7 +7,9 @@ function env(
 
 export function getApiBaseUrl() {
   if (env("VITE_DEV_API_PROXY") === "true") return "";
-  return (env("VITE_API_BASE_URL") || "http://localhost:8080").replace(/\/+$/, "");
+  const value = env("VITE_API_BASE_URL");
+  if (!value) throw new Error("VITE_API_BASE_URL is missing from this build");
+  return value.replace(/\/+$/, "");
 }
 
 export function getPublicWebUrl() {
@@ -25,7 +27,9 @@ export function getAppVersionCode() {
 }
 
 export function getAppEnv() {
-  return env("VITE_APP_ENV") || "dev";
+  const value = env("VITE_APP_ENV");
+  if (!value) throw new Error("VITE_APP_ENV is missing from this build");
+  return value;
 }
 
 export function usesSpringBackend() {

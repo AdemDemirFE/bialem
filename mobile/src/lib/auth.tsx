@@ -1,6 +1,8 @@
 import { type PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { api } from "./api";
+import { deactivateCurrentPushDevice } from "./notificationApi";
 import { noPermissions, type AccountPermissions } from "./permissions";
+import { initializePushNotifications } from "./pushNotifications";
 
 type Profile = {
   id: string;
@@ -146,7 +148,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const initializePushNotificationsAfterLogin = async () => {
     try {
-      const { initializePushNotifications } = await import("./pushNotifications");
       await initializePushNotifications();
     } catch (error) {
       console.warn("Push notification init after login failed", error);
@@ -247,7 +248,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signOut = async () => {
     try {
-      const { deactivateCurrentPushDevice } = await import("./notificationApi");
       await deactivateCurrentPushDevice();
     } catch (error) {
       console.warn("Push device cleanup during logout failed", error);

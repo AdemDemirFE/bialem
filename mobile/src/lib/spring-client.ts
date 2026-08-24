@@ -2,6 +2,7 @@ export type SpringClientOptions = {
   getBaseUrl: () => string;
   getToken: () => Promise<string | null>;
   setToken: (token: string | null) => Promise<void>;
+  diagnostics?: boolean;
 };
 
 type Filter = {
@@ -31,14 +32,14 @@ export function createSpringClient(options: SpringClientOptions) {
       if (token) headers.set("Authorization", `Bearer ${token}`);
     }
     const resolvedUrl = `${options.getBaseUrl()}${path}`;
-    if (path === "/api/push-device-tokens") {
-      console.log("[PUSH] request URL:", resolvedUrl);
-    }
     const response = await fetch(resolvedUrl, {
       ...init,
       headers,
       body: init.json === undefined ? init.body : JSON.stringify(init.json)
     });
+    if (options.diagnostics) {
+      console.info(`[Bialem HTTP] ${init.method || "GET"} ${resolvedUrl} status=${response.status}`);
+    }
     const contentType = response.headers.get("content-type") ?? "";
     const payload = contentType.includes("application/json")
       ? await response.json().catch(() => null)

@@ -80,3 +80,9 @@ gradlew.bat clean assembleDebug
 cd ~/ADEM/GITHUB/bialem/mobile
 npm run ios:3:test
 npx cap open ios
+
+
+
+
+#Yapılacaklar
+Tek bir button ile tüm arkadaşlarını uygulamaya davet gibi birşey yapacağız burada 20 kişi 50 100 kişiyi ekleyene hediye gibi birşey yapacağız
