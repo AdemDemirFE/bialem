@@ -14,6 +14,16 @@ import DirectChatScreen from "../app/messages/[id]";
 import ProfileScreen from "../app/(tabs)/profile";
 import ManagementScreen from "../app/(tabs)/management";
 import ManagementUsersScreen from "../app/management/users";
+import ManagementUserDetailScreen from "../app/management/users/[id]";
+import ManagementCommunitiesScreen from "../app/management/communities";
+import ManagementCommunityDetailScreen from "../app/management/communities/[id]";
+import ManagementEventsScreen from "../app/management/events";
+import ManagementEventDetailScreen from "../app/management/events/[id]";
+import ManagementNotificationsScreen from "../app/management/notifications";
+import ManagementNotificationDetailScreen from "../app/management/notifications/[id]";
+import ManagementRolesScreen from "../app/management/roles";
+import ManagementModerationScreen from "../app/management/moderation";
+import ManagementDataScreen from "../app/management/data";
 import HomeScreen from "../app/index";
 import AccountScreen from "../app/account";
 import SettingsScreen from "../app/settings";
@@ -107,6 +117,16 @@ export function App() {
               <Route path="/account" element={<AccountScreen />} />
               <Route path="/settings" element={<SettingsScreen />} />
               <Route path="/management/users" element={<ManagementUsersScreen />} />
+              <Route path="/management/users/:id" element={<ManagementUserDetailScreen />} />
+              <Route path="/management/communities" element={<ManagementCommunitiesScreen />} />
+              <Route path="/management/communities/:id" element={<ManagementCommunityDetailScreen />} />
+              <Route path="/management/events" element={<ManagementEventsScreen />} />
+              <Route path="/management/events/:id" element={<ManagementEventDetailScreen />} />
+              <Route path="/management/notifications" element={<ManagementNotificationsScreen />} />
+              <Route path="/management/notifications/:id" element={<ManagementNotificationDetailScreen />} />
+              <Route path="/management/roles" element={<ManagementRolesScreen />} />
+              <Route path="/management/moderation" element={<ManagementModerationScreen />} />
+              <Route path="/management/data" element={<ManagementDataScreen />} />
               <Route path="/my-plans" element={<MyPlansScreen />} />
               <Route path="/city-radar" element={<CityRadarScreen />} />
               <Route path="/city-event/:id" element={<CityEventScreen />} />

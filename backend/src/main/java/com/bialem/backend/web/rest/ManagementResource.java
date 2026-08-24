@@ -31,6 +31,11 @@ public class ManagementResource {
     @GetMapping("/dashboard")
     public ManagementDashboardDTO dashboard() { return dashboard.getDashboard(); }
 
+    @GetMapping("/users/{id:\\d+}")
+    public com.bialem.backend.service.dto.AdminUserDTO user(@PathVariable Long id) {
+        return users.getManagedUser(id).orElseThrow();
+    }
+
     @PostMapping("/users/{id}/activate")
     @PreAuthorize("@managementAuthorization.has(T(com.bialem.backend.service.ManagementAuthorizationService.Permission).USER_ACTIVATE)")
     public void activate(@PathVariable Long id) { users.setActivated(id, true); }

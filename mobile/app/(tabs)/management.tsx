@@ -3,65 +3,39 @@ import { Link, Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
-import { api } from "../../src/lib/api";
+import { managementApi, type ManagementContext as Context } from "../../src/lib/management-api";
 import { canSeeManagement } from "../../src/lib/permissions";
 import { colors } from "../../src/theme/colors";
-
-type Context = { superAdmin: boolean; permissions: string[] };
-type Dashboard = {
-  users: { total: number; active: number; inactive: number; suspended: number; newToday: number };
-  communities: { total: number; active: number; pendingRequests: number };
-  events: { total: number; upcoming: number; pendingApproval: number };
-  moderation: { openReports: number; flaggedPosts: number; flaggedComments: number };
-  communications: { notificationsSent: number };
-};
 
 export default function ManagementScreen() {
   const { permissions } = useAuth();
   const [context, setContext] = useState<Context | null>(null);
-  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const allowed = canSeeManagement(permissions);
 
   const load = async () => {
     setError(null);
     try {
-      const [nextContext, nextDashboard] = await Promise.all([
-        api.rest.get<Context>("/api/admin/context"), api.rest.get<Dashboard>("/api/admin/dashboard")
-      ]);
-      setContext(nextContext); setDashboard(nextDashboard);
+      setContext(await managementApi.context());
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Yönetim verileri yüklenemedi."); }
   };
   useEffect(() => { if (allowed) void load(); }, [allowed]);
   if (!allowed) return <Redirect href="/profile" />;
 
-  const stats = dashboard ? [
-    ["Toplam kullanıcı", dashboard.users.total, "/management/users"],
-    ["Aktif kullanıcı", dashboard.users.active, "/management/users?activated=true"],
-    ["Pasif kullanıcı", dashboard.users.inactive, "/management/users?activated=false"],
-    ["Askıya alınan", dashboard.users.suspended, "/management/users?status=suspended"],
-    ["Topluluk", dashboard.communities.total, "/communities"],
-    ["Üyelik talebi", dashboard.communities.pendingRequests, "/communities"],
-    ["Yaklaşan etkinlik", dashboard.events.upcoming, "/calendar"],
-    ["Onay bekleyen", dashboard.events.pendingApproval, "/calendar"],
-    ["Açık rapor", dashboard.moderation.openReports, "/management"],
-    ["Bildirim", dashboard.communications.notificationsSent, "/notifications"]
-  ] as const : [];
-
   return <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
     <View style={styles.hero}><Text style={styles.kicker}>{context?.superAdmin ? "SUPER ADMIN" : "ADMIN"}</Text>
       <Text style={styles.title}>Yönetim Merkezi</Text><Text style={styles.subtitle}>Bialem platformunu yönetin</Text></View>
-    {!dashboard && !error ? <View style={styles.state}><ActivityIndicator color={colors.accent}/><Text style={styles.muted}>Veriler yükleniyor...</Text></View> : null}
+    {!context && !error ? <View style={styles.state}><ActivityIndicator color={colors.accent}/><Text style={styles.muted}>Yönetim yükleniyor...</Text></View> : null}
     {error ? <View style={styles.state}><Text style={styles.error}>{error}</Text><Pressable onPress={() => void load()} style={styles.retry}><Text style={styles.retryText}>Tekrar dene</Text></Pressable></View> : null}
-    <View style={styles.grid}>{stats.map(([label,value,href]) => <Link key={label} href={href} asChild><Pressable style={styles.stat} accessibilityLabel={`${label}: ${value}`}><Text style={styles.value}>{value}</Text><Text style={styles.label}>{label}</Text></Pressable></Link>)}</View>
     <Text style={styles.section}>YÖNETİM</Text>
     <View style={styles.menu}>
       <Menu href="/management/users" icon="people-outline" title="Kullanıcılar" subtitle="Hesap, durum ve yetkiler" />
-      <Menu href="/communities" icon="globe-outline" title="Topluluklar" subtitle="Üyelik ve topluluk işlemleri" />
-      <Menu href="/calendar" icon="calendar-outline" title="Etkinlikler" subtitle="Onay ve katılımcılar" />
-      <Menu href="/notifications" icon="notifications-outline" title="Bildirimler" subtitle="Bildirim geçmişi" />
-      <Menu href="/profile" icon="person-circle-outline" title="Profilim" subtitle="Kendi profilinizi görüntüleyin" />
-      <Menu href="/settings" icon="settings-outline" title="Ayarlar" subtitle="Gizlilik ve bildirim tercihleri" />
+      <Menu href="/management/communities" icon="globe-outline" title="Topluluklar" subtitle="Toplulukları düzenleyin ve oluşturun" />
+      <Menu href="/management/events" icon="calendar-outline" title="Etkinlikler" subtitle="Etkinlikleri görüntüleyin ve yönetin" />
+      <Menu href="/management/notifications" icon="notifications-outline" title="Bildirimler" subtitle="Bildirim oluşturun ve gönderimleri izleyin" />
+      <Menu href="/management/roles" icon="key-outline" title="Roller ve Yetkiler" subtitle="Platform rollerini görüntüleyin" />
+      <Menu href="/management/moderation" icon="shield-checkmark-outline" title="Moderasyon" subtitle="Rapor ve içerik yönetimi" />
+      <Menu href="/management/data" icon="analytics-outline" title="Veriler" subtitle="Platform istatistikleri" />
     </View>
   </ScrollView>;
 }

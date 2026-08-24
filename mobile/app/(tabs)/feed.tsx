@@ -172,7 +172,7 @@ export default function FeedScreen() {
                 <Ionicons name="search" size={19} color={colors.ink} />
               </Pressable>
             </Link>
-            <Link href="/(tabs)/profile" asChild>
+            <Link href="/profile" asChild>
               <Pressable style={styles.avatar}>
                 {profile?.avatar_url ? <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} /> : <Text style={styles.avatarInitial}>{(profile?.display_name || "Ü").slice(0, 1).toUpperCase()}</Text>}
               </Pressable>

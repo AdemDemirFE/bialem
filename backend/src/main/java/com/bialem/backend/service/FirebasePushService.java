@@ -75,7 +75,7 @@ public class FirebasePushService {
                     if (i < response.getResponses().size() && response.getResponses().get(i).isSuccessful()) {
                         successCount++;
                         markDeviceSuccess(device);
-                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.SENT, null, null, outbox.getAttemptCount());
+                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.SENT, sendResponse.getMessageId(), null, null, outbox.getAttemptCount());
                     } else {
                         failureCount++;
                         SendResponse sendResponse = i < response.getResponses().size() ? response.getResponses().get(i) : null;
@@ -87,7 +87,7 @@ public class FirebasePushService {
                             lastError = errorMessage;
                             handleDeviceError(device, sendResponse.getException());
                         }
-                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, errorCode, errorMessage, outbox.getAttemptCount());
+                        saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, null, errorCode, errorMessage, outbox.getAttemptCount());
                     }
                 }
             } catch (FirebaseMessagingException ex) {
@@ -99,6 +99,7 @@ public class FirebasePushService {
                         outbox,
                         device,
                         NotificationDeliveryStatus.FAILED,
+                        null,
                         String.valueOf(ex.getMessagingErrorCode()),
                         lastError,
                         outbox.getAttemptCount()
@@ -109,7 +110,7 @@ public class FirebasePushService {
                 lastError = "Beklenmeyen gönderim hatası";
                 failureCount += batch.size();
                 for (PushDeviceToken device : batch) {
-                    saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, null, lastError, outbox.getAttemptCount());
+                    saveDeliveryLog(outbox, device, NotificationDeliveryStatus.FAILED, null, null, lastError, outbox.getAttemptCount());
                 }
             }
         }
@@ -209,6 +210,7 @@ public class FirebasePushService {
         NotificationOutbox outbox,
         PushDeviceToken device,
         NotificationDeliveryStatus status,
+        String providerMessageId,
         String errorCode,
         String errorMessage,
         Integer attemptNumber
@@ -218,6 +220,7 @@ public class FirebasePushService {
         log.setPushDevice(device);
         log.setProvider("FCM");
         log.setStatus(status);
+        log.setProviderMessageId(providerMessageId);
         log.setErrorCode(errorCode);
         log.setErrorMessage(errorMessage);
         log.setAttemptNumber(attemptNumber);
