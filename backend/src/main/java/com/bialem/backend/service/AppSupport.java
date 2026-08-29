@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -438,6 +439,9 @@ public class AppSupport {
         }
         if (type == Instant.class) {
             return Instant.parse(String.valueOf(raw));
+        }
+        if (type == LocalDate.class) {
+            return LocalDate.parse(String.valueOf(raw));
         }
         if (type == Integer.class || type == int.class) {
             return Integer.valueOf(String.valueOf(raw));

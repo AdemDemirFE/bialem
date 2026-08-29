@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, type TextInputProps, View } from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { colors } from "../../src/theme/colors";
@@ -13,6 +13,7 @@ export default function EditProfileScreen() {
   const [username, setUsername] = useState("");
   const [city, setCity] = useState("");
   const [bio, setBio] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saved, setSaved] = useState(false);
   const [viewerVisible, setViewerVisible] = useState(false);
@@ -22,6 +23,7 @@ export default function EditProfileScreen() {
     setUsername(profile?.username ?? "");
     setCity(profile?.city ?? "");
     setBio(profile?.bio ?? "");
+    setBirthDate(formatBirthDate(profile?.birth_date));
   }, [profile?.id]);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function EditProfileScreen() {
 
   const submit = async () => {
     setSaved(false);
-    const successful = await saveProfile({ displayName, username, city, bio });
+    const successful = await saveProfile({ displayName, username, city, bio, birthDate });
     if (successful) setSaved(true);
   };
 
@@ -107,6 +109,14 @@ export default function EditProfileScreen() {
             placeholder="İlgi alanlarını ve toplulukta neler yapmak istediğini anlat."
             multiline
           />
+          <Field
+            label="Doğum tarihi"
+            value={birthDate}
+            onChangeText={setBirthDate}
+            placeholder="GG.AA.YYYY"
+            keyboardType="numeric"
+            hint="Örnek: 15.07.1995"
+          />
 
           <Pressable disabled={loading} style={[styles.saveButton, loading && styles.disabled]} onPress={() => void submit()}>
             {loading ? <ActivityIndicator color={colors.actionText} /> : <Ionicons name="checkmark-circle" size={20} color={colors.actionText} />}
@@ -123,6 +133,20 @@ export default function EditProfileScreen() {
   );
 }
 
+function formatBirthDate(value: string | null | undefined): string {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const year = d.getUTCFullYear();
+    return `${day}.${month}.${year}`;
+  } catch {
+    return "";
+  }
+}
+
 function Field({
   label,
   hint,
@@ -136,6 +160,7 @@ function Field({
   onChangeText: (value: string) => void;
   placeholder: string;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  keyboardType?: TextInputProps["keyboardType"];
 }) {
   return (
     <View style={styles.field}>

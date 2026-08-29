@@ -12,6 +12,7 @@ type Profile = {
   avatar_url: string | null;
   bio: string | null;
   city: string | null;
+  birth_date: string | null;
   status: string;
   is_verified: boolean;
 };
@@ -28,6 +29,7 @@ type ProfileInput = {
   username: string;
   city: string;
   bio: string;
+  birthDate: string;
 };
 
 type AuthUser = { id: string; email: string };
@@ -56,6 +58,19 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function sanitizeUsername(username: string) {
   return username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+}
+
+function parseTurkishDate(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const match = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (!match) return null;
+  const [_, day, month, year] = match;
+  const d = Number(day);
+  const m = Number(month);
+  const y = Number(year);
+  if (d < 1 || d > 31 || m < 1 || m > 12 || y < 1900 || y > 2100) return null;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
 function mapErrorMessage(message: string) {
@@ -202,16 +217,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return true;
   };
 
-  const saveProfile = async ({ displayName, username, city, bio }: ProfileInput) => {
+  const saveProfile = async ({ displayName, username, city, bio, birthDate }: ProfileInput) => {
     if (!user) return false;
     const normalizedUsername = sanitizeUsername(username);
+    const parsedBirthDate = parseTurkishDate(birthDate);
     const { data, error: profileError } = await api
       .from("profiles")
       .update({
         display_name: displayName.trim(),
         username: normalizedUsername,
         city: city.trim() || null,
-        bio: bio.trim() || null
+        bio: bio.trim() || null,
+        birth_date: parsedBirthDate
       })
       .eq("id", user.id)
       .select("*")
