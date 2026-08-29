@@ -12,9 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IyzicoPaymentProvider implements PaymentProvider {
+public class StoreIyzicoPaymentProvider implements PaymentProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IyzicoPaymentProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StoreIyzicoPaymentProvider.class);
 
     @Value("${payment.iyzico.api-key:}")
     private String apiKey;
