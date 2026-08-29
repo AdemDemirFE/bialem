@@ -31,17 +31,22 @@ type PostItem = {
   communities: { name: string; slug: string } | null;
 };
 
-type StoryItem = {
-  story_id: string;
-  author_id: string;
-  display_name: string;
-  avatar_url: string | null;
-  community_name: string | null;
-  content_type: "text" | "image";
-  body: string | null;
-  media_url: string | null;
-  created_at: string;
-  is_viewed: boolean;
+type StoryGroupItem = {
+  group_id: string;
+  title: string;
+  subtitle?: string | null;
+  context_type: string;
+  author?: { id?: string; display_name?: string; avatar_url?: string | null };
+  story_count: number;
+  stories: Array<{
+    story_id: string;
+    author_id: string;
+    display_name: string;
+    avatar_url: string | null;
+    media_url: string | null;
+    content_type: "text" | "image";
+    is_viewed?: boolean;
+  }>;
 };
 
 type DiscoveryMode = "forYou" | "today" | "week" | "city";
@@ -50,7 +55,7 @@ export default function FeedScreen() {
   const { user, profile } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [posts, setPosts] = useState<PostItem[]>([]);
-  const [stories, setStories] = useState<StoryItem[]>([]);
+  const [stories, setStories] = useState<StoryGroupItem[]>([]);
   const [followedIds, setFollowedIds] = useState<string[]>([]);
   const [joinedCommunityIds, setJoinedCommunityIds] = useState<string[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
@@ -99,7 +104,7 @@ export default function FeedScreen() {
 
     if (postsResult.error) setError(postsResult.error.message);
     else setPosts((postsResult.data ?? []) as unknown as PostItem[]);
-    if (!storiesResult.error) setStories(Array.isArray(storiesResult.data) ? (storiesResult.data as StoryItem[]) : []);
+    if (!storiesResult.error) setStories(Array.isArray(storiesResult.data) ? (storiesResult.data as StoryGroupItem[]) : []);
 
     mode === "initial" ? setLoading(false) : setRefreshing(false);
   };
@@ -112,7 +117,7 @@ export default function FeedScreen() {
     useCallback(() => {
       if (!user) return;
       void api.rpc("get_story_feed").then((result) => {
-        if (!result.error) setStories(Array.isArray(result.data) ? (result.data as StoryItem[]) : []);
+        if (!result.error) setStories(Array.isArray(result.data) ? (result.data as StoryGroupItem[]) : []);
       });
     }, [user?.id])
   );
@@ -259,22 +264,37 @@ export default function FeedScreen() {
   );
 }
 
-function Stories({ stories, currentUserId }: { stories: StoryItem[]; currentUserId?: string }) {
+function Stories({ stories, currentUserId }: { stories: StoryGroupItem[]; currentUserId?: string }) {
   return (
     <View style={styles.storiesSection}>
       <View style={styles.storiesHeading}><View><Text style={styles.kicker}>ANLIKLAR</Text><Text style={styles.storiesTitle}>Şu anda neler oluyor?</Text></View><Text style={styles.storyHint}>24 saat</Text></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesRow}>
         <Link href="/story/create" asChild><Pressable style={styles.storyItem}><View style={[styles.storyRing, styles.addRing]}><View style={styles.storyInner}><Ionicons name="add" size={31} color={colors.onBrand} /></View></View><Text style={styles.storyName}>Anını ekle</Text></Pressable></Link>
-        {stories.map((story) => (
-          <Link key={story.story_id} href={{ pathname: "/story/[id]", params: { id: story.story_id } }} asChild>
-            <Pressable style={styles.storyItem}>
-              <View style={[styles.storyRing, story.is_viewed && styles.viewedRing]}><View style={styles.storyInner}>
-                {story.media_url || story.avatar_url ? <Image source={{ uri: story.media_url || story.avatar_url! }} style={styles.storyImage} /> : <Text style={styles.storyInitial}>{(story.display_name || "?").slice(0, 1)}</Text>}
-              </View></View>
-              <Text style={styles.storyName} numberOfLines={1}>{story.author_id === currentUserId ? "Sen" : (story.display_name || "").split(" ")[0]}</Text>
-            </Pressable>
-          </Link>
-        ))}
+        {stories.filter((group) => Array.isArray(group?.stories) && group.stories.length > 0).map((group) => {
+          const first = group.stories[0];
+          const allViewed = group.stories.every((s) => s.is_viewed);
+          const href = { pathname: "/story/[id]", params: { id: first.story_id } };
+          const author = group.author ?? {};
+          return (
+            <Link key={group.group_id} href={href as any} asChild>
+              <Pressable style={styles.storyItem}>
+                <View style={[styles.storyRing, allViewed && styles.viewedRing]}>
+                  <View style={styles.storyInner}>
+                    {first?.media_url || author.avatar_url ? (
+                      <Image source={{ uri: first?.media_url || author.avatar_url! }} style={styles.storyImage} />
+                    ) : (
+                      <Text style={styles.storyInitial}>{(author.display_name || group.title || "?").slice(0, 1)}</Text>
+                    )}
+                  </View>
+                  {group.story_count > 1 ? (
+                    <View style={styles.storyCountBadge}><Text style={styles.storyCountText}>{group.story_count}</Text></View>
+                  ) : null}
+                </View>
+                <Text style={styles.storyName} numberOfLines={1}>{group.title}</Text>
+              </Pressable>
+            </Link>
+          );
+        })}
       </ScrollView>
       {!stories.length ? <Text style={styles.storyEmpty}>Takip ettiğin kişilerden yeni anlık yok. İlk anı sen paylaş.</Text> : null}
     </View>
@@ -360,6 +380,8 @@ const styles = StyleSheet.create({
   storyInner: { flex: 1, overflow: "hidden", alignItems: "center", justifyContent: "center", borderRadius: 31, borderWidth: 3, borderColor: colors.surface, backgroundColor: colors.brandInk },
   storyImage: { width: "100%", height: "100%" },
   storyInitial: { color: colors.onBrand, fontSize: 22, fontWeight: "900" },
+  storyCountBadge: { position: "absolute", right: -2, bottom: -2, minWidth: 20, height: 20, alignItems: "center", justifyContent: "center", borderRadius: 10, backgroundColor: colors.accent, borderWidth: 2, borderColor: colors.page },
+  storyCountText: { color: colors.onBrand, fontSize: 10, fontWeight: "900" },
   storyName: { width: "100%", color: colors.ink, textAlign: "center", fontSize: 10, fontWeight: "900" },
   storyEmpty: { color: colors.muted, paddingHorizontal: 17, fontSize: 12 },
   nowSection: { gap: 12, padding: 15, borderRadius: 20, backgroundColor: colors.surfaceStrong, borderWidth: 1, borderColor: colors.warning },

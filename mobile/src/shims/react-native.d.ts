@@ -13,6 +13,12 @@ declare module "react-native" {
     pointerEvents?: "auto" | "none" | "box-none" | "box-only";
     onLayout?: (event: any) => void;
     onPress?: () => void;
+    onStartShouldSetResponder?: (event: any) => boolean;
+    onMoveShouldSetResponder?: (event: any) => boolean;
+    onResponderGrant?: (event: any) => void;
+    onResponderMove?: (event: any) => void;
+    onResponderRelease?: (event: any) => void;
+    onResponderTerminate?: (event: any) => void;
     testID?: string;
     accessible?: boolean;
     accessibilityLabel?: string;
@@ -194,8 +200,11 @@ declare module "react-native" {
   export const Animated: {
     View: ComponentType<ViewProps>;
     Text: ComponentType<TextProps>;
+    Image: ComponentType<ImageProps>;
     createAnimatedComponent: <P>(component: ComponentType<P>) => ComponentType<P>;
     Value: new (value: number) => any;
+    ValueXY: new (value?: { x: number; y: number }) => any;
+    event: (argMapping: any[], config?: { listener?: (event: any) => void; useNativeDriver?: boolean }) => (event: any) => void;
     timing: (value: any, config: any) => { start: (callback?: () => void) => void; stop: () => void };
     spring: (value: any, config: any) => { start: (callback?: () => void) => void; stop: () => void };
     loop: (animation: { start: (callback?: () => void) => void; stop?: () => void }) => { start: (callback?: () => void) => void; stop: () => void };
@@ -207,6 +216,10 @@ declare module "react-native" {
       out: (easing: (value: number) => number) => (value: number) => number;
       inOut: (easing: (value: number) => number) => (value: number) => number;
     };
+  };
+
+  export const PanResponder: {
+    create: (config: any) => { panHandlers: any };
   };
 
   export const Alert: {

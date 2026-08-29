@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20260829130000-1" author="bialem">
+        <createTable tableName="hashtag">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="normalized_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usage_count" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="hashtag" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="hashtag" columnName="updated_at" columnDataType="${datetimeType}"/>
+
+        <addUniqueConstraint
+            columnNames="normalized_name"
+            constraintName="ux_hashtag__normalized_name"
+            tableName="hashtag"
+        />
+        <createIndex indexName="idx_hashtag_normalized_name" tableName="hashtag">
+            <column name="normalized_name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260829130000-2" author="bialem">
+        <createTable tableName="story_hashtag">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="story_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="hashtag_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="story_hashtag" columnName="created_at" columnDataType="${datetimeType}"/>
+
+        <addForeignKeyConstraint baseColumnNames="story_id"
+                                 baseTableName="story_hashtag"
+                                 constraintName="fk_story_hashtag__story_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="story"/>
+        <addForeignKeyConstraint baseColumnNames="hashtag_id"
+                                 baseTableName="story_hashtag"
+                                 constraintName="fk_story_hashtag__hashtag_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="hashtag"/>
+        <addUniqueConstraint
+            columnNames="story_id, hashtag_id"
+            constraintName="ux_story_hashtag__story_hashtag"
+            tableName="story_hashtag"
+        />
+        <createIndex indexName="idx_story_hashtag_story_id" tableName="story_hashtag">
+            <column name="story_id"/>
+        </createIndex>
+        <createIndex indexName="idx_story_hashtag_hashtag_id" tableName="story_hashtag">
+            <column name="hashtag_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260829130000-3" author="bialem">
+        <createTable tableName="story_group">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="location_name" type="varchar(200)"/>
+            <column name="latitude" type="decimal(21, 2)"/>
+            <column name="longitude" type="decimal(21, 2)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="community_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="event_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="story_group" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="story_group" columnName="expires_at" columnDataType="${datetimeType}"/>
+
+        <addForeignKeyConstraint baseColumnNames="author_id"
+                                 baseTableName="story_group"
+                                 constraintName="fk_story_group__author_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="profile"/>
+        <addForeignKeyConstraint baseColumnNames="community_id"
+                                 baseTableName="story_group"
+                                 constraintName="fk_story_group__community_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="community"
+                                 onDelete="SET NULL"/>
+        <addForeignKeyConstraint baseColumnNames="event_id"
+                                 baseTableName="story_group"
+                                 constraintName="fk_story_group__event_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="event"
+                                 onDelete="SET NULL"/>
+        <createIndex indexName="idx_story_group_author_id" tableName="story_group">
+            <column name="author_id"/>
+        </createIndex>
+        <createIndex indexName="idx_story_group_community_id" tableName="story_group">
+            <column name="community_id"/>
+        </createIndex>
+        <createIndex indexName="idx_story_group_event_id" tableName="story_group">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260829130000-4" author="bialem">
+        <createTable tableName="story_element">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="element_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="varchar(2000)"/>
+            <column name="position_x" type="double precision"/>
+            <column name="position_y" type="double precision"/>
+            <column name="scale" type="double precision"/>
+            <column name="rotation" type="double precision"/>
+            <column name="color" type="varchar(50)"/>
+            <column name="background_color" type="varchar(50)"/>
+            <column name="font_size" type="integer"/>
+            <column name="width" type="double precision"/>
+            <column name="height" type="double precision"/>
+            <column name="metadata_json" type="varchar(4000)"/>
+            <column name="sort_order" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="story_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="story_element" columnName="created_at" columnDataType="${datetimeType}"/>
+
+        <addForeignKeyConstraint baseColumnNames="story_id"
+                                 baseTableName="story_element"
+                                 constraintName="fk_story_element__story_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="story"/>
+        <createIndex indexName="idx_story_element_story_id" tableName="story_element">
+            <column name="story_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260829130000-5" author="bialem">
+        <addColumn tableName="story">
+            <column name="story_group_id" type="bigint"/>
+            <column name="event_id" type="bigint"/>
+            <column name="location_name" type="varchar(200)"/>
+            <column name="latitude" type="decimal(21, 2)"/>
+            <column name="longitude" type="decimal(21, 2)"/>
+        </addColumn>
+
+        <addForeignKeyConstraint baseColumnNames="story_group_id"
+                                 baseTableName="story"
+                                 constraintName="fk_story__story_group_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="story_group"
+                                 onDelete="SET NULL"/>
+        <addForeignKeyConstraint baseColumnNames="event_id"
+                                 baseTableName="story"
+                                 constraintName="fk_story__event_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="event"
+                                 onDelete="SET NULL"/>
+        <createIndex indexName="idx_story_story_group_id" tableName="story">
+            <column name="story_group_id"/>
+        </createIndex>
+        <createIndex indexName="idx_story_event_id" tableName="story">
+            <column name="event_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

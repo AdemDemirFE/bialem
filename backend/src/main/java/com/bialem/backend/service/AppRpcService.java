@@ -12,15 +12,19 @@ import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -49,12 +53,18 @@ public class AppRpcService {
     private final OrderItemRepository orderItemRepository;
     private final TicketRepository ticketRepository;
     private final PaymentRepository paymentRepository;
+    private final HashtagRepository hashtagRepository;
+    private final StoryHashtagRepository storyHashtagRepository;
+    private final StoryGroupRepository storyGroupRepository;
+    private final StoryElementRepository storyElementRepository;
 
     public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents,
         CommunityAuthorizationService communityAuthorization, PaymentService paymentService,
         EventTicketRepository eventTicketRepository, OrderRepository orderRepository,
         OrderItemRepository orderItemRepository, TicketRepository ticketRepository,
-        PaymentRepository paymentRepository) {
+        PaymentRepository paymentRepository, HashtagRepository hashtagRepository,
+        StoryHashtagRepository storyHashtagRepository, StoryGroupRepository storyGroupRepository,
+        StoryElementRepository storyElementRepository) {
         this.support = support;
         this.transactions = new TransactionTemplate(transactionManager);
         this.notificationEvents = notificationEvents;
@@ -65,6 +75,10 @@ public class AppRpcService {
         this.orderItemRepository = orderItemRepository;
         this.ticketRepository = ticketRepository;
         this.paymentRepository = paymentRepository;
+        this.hashtagRepository = hashtagRepository;
+        this.storyHashtagRepository = storyHashtagRepository;
+        this.storyGroupRepository = storyGroupRepository;
+        this.storyElementRepository = storyElementRepository;
     }
 
     public AppQueryResponse invoke(String name, Map<String, Object> args) {
@@ -129,6 +143,7 @@ public class AppRpcService {
             }
             case "set_community_lead_moderator" -> setAuthorizedLeadModerator(id(args.get("target_community_id")), id(args.get("target_user_id")));
             case "get_my_event_creation_groups" -> creationGroups(me);
+            case "get_my_events" -> myEvents(me);
             case "create_group_event" -> createGroupEvent(me, args);
             case "moderate_group_event" -> moderateAuthorizedEvent(id(args.get("target_event_id")), str(args.get("target_status")), str(args.get("target_rejection_reason")));
             case "cancel_event" -> cancelEvent(me, id(args.get("target_event_id")), str(args.get("target_reason")));
@@ -143,12 +158,14 @@ public class AppRpcService {
             case "get_public_event_share" -> eventShare(id(args.get("target_event_id")));
             case "get_my_profile_plans" -> myPlans(me, instant(args.get("range_start")), instant(args.get("range_end")));
             case "get_story_feed" -> storyFeed(me);
+            case "get_story_groups" -> storyGroups(me);
             case "get_story_detail" -> storyDetail(id(args.get("target_story_id")));
             case "mark_story_viewed" -> markStoryViewed(me, id(args.get("target_story_id")));
             case "get_story_viewers" -> storyViewers(me, id(args.get("target_story_id")));
             case "set_story_reaction" -> setStoryReaction(me, id(args.get("target_story_id")), str(args.get("target_reaction_type")));
             case "get_story_reactions" -> storyReactions(me, id(args.get("target_story_id")));
             case "remove_story_reaction" -> removeStoryReaction(me, id(args.get("target_story_id")));
+            case "search_hashtags" -> searchHashtags(str(args.get("target_query")), num(args.get("result_limit"), 20));
             case "create_story_with_audience" -> createStory(me, args);
             case "get_user_reviews" -> userReviews(id(args.get("target_user_id")));
             case "get_city_radar" -> cityRadar(me, str(args.get("target_city")));
@@ -611,6 +628,26 @@ public class AppRpcService {
             .toList();
     }
 
+    private List<Map<String, Object>> myEvents(Profile me) {
+        List<Event> events = em
+            .createQuery(
+                "select distinct e from Event e left join EventParticipant p on p.event = e " +
+                "where e.status in :statuses and (e.createdBy = :me or p.user = :me) order by e.startsAt desc",
+                Event.class
+            )
+            .setParameter("statuses", List.of(EventStatus.PUBLISHED, EventStatus.COMPLETED))
+            .setParameter("me", me)
+            .setMaxResults(50)
+            .getResultList();
+        return events.stream().map(event -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("event_id", support.stringify(event.getId()));
+            row.put("title", event.getTitle());
+            row.put("starts_at", event.getStartsAt() == null ? null : event.getStartsAt().toString());
+            return row;
+        }).toList();
+    }
+
     private List<Map<String, Object>> createGroupEvent(Profile me, Map<String, Object> args) {
         Community community = em.find(Community.class, id(args.get("target_community_id")));
         boolean moderator = membership(me, community.getId()) != null && membership(me, community.getId()).getRole() != CommunityMemberRole.MEMBER;
@@ -893,9 +930,22 @@ public class AppRpcService {
     }
 
     private List<Map<String, Object>> storyFeed(Profile me) {
+        return storyGroups(me);
+    }
+
+    private List<Map<String, Object>> storyGroups(Profile me) {
         Instant now = Instant.now();
-        List<Story> stories = em
-            .createQuery("select s from Story s left join fetch s.author where s.expiresAt > :now order by s.createdAt desc", Story.class)
+        List<StoryGroup> groups = em
+            .createQuery(
+                "select distinct g from StoryGroup g " +
+                "left join fetch g.author " +
+                "left join fetch g.community " +
+                "left join fetch g.event " +
+                "left join g.stories s " +
+                "where s.expiresAt > :now " +
+                "order by g.createdAt desc",
+                StoryGroup.class
+            )
             .setParameter("now", now)
             .setMaxResults(50)
             .getResultList();
@@ -905,7 +955,19 @@ public class AppRpcService {
                 .setParameter("me", me)
                 .getResultList()
         );
-        return stories.stream().map(story -> storyRow(story, viewed.contains(story.getId()))).toList();
+        Map<Long, List<Story>> storiesByGroup = new HashMap<>();
+        for (StoryGroup group : groups) {
+            List<Story> groupStories = em
+                .createQuery(
+                    "select s from Story s left join fetch s.author where s.storyGroup.id = :id and s.expiresAt > :now order by s.createdAt",
+                    Story.class
+                )
+                .setParameter("id", group.getId())
+                .setParameter("now", now)
+                .getResultList();
+            storiesByGroup.put(group.getId(), groupStories);
+        }
+        return groups.stream().map(group -> groupRow(group, viewed, storiesByGroup.getOrDefault(group.getId(), List.of()))).toList();
     }
 
     private Object storyDetail(Long storyId) {
@@ -919,10 +981,60 @@ public class AppRpcService {
             StoryView.class,
             Map.of("id", storyId, "me", me)
         ) != null;
-        return List.of(storyRow(story, viewed));
+        return storyRow(story, viewed, true);
     }
 
-    private Map<String, Object> storyRow(Story story, boolean viewed) {
+    private Map<String, Object> groupRow(StoryGroup group, Set<Long> viewed, List<Story> stories) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        Long groupId = group.getId();
+        row.put("group_id", support.stringify(groupId));
+        row.put("title", groupTitle(group));
+        row.put("subtitle", groupSubtitle(group));
+        row.put("context_type", groupContextType(group));
+        Profile author = group.getAuthor();
+        row.put("author", author == null ? Map.of() : support.profileEmbed(author));
+        List<Map<String, Object>> storyRows = stories
+            .stream()
+            .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().isAfter(Instant.now()))
+            .sorted(Comparator.comparing(Story::getCreatedAt))
+            .map(s -> storyRow(s, viewed.contains(s.getId()), false))
+            .toList();
+        row.put("stories", storyRows);
+        row.put("story_count", storyRows.size());
+        row.put("created_at", group.getCreatedAt() == null ? null : group.getCreatedAt().toString());
+        row.put("expires_at", group.getExpiresAt() == null ? null : group.getExpiresAt().toString());
+        return row;
+    }
+
+    private String groupTitle(StoryGroup group) {
+        if (group.getEvent() != null && group.getEvent().getTitle() != null) {
+            return group.getEvent().getTitle();
+        }
+        if (group.getCommunity() != null && group.getCommunity().getName() != null) {
+            return group.getCommunity().getName();
+        }
+        if (group.getLocationName() != null) {
+            return group.getLocationName();
+        }
+        Profile author = group.getAuthor();
+        return author == null || author.getDisplayName() == null ? "Story" : author.getDisplayName();
+    }
+
+    private String groupSubtitle(StoryGroup group) {
+        if (group.getEvent() != null && group.getCommunity() != null && group.getCommunity().getName() != null) {
+            return group.getCommunity().getName();
+        }
+        return null;
+    }
+
+    private String groupContextType(StoryGroup group) {
+        if (group.getEvent() != null) return "event";
+        if (group.getCommunity() != null) return "community";
+        if (group.getLocationName() != null) return "location";
+        return "user";
+    }
+
+    private Map<String, Object> storyRow(Story story, boolean viewed, boolean withDetails) {
         Profile author = story.getAuthor();
         Map<String, Object> row = new LinkedHashMap<>();
         Long storyId = story.getId();
@@ -930,6 +1042,7 @@ public class AppRpcService {
         row.put("author_id", author == null ? null : support.stringify(author.getId()));
         row.put("display_name", author == null || author.getDisplayName() == null ? "" : author.getDisplayName());
         row.put("avatar_url", author == null ? null : author.getAvatarUrl());
+        row.put("group_id", story.getStoryGroup() == null ? null : support.stringify(story.getStoryGroup().getId()));
         List<String> targetNames = story
             .getCommunityTargets()
             .stream()
@@ -955,6 +1068,55 @@ public class AppRpcService {
         row.put("is_viewed", viewed);
         row.put("viewer_count", storyId == null ? 0 : storyViewerCount(storyId));
         row.put("reactions", storyId == null ? Map.of() : storyReactionsSummary(storyId));
+        if (story.getEvent() != null) {
+            Map<String, Object> event = new LinkedHashMap<>();
+            event.put("event_id", support.stringify(story.getEvent().getId()));
+            event.put("title", story.getEvent().getTitle());
+            row.put("event", event);
+        }
+        if (story.getLocationName() != null) {
+            Map<String, Object> location = new LinkedHashMap<>();
+            location.put("name", story.getLocationName());
+            location.put("latitude", story.getLatitude());
+            location.put("longitude", story.getLongitude());
+            row.put("location", location);
+        }
+        if (withDetails) {
+            row.put("hashtags", story.getStoryHashtags().stream()
+                .map(StoryHashtag::getHashtag)
+                .filter(Objects::nonNull)
+                .map(h -> Map.of("name", h.getName(), "normalized_name", h.getNormalizedName()))
+                .toList());
+            row.put("elements", story.getStoryElements().stream()
+                .sorted(Comparator.comparing(StoryElement::getSortOrder))
+                .map(this::elementRow)
+                .toList());
+        } else {
+            row.put("hashtags", story.getStoryHashtags().stream()
+                .map(StoryHashtag::getHashtag)
+                .filter(Objects::nonNull)
+                .map(Hashtag::getName)
+                .toList());
+        }
+        return row;
+    }
+
+    private Map<String, Object> elementRow(StoryElement element) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("element_id", support.stringify(element.getId()));
+        row.put("type", element.getElementType() == null ? null : element.getElementType().name().toLowerCase(Locale.ROOT));
+        row.put("content", element.getContent());
+        row.put("position_x", element.getPositionX());
+        row.put("position_y", element.getPositionY());
+        row.put("scale", element.getScale());
+        row.put("rotation", element.getRotation());
+        row.put("color", element.getColor());
+        row.put("background_color", element.getBackgroundColor());
+        row.put("font_size", element.getFontSize());
+        row.put("width", element.getWidth());
+        row.put("height", element.getHeight());
+        row.put("metadata", element.getMetadataJson());
+        row.put("sort_order", element.getSortOrder());
         return row;
     }
 
@@ -1088,27 +1250,199 @@ public class AppRpcService {
     }
 
     private String createStory(Profile me, Map<String, Object> args) {
+        Instant now = Instant.now();
         Story story = new Story();
         story.setAuthor(me);
         story.setContentType("image".equalsIgnoreCase(str(args.get("target_content_type"))) ? StoryContentType.IMAGE : StoryContentType.TEXT);
         story.setBody(str(args.get("target_body")));
+        story.setMediaUrl(str(args.get("target_media_url")));
         story.setIsPublic(bool(args.get("target_is_public")));
-        story.setShareWithFollowers(bool(args.get("target_share_with_followers")));
-        story.setCreatedAt(Instant.now());
-        story.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
+        story.setShareWithFollowers(bool(args.get("target_share_with_followers"), true));
+        story.setCreatedAt(now);
+        story.setExpiresAt(now.plus(24, ChronoUnit.HOURS));
+
+        Long eventId = id(args.get("target_event_id"));
+        Event event = eventId == null ? null : em.find(Event.class, eventId);
+        story.setEvent(event);
+
+        Object location = args.get("target_location");
+        if (location instanceof Map<?, ?> loc) {
+            story.setLocationName(str(loc.get("name")));
+            Object lat = loc.get("latitude");
+            Object lng = loc.get("longitude");
+            if (lat instanceof Number n) story.setLatitude(BigDecimal.valueOf(n.doubleValue()));
+            if (lng instanceof Number n) story.setLongitude(BigDecimal.valueOf(n.doubleValue()));
+        }
+
         em.persist(story);
+
+        Long primaryCommunityId = null;
         Object communityIds = args.get("target_community_ids");
         if (communityIds instanceof List<?> ids) {
             for (Object raw : ids) {
                 Long communityId = support.parseLong(raw);
                 if (communityId == null) continue;
+                if (primaryCommunityId == null) primaryCommunityId = communityId;
                 StoryCommunityTarget target = new StoryCommunityTarget();
                 target.setStory(story);
                 target.setCommunity(em.getReference(Community.class, communityId));
+                target.setCreatedAt(now);
                 em.persist(target);
             }
         }
+
+        if (event != null && event.getCommunity() != null && primaryCommunityId == null) {
+            primaryCommunityId = event.getCommunity().getId();
+        }
+
+        StoryGroup group = resolveStoryGroup(me, event, primaryCommunityId, story.getLocationName(), story.getLatitude(), story.getLongitude(), story.getExpiresAt());
+        story.setStoryGroup(group);
+
+        attachHashtags(story, args.get("target_hashtags"), now);
+        attachElements(story, args.get("target_elements"), now);
+
         return support.stringify(story.getId());
+    }
+
+    private StoryGroup resolveStoryGroup(Profile me, Event event, Long communityId, String locationName, BigDecimal latitude, BigDecimal longitude, Instant expiresAt) {
+        Long eventId = event == null ? null : event.getId();
+        Long primaryCommunityId = communityId;
+        if (event != null && event.getCommunity() != null && primaryCommunityId == null) {
+            primaryCommunityId = event.getCommunity().getId();
+        }
+
+        Instant now = Instant.now();
+        Optional<StoryGroup> existing;
+        if (eventId == null && primaryCommunityId == null) {
+            existing = storyGroupRepository.findByAuthorIdAndEventIdIsNullAndCommunityIdIsNullAndExpiresAtAfter(me.getId(), now);
+        } else if (eventId != null && primaryCommunityId == null) {
+            existing = storyGroupRepository.findByAuthorIdAndEventIdAndCommunityIdIsNullAndExpiresAtAfter(me.getId(), eventId, now);
+        } else if (eventId == null) {
+            existing = storyGroupRepository.findByAuthorIdAndEventIdIsNullAndCommunityIdAndExpiresAtAfter(me.getId(), primaryCommunityId, now);
+        } else {
+            existing = storyGroupRepository.findByAuthorIdAndEventIdAndCommunityIdAndExpiresAtAfter(me.getId(), eventId, primaryCommunityId, now);
+        }
+
+        StoryGroup group = existing.orElse(null);
+        if (group != null) {
+            if (group.getExpiresAt() != null && expiresAt != null && expiresAt.isAfter(group.getExpiresAt())) {
+                group.setExpiresAt(expiresAt);
+            }
+            return group;
+        }
+
+        group = new StoryGroup();
+        group.setAuthor(me);
+        group.setEvent(event);
+        if (primaryCommunityId != null) {
+            group.setCommunity(em.getReference(Community.class, primaryCommunityId));
+        }
+        group.setLocationName(locationName);
+        group.setLatitude(latitude);
+        group.setLongitude(longitude);
+        group.setCreatedAt(now);
+        group.setExpiresAt(expiresAt);
+        em.persist(group);
+        return group;
+    }
+
+    private void attachHashtags(Story story, Object rawHashtags, Instant now) {
+        if (!(rawHashtags instanceof List<?> list)) return;
+        Set<String> seen = new HashSet<>();
+        for (Object raw : list) {
+            String name = normalizeHashtag(str(raw));
+            if (name.isBlank() || !seen.add(name)) continue;
+            Hashtag hashtag = hashtagRepository
+                .findByNormalizedName(name)
+                .orElseGet(() -> {
+                    Hashtag h = new Hashtag();
+                    h.setName("#" + name);
+                    h.setNormalizedName(name);
+                    h.setUsageCount(0L);
+                    h.setCreatedAt(now);
+                    h.setUpdatedAt(now);
+                    h.setIsActive(true);
+                    em.persist(h);
+                    return h;
+                });
+            hashtag.setUsageCount(hashtag.getUsageCount() + 1);
+            hashtag.setUpdatedAt(now);
+            StoryHashtag link = new StoryHashtag();
+            link.setStory(story);
+            link.setHashtag(hashtag);
+            link.setCreatedAt(now);
+            em.persist(link);
+        }
+    }
+
+    private String normalizeHashtag(String input) {
+        if (input == null) return "";
+        String cleaned = input.startsWith("#") ? input.substring(1) : input;
+        return cleaned.trim().toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}0-9_-]", "");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void attachElements(Story story, Object rawElements, Instant now) {
+        if (!(rawElements instanceof List<?> list)) return;
+        int order = 0;
+        for (Object raw : list) {
+            if (!(raw instanceof Map<?, ?> map)) continue;
+            StoryElement element = new StoryElement();
+            element.setStory(story);
+            element.setElementType(parseElementType(str(map.get("type"))));
+            element.setContent(str(map.get("content")));
+            element.setPositionX(parseDouble(map.get("position_x")));
+            element.setPositionY(parseDouble(map.get("position_y")));
+            element.setScale(parseDouble(map.get("scale")));
+            element.setRotation(parseDouble(map.get("rotation")));
+            element.setColor(str(map.get("color")));
+            element.setBackgroundColor(str(map.get("background_color")));
+            element.setFontSize(parseInt(map.get("font_size")));
+            element.setWidth(parseDouble(map.get("width")));
+            element.setHeight(parseDouble(map.get("height")));
+            Object metadata = map.get("metadata");
+            element.setMetadataJson(metadata == null ? null : metadata.toString());
+            element.setSortOrder(order++);
+            element.setCreatedAt(now);
+            em.persist(element);
+        }
+    }
+
+    private StoryElementType parseElementType(String type) {
+        if (type == null) return StoryElementType.TEXT;
+        try {
+            return StoryElementType.valueOf(type.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return StoryElementType.TEXT;
+        }
+    }
+
+    private Double parseDouble(Object value) {
+        if (value instanceof Number n) return n.doubleValue();
+        return null;
+    }
+
+    private Integer parseInt(Object value) {
+        if (value instanceof Number n) return n.intValue();
+        return null;
+    }
+
+    private List<Map<String, Object>> searchHashtags(String query, int limit) {
+        String normalized = normalizeHashtag(query);
+        String like = "%" + normalized + "%";
+        List<Hashtag> hashtags = em
+            .createQuery("select h from Hashtag h where h.isActive = true and lower(h.normalizedName) like :q order by h.usageCount desc", Hashtag.class)
+            .setParameter("q", like)
+            .setMaxResults(Math.max(limit, 1))
+            .getResultList();
+        return hashtags.stream().map(h -> {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("hashtag_id", support.stringify(h.getId()));
+            row.put("name", h.getName());
+            row.put("normalized_name", h.getNormalizedName());
+            row.put("usage_count", h.getUsageCount());
+            return row;
+        }).toList();
     }
 
     private List<Map<String, Object>> cityRadar(Profile me, String city) {

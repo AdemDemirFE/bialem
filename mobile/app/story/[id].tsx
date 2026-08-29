@@ -16,12 +16,32 @@ import { removeStoryImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
 
+type StoryEvent = { event_id: string; title: string };
+type StoryLocation = { name: string; latitude?: number; longitude?: number };
+type StoryElement = {
+  element_id: string;
+  type: string;
+  content: string;
+  position_x?: number;
+  position_y?: number;
+  scale?: number;
+  rotation?: number;
+  color?: string;
+  background_color?: string;
+  font_size?: number;
+  width?: number;
+  height?: number;
+  metadata?: Record<string, any>;
+  sort_order?: number;
+};
+
 type StoryDetail = {
   story_id: string;
   author_id: string;
   display_name: string;
   avatar_url: string | null;
   community_name: string | null;
+  group_id?: string | null;
   content_type: "text" | "image";
   body: string | null;
   media_url: string | null;
@@ -30,6 +50,20 @@ type StoryDetail = {
   viewer_count: number;
   reactions: Record<string, number>;
   my_reaction?: string | null;
+  event?: StoryEvent | null;
+  location?: StoryLocation | null;
+  hashtags?: string[];
+  elements?: StoryElement[];
+};
+
+type StoryGroup = {
+  group_id: string;
+  title: string;
+  subtitle?: string | null;
+  context_type: string;
+  author?: { id?: string; display_name?: string; avatar_url?: string | null };
+  stories: StoryDetail[];
+  story_count: number;
 };
 
 type ProfileCard = {
@@ -86,11 +120,17 @@ export default function StoryViewerScreen() {
       setLoading(true);
       setError(null);
       const feed = await api.rpc("get_story_feed");
-      const items = Array.isArray(feed.data) ? (feed.data as StoryDetail[]) : [];
-      let nextQueue = items.filter((item) => item.story_id);
+      const groups = Array.isArray(feed.data) ? (feed.data as StoryGroup[]) : [];
+      let nextQueue: StoryDetail[] = [];
+      for (const group of groups) {
+        for (const storyItem of group.stories ?? []) {
+          nextQueue.push(storyItem);
+        }
+      }
       if (!nextQueue.some((item) => item.story_id === id)) {
         const detail = await api.rpc("get_story_detail", { target_story_id: id });
-        if (detail.data?.[0]) nextQueue = [detail.data[0] as StoryDetail, ...nextQueue];
+        const detailStory = detail.data as StoryDetail | undefined;
+        if (detailStory?.story_id) nextQueue = [detailStory, ...nextQueue];
       }
       const start = Math.max(0, nextQueue.findIndex((item) => item.story_id === id));
       if (!nextQueue.length) {

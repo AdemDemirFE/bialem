@@ -1,333 +1,946 @@
-import { Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  PanResponder,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from "react-native";
 import { useAuth } from "../../src/lib/auth";
+import { api } from "../../src/lib/api";
 import {
   pickImageFromLibrary,
   requestCameraPermission,
   requestMediaLibraryPermission,
   takePhotoWithCamera,
   type PickedImage,
-  uploadStoryImage
+  uploadStoryMedia
 } from "../../src/lib/storage";
-import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
 
-type CommunityOption = {
-  community_id: string;
-  communities: { name: string } | null;
+const SCREEN = Dimensions.get("window");
+const CANVAS_WIDTH = Math.min(SCREEN.width - 32, 420);
+const CANVAS_HEIGHT = (CANVAS_WIDTH * 16) / 9;
+
+const LOCATION_PRESETS = [
+  { name: "Ankara", latitude: 39.9334, longitude: 32.8597 },
+  { name: "İstanbul", latitude: 41.0082, longitude: 28.9784 },
+  { name: "İzmir", latitude: 38.4192, longitude: 27.1287 },
+  { name: "Antalya", latitude: 36.8969, longitude: 30.7133 },
+  { name: "Bursa", latitude: 40.1828, longitude: 29.0669 }
+];
+
+const COLOR_PRESETS = ["#FFFFFF", "#000000", "#FF3B30", "#FF9500", "#FFCC00", "#4CD964", "#5AC8FA", "#007AFF", "#5856D6", "#FF2D55"];
+const BG_PRESETS = ["transparent", "rgba(0,0,0,0.4)", "rgba(255,255,255,0.8)", "#000000", "#FFFFFF", "#FF3B30", "#007AFF"];
+
+export type StoryElementType = "TEXT" | "LOCATION" | "HASHTAG" | "COMMUNITY" | "EVENT" | "STICKER";
+
+export type StoryElement = {
+  id: string;
+  type: StoryElementType;
+  content: string;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  color: string;
+  backgroundColor: string;
+  fontSize: number;
+  width?: number;
+  height?: number;
+  metadata?: Record<string, any>;
 };
+
+type CommunityOption = { community_id?: string | null; communities?: { id?: string; name?: string; slug?: string } | null };
+type EventOption = { event_id?: string | null; events?: { id?: string; title?: string; starts_at?: string } | null };
+type HashtagOption = { hashtag_id: string; name: string; normalized_name: string; usage_count: number };
 
 export default function CreateStoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [mode, setMode] = useState<"text" | "image">("text");
-  const [body, setBody] = useState("");
-  const [image, setImage] = useState<PickedImage | null>(null);
-  const [communities, setCommunities] = useState<CommunityOption[]>([]);
+
+  const [media, setMedia] = useState<PickedImage | null>(null);
+  const [elements, setElements] = useState<StoryElement[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeSheet, setActiveSheet] = useState<"text" | "hashtag" | "location" | "community" | "event" | "share" | null>(null);
+  const [caption, setCaption] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
   const [shareWithEveryone, setShareWithEveryone] = useState(false);
   const [shareWithFollowers, setShareWithFollowers] = useState(true);
   const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ name: string; latitude?: number; longitude?: number } | null>(null);
+
+  const [communities, setCommunities] = useState<CommunityOption[]>([]);
+  const [events, setEvents] = useState<EventOption[]>([]);
+  const [hashtagQuery, setHashtagQuery] = useState("");
+  const [hashtags, setHashtags] = useState<HashtagOption[]>([]);
   const [loadingCommunities, setLoadingCommunities] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingHashtags, setLoadingHashtags] = useState(false);
 
   useEffect(() => {
-    const loadCommunities = async () => {
-      if (!user) return;
-      const result = await api
-        .from("community_members")
-        .select("community_id, communities(name)")
-        .eq("user_id", user.id)
-        .eq("status", "approved");
-
-      if (!result.error) setCommunities((result.data ?? []) as unknown as CommunityOption[]);
+    if (!user) return;
+    const load = async () => {
+      const [cResult, eResult] = await Promise.all([
+        api.from("community_members").select("community_id, communities(id, name)").eq("user_id", user.id).eq("status", "approved"),
+        api.rpc("get_my_events")
+      ]);
+      if (!cResult.error) setCommunities((cResult.data ?? []) as unknown as CommunityOption[]);
       setLoadingCommunities(false);
+      if (!eResult.error && Array.isArray(eResult.data)) {
+        const eventRows = (eResult.data as Array<{ event_id?: string; event_id_raw?: string; title?: string; starts_at?: string }>)
+          .filter((r) => r.event_id || r.event_id_raw)
+          .map((r) => ({
+            event_id: r.event_id || r.event_id_raw || "",
+            events: { title: r.title || "Etkinlik", starts_at: r.starts_at }
+          }));
+        setEvents(eventRows);
+      }
+      setLoadingEvents(false);
     };
-
-    void loadCommunities();
+    void load();
   }, [user?.id]);
 
-  const setSelectedImage = (selected: PickedImage | null) => {
-    if (!selected) return;
-    setImage(selected);
-    setMode("image");
-    setError(null);
+  useEffect(() => {
+    if (activeSheet !== "hashtag") return;
+    const q = hashtagQuery.trim();
+    setLoadingHashtags(true);
+    api.rpc("search_hashtags", { target_query: q, result_limit: 20 })
+      .then((res) => {
+        if (!res.error) setHashtags((res.data ?? []) as HashtagOption[]);
+      })
+      .finally(() => setLoadingHashtags(false));
+  }, [hashtagQuery, activeSheet]);
+
+  const addElement = (partial: Omit<StoryElement, "id" | "x" | "y" | "scale" | "rotation" | "color" | "backgroundColor" | "fontSize"> & Partial<StoryElement>) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const element: StoryElement = {
+      id,
+      type: partial.type,
+      content: partial.content,
+      x: 0.5,
+      y: 0.45,
+      scale: partial.scale ?? 1,
+      rotation: partial.rotation ?? 0,
+      color: partial.color ?? "#FFFFFF",
+      backgroundColor: partial.backgroundColor ?? "transparent",
+      fontSize: partial.fontSize ?? 22,
+      width: partial.width,
+      height: partial.height,
+      metadata: partial.metadata
+    };
+    setElements((current) => [...current, element]);
+    setSelectedId(id);
   };
 
-  const chooseImageFromLibrary = async () => {
+  const updateElement = (id: string, patch: Partial<StoryElement>) => {
+    setElements((current) => current.map((el) => (el.id === id ? { ...el, ...patch } : el)));
+  };
+
+  const removeElement = (id: string) => {
+    setElements((current) => current.filter((el) => el.id !== id));
+    if (selectedId === id) setSelectedId(null);
+  };
+
+  const pickMedia = async () => {
     if (!(await requestMediaLibraryPermission())) {
-      setError("Fotoğraf seçmek için galeri izni vermen gerekiyor.");
+      setError("Galeri izni gerekli.");
       return;
     }
-
     const selected = await pickImageFromLibrary();
-    setSelectedImage(selected);
+    if (selected) setMedia(selected);
   };
 
-  const takePhoto = async () => {
+  const capturePhoto = async () => {
     const permission = await requestCameraPermission();
-
     if (!permission.granted) {
-      setError("Fotoğraf çekmek için kamera izni vermen gerekiyor.");
-
-      if (permission.canAskAgain) {
-        Alert.alert(
-          "Kamera izni gerekli",
-          "Kamerayı kullanabilmek için izin vermelisin. İstersen tekrar deneyebilir veya galeriden fotoğraf seçebilirsin.",
-          [
-            { text: "Vazgeç", style: "cancel" },
-            { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-            { text: "Tekrar dene", onPress: () => void takePhoto() }
-          ]
-        );
-      } else {
-        Alert.alert(
-          "Kamera izni kapalı",
-          "Kamera izni kalıcı olarak kapatılmış. Telefon ayarlarından Bialem için kamera iznini açabilir veya galeriden fotoğraf seçebilirsin.",
-          [
-            { text: "Vazgeç", style: "cancel" },
-            { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-            { text: "Ayarları aç", onPress: () => void Linking.openSettings() }
-          ]
-        );
-      }
+      setError("Kamera izni gerekli.");
       return;
     }
-
     const selected = await takePhotoWithCamera();
-    setSelectedImage(selected);
-  };
-
-  const chooseImageSource = () => {
-    setMode("image");
-    setError(null);
-
-    if (Platform.OS === "web") {
-      void chooseImageFromLibrary();
-      return;
-    }
-
-    Alert.alert("Anını fotoğrafla paylaş", "Yeni bir fotoğraf çekebilir veya galerinden seçebilirsin.", [
-      { text: "Kamerayı aç", onPress: () => void takePhoto() },
-      { text: "Galeriden seç", onPress: () => void chooseImageFromLibrary() },
-      { text: "Vazgeç", style: "cancel" }
-    ]);
+    if (selected) setMedia(selected);
   };
 
   const shareStory = async () => {
     if (!user) return;
-    if (mode === "text" && !body.trim()) {
-      setError("Metin anlığı boş olamaz.");
-      return;
-    }
-    if (mode === "image" && !image) {
-      setError("Bir fotoğraf seçmelisin.");
-      return;
-    }
-    if (!shareWithEveryone && !shareWithFollowers && selectedCommunityIds.length === 0) {
-      setError("Anlığı görecek en az bir hedef seçmelisin.");
+    if (!media && !caption.trim() && elements.length === 0) {
+      setError("Paylaşmak için en az bir medya, yazı veya etiket ekleyin.");
       return;
     }
 
-    setSharing(true);
+    setUploading(true);
+    setUploadProgress(10);
     setError(null);
 
-    const { data: storyId, error: storyError } = await api.rpc("create_story_with_audience", {
-      target_content_type: mode,
-      target_body: body.trim(),
-      target_is_public: shareWithEveryone,
-      target_share_with_followers: shareWithFollowers,
-      target_community_ids: selectedCommunityIds
-    });
-
-    if (storyError) {
-      setError(storyError.message);
-      setSharing(false);
-      return;
-    }
-
-    if (mode === "image" && image) {
-      try {
-        const uploaded = await uploadStoryImage({ userId: user.id, storyId, image });
-        const updateResult = await api.from("stories").update({ media_url: uploaded.storagePath }).eq("id", storyId);
-        if (updateResult.error) throw updateResult.error;
-      } catch (uploadError) {
-        await api.from("stories").delete().eq("id", storyId);
-        setError(uploadError instanceof Error ? uploadError.message : "Fotoğraf yüklenemedi.");
-        setSharing(false);
-        return;
+    try {
+      let mediaUrl: string | null = null;
+      if (media) {
+        const uploaded = await uploadStoryMedia({ userId: user.id, image: media });
+        mediaUrl = uploaded.storagePath;
+        setUploadProgress(60);
       }
+
+      const elementPayload = elements.map((el) => ({
+        type: el.type.toLowerCase(),
+        content: el.content,
+        position_x: el.x,
+        position_y: el.y,
+        scale: el.scale,
+        rotation: el.rotation,
+        color: el.color,
+        background_color: el.backgroundColor,
+        font_size: el.fontSize,
+        width: el.width,
+        height: el.height,
+        metadata: el.metadata
+      }));
+
+      const hashtagNames = elements
+        .filter((el) => el.type === "HASHTAG")
+        .map((el) => el.content.replace(/^#/, ""));
+
+      const payload: Record<string, any> = {
+        target_content_type: media ? "image" : "text",
+        target_body: caption.trim() || null,
+        target_media_url: mediaUrl,
+        target_is_public: shareWithEveryone,
+        target_share_with_followers: shareWithFollowers,
+        target_community_ids: selectedCommunityIds.filter((id) => id && id !== "null"),
+        target_event_id: selectedEventId,
+        target_location: selectedLocation,
+        target_hashtags: hashtagNames,
+        target_elements: elementPayload
+      };
+
+      const { error: rpcError } = await api.rpc("create_story_with_audience", payload);
+      if (rpcError) throw new Error(rpcError.message);
+
+      setUploadProgress(100);
+      if (typeof window !== "undefined" && (window as any).Swal) {
+        (window as any).Swal.fire({ icon: "success", title: "Story paylaşıldı", confirmButtonText: "Tamam" });
+      }
+      router.replace("/(tabs)/feed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Story paylaşılırken bir hata oluştu.");
+      setUploading(false);
     }
-
-    router.replace("/(tabs)/feed");
   };
 
-  const selectEveryone = () => {
-    setShareWithEveryone(true);
-    setError(null);
+  const confirmBack = () => {
+    if (!media && !caption && elements.length === 0) {
+      router.back();
+      return;
+    }
+    Alert.alert("Story'den çık?", "Yaptığın değişiklikler kaybolacak.", [
+      { text: "Kal", style: "cancel" },
+      { text: "Çık", style: "destructive", onPress: () => router.back() }
+    ]);
   };
 
-  const toggleFollowers = () => {
-    setShareWithEveryone(false);
-    setShareWithFollowers((current) => !current);
-    setError(null);
-  };
+  const selectedElement = useMemo(() => elements.find((el) => el.id === selectedId) ?? null, [elements, selectedId]);
 
-  const toggleCommunity = (communityId: string) => {
-    setShareWithEveryone(false);
-    setSelectedCommunityIds((current) => (
-      current.includes(communityId)
-        ? current.filter((id) => id !== communityId)
-        : [...current, communityId]
-    ));
-    setError(null);
+  return (
+    <View style={styles.root}>
+      <View style={styles.topBar}>
+        <Pressable accessibilityLabel="Geri" hitSlop={8} onPress={confirmBack} style={styles.iconButton}>
+          <Ionicons name="chevron-back" size={28} color={colors.ink} />
+        </Pressable>
+        <Text style={styles.topTitle}>Yeni Story</Text>
+        <Pressable
+          accessibilityLabel="Paylaş"
+          hitSlop={8}
+          disabled={uploading}
+          onPress={() => setActiveSheet("share")}
+          style={[styles.shareTopButton, uploading && styles.disabled]}
+        >
+          {uploading ? <ActivityIndicator size="small" color={colors.actionText} /> : <Text style={styles.shareTopText}>Paylaş</Text>}
+        </Pressable>
+      </View>
+
+      <View style={styles.canvasWrap}>
+        <View style={styles.canvas} onStartShouldSetResponder={() => { setSelectedId(null); return true; }}>
+          {!media ? (
+            <View style={styles.emptyCanvas}>
+              <Ionicons name="image-outline" size={48} color={colors.muted} />
+              <Text style={styles.emptyCanvasText}>Fotoğraf seç veya çek</Text>
+              <View style={styles.emptyActions}>
+                <Pressable style={styles.emptyAction} onPress={() => void pickMedia()}>
+                  <Ionicons name="images-outline" size={20} color={colors.actionText} />
+                  <Text style={styles.emptyActionText}>Galeri</Text>
+                </Pressable>
+                {Platform.OS !== "web" && (
+                  <Pressable style={styles.emptyAction} onPress={() => void capturePhoto()}>
+                    <Ionicons name="camera-outline" size={20} color={colors.actionText} />
+                    <Text style={styles.emptyActionText}>Kamera</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          ) : (
+            <Image source={{ uri: media.uri }} style={styles.canvasImage} resizeMode="cover" />
+          )}
+          {elements.map((el) => (
+            <DraggableElement
+              key={el.id}
+              element={el}
+              canvasWidth={CANVAS_WIDTH}
+              canvasHeight={CANVAS_HEIGHT}
+              selected={selectedId === el.id}
+              onSelect={() => setSelectedId(el.id)}
+              onChange={(patch) => updateElement(el.id, patch)}
+            />
+          ))}
+        </View>
+      </View>
+
+      {selectedElement ? (
+        <ElementToolbar
+          element={selectedElement}
+          onChange={(patch) => updateElement(selectedElement.id, patch)}
+          onDelete={() => removeElement(selectedElement.id)}
+        />
+      ) : (
+        <View style={styles.bottomToolbar}>
+          <ToolButton icon="text" label="Aa" onPress={() => setActiveSheet("text")} />
+          <ToolButton icon="pricetag" label="#" onPress={() => setActiveSheet("hashtag")} />
+          <ToolButton icon="location" label="Konum" onPress={() => setActiveSheet("location")} />
+          <ToolButton icon="people" label="Topluluk" onPress={() => setActiveSheet("community")} />
+          <ToolButton icon="ticket" label="Etkinlik" onPress={() => setActiveSheet("event")} />
+        </View>
+      )}
+
+      {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
+
+      {uploading && (
+        <View style={styles.progressOverlay}>
+          <ActivityIndicator color={colors.accent} />
+          <Text style={styles.progressText}>Story yükleniyor... %{uploadProgress}</Text>
+        </View>
+      )}
+
+      <TextEditorSheet
+        visible={activeSheet === "text"}
+        onClose={() => setActiveSheet(null)}
+        onSubmit={(text, style) => {
+          addElement({ type: "TEXT", content: text, ...style });
+          setActiveSheet(null);
+        }}
+      />
+
+      <HashtagPickerSheet
+        visible={activeSheet === "hashtag"}
+        query={hashtagQuery}
+        onQueryChange={setHashtagQuery}
+        hashtags={hashtags}
+        loading={loadingHashtags}
+        onClose={() => setActiveSheet(null)}
+        onSelect={(name) => {
+          addElement({ type: "HASHTAG", content: `#${name}`, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.4)", fontSize: 20 });
+          setActiveSheet(null);
+        }}
+      />
+
+      <LocationPickerSheet
+        visible={activeSheet === "location"}
+        presets={LOCATION_PRESETS}
+        onClose={() => setActiveSheet(null)}
+        onSelect={(loc) => {
+          setSelectedLocation(loc);
+          addElement({ type: "LOCATION", content: loc.name, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.5)", fontSize: 18, metadata: loc });
+          setActiveSheet(null);
+        }}
+      />
+
+      <CommunityPickerSheet
+        visible={activeSheet === "community"}
+        communities={communities}
+        selectedIds={selectedCommunityIds}
+        loading={loadingCommunities}
+        onClose={() => setActiveSheet(null)}
+        onToggle={(id, name) => {
+          setSelectedCommunityIds((current) =>
+            current.includes(id) ? current.filter((c) => c !== id) : [...current, id]
+          );
+          if (!elements.some((el) => el.type === "COMMUNITY" && el.metadata?.community_id === id)) {
+            addElement({ type: "COMMUNITY", content: `@${name}`, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.4)", fontSize: 18, metadata: { community_id: id } });
+          }
+        }}
+      />
+
+      <EventPickerSheet
+        visible={activeSheet === "event"}
+        events={events}
+        selectedId={selectedEventId}
+        loading={loadingEvents}
+        onClose={() => setActiveSheet(null)}
+        onSelect={(id, title) => {
+          setSelectedEventId(id);
+          if (!elements.some((el) => el.type === "EVENT" && el.metadata?.event_id === id)) {
+            addElement({ type: "EVENT", content: `🎫 ${title}`, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.5)", fontSize: 18, metadata: { event_id: id } });
+          }
+          setActiveSheet(null);
+        }}
+      />
+
+      <ShareSheet
+        visible={activeSheet === "share"}
+        onClose={() => setActiveSheet(null)}
+        onShare={() => void shareStory()}
+        sharing={uploading}
+        shareWithEveryone={shareWithEveryone}
+        shareWithFollowers={shareWithFollowers}
+        selectedCommunityIds={selectedCommunityIds}
+        communities={communities}
+        onToggleEveryone={() => setShareWithEveryone((v) => !v)}
+        onToggleFollowers={() => setShareWithFollowers((v) => !v)}
+        onToggleCommunity={(id) =>
+          setSelectedCommunityIds((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]))
+        }
+      />
+    </View>
+  );
+}
+
+function ToolButton({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityLabel={label} onPress={onPress} style={styles.toolButton}>
+      <Ionicons name={icon} size={22} color={colors.ink} />
+      <Text style={styles.toolLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function DraggableElement({
+  element,
+  canvasWidth,
+  canvasHeight,
+  selected,
+  onSelect,
+  onChange
+}: {
+  element: StoryElement;
+  canvasWidth: number;
+  canvasHeight: number;
+  selected: boolean;
+  onSelect: () => void;
+  onChange: (patch: Partial<StoryElement>) => void;
+}) {
+  const pan = useRef(new Animated.ValueXY({ x: element.x * canvasWidth, y: element.y * canvasHeight })).current;
+  useEffect(() => {
+    pan.setValue({ x: element.x * canvasWidth, y: element.y * canvasHeight });
+  }, [canvasWidth, canvasHeight]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        onSelect();
+        pan.setOffset({ x: (pan as any).__getValue().x, y: (pan as any).__getValue().y });
+        pan.setValue({ x: 0, y: 0 });
+      },
+      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+      onPanResponderRelease: (_evt: any, gestureState: any) => {
+        pan.flattenOffset();
+        const current = (pan as any).__getValue();
+        const nx = Math.max(0, Math.min(1, current.x / canvasWidth));
+        const ny = Math.max(0, Math.min(1, current.y / canvasHeight));
+        onChange({ x: nx, y: ny });
+      }
+    })
+  ).current;
+
+  const isText = element.type === "TEXT" || element.type === "HASHTAG" || element.type === "LOCATION" || element.type === "COMMUNITY" || element.type === "EVENT";
+  const containerStyle = {
+    position: "absolute" as const,
+    left: 0,
+    top: 0,
+    transform: [
+      { translateX: pan.x },
+      { translateY: pan.y },
+      { scale: element.scale },
+      { rotate: `${element.rotation}deg` }
+    ],
+    zIndex: selected ? 20 : 10,
+    backgroundColor: isText ? element.backgroundColor : "transparent",
+    paddingHorizontal: isText ? 10 : 0,
+    paddingVertical: isText ? 6 : 0,
+    borderRadius: isText ? 10 : 0,
+    borderWidth: selected ? 1 : 0,
+    borderColor: selected ? colors.accent : "transparent",
+    borderStyle: "dashed" as const
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
-      <Link href="/(tabs)/feed" asChild>
-        <Pressable style={styles.backButton}><Text style={styles.backText}>Keşfet'e dön</Text></Pressable>
-      </Link>
+    <Animated.View {...panResponder.panHandlers} style={containerStyle}>
+      {element.type === "LOCATION" ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Ionicons name="location" size={element.fontSize} color={element.color} />
+          <Text style={{ color: element.color, fontSize: element.fontSize, fontWeight: "800" }}>{element.content}</Text>
+        </View>
+      ) : element.type === "EVENT" ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Ionicons name="ticket" size={element.fontSize} color={element.color} />
+          <Text style={{ color: element.color, fontSize: element.fontSize, fontWeight: "800" }}>{element.content}</Text>
+        </View>
+      ) : (
+        <Text
+          style={{
+            color: element.color,
+            fontSize: element.fontSize,
+            fontWeight: element.type === "TEXT" ? "700" : "800",
+            textAlign: "center"
+          }}
+        >
+          {element.content}
+        </Text>
+      )}
+    </Animated.View>
+  );
+}
 
-      <View style={styles.hero}>
-        <Text style={styles.kicker}>YENİ ANLIK</Text>
-        <Text style={styles.title}>Şu anda dünyanda ne oluyor?</Text>
-        <Text style={styles.description}>Fotoğrafını veya kısa notunu paylaş. Anlığın 24 saat sonra otomatik kaybolur.</Text>
-      </View>
-
-      <View style={styles.modeRow}>
-        <Pressable style={[styles.modeButton, mode === "text" && styles.modeButtonActive]} onPress={() => setMode("text")}>
-          <Text style={[styles.modeText, mode === "text" && styles.modeTextActive]}>Yazı</Text>
+function ElementToolbar({
+  element,
+  onChange,
+  onDelete
+}: {
+  element: StoryElement;
+  onChange: (patch: Partial<StoryElement>) => void;
+  onDelete: () => void;
+}) {
+  return (
+    <View style={styles.elementToolbar}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.elementToolbarScroll}>
+        <Pressable style={styles.etoolButton} onPress={() => onChange({ scale: Math.max(0.5, element.scale - 0.15) })}>
+          <Ionicons name="remove-circle-outline" size={22} color={colors.ink} />
+          <Text style={styles.etoolLabel}>Küçült</Text>
         </Pressable>
-        <Pressable style={[styles.modeButton, mode === "image" && styles.modeButtonActive]} onPress={chooseImageSource}>
-          <Text style={[styles.modeText, mode === "image" && styles.modeTextActive]}>Fotoğraf</Text>
+        <Pressable style={styles.etoolButton} onPress={() => onChange({ scale: Math.min(3, element.scale + 0.15) })}>
+          <Ionicons name="add-circle-outline" size={22} color={colors.ink} />
+          <Text style={styles.etoolLabel}>Büyüt</Text>
         </Pressable>
-      </View>
-
-      <View style={[styles.preview, mode === "text" ? styles.textPreview : styles.imagePreview]}>
-        {mode === "image" && image ? (
-          <Image source={{ uri: image.uri }} style={styles.previewImage} resizeMode="cover" />
-        ) : mode === "image" ? (
-          <View style={styles.emptyImage}>
-            <Text style={styles.emptyImageTitle}>Anını fotoğrafla</Text>
-            <Text style={styles.emptyImageText}>Dikey veya kare fotoğraflar en iyi görünür.</Text>
-            <View style={styles.imageActionRow}>
-              {Platform.OS !== "web" ? (
-                <Pressable style={styles.imageActionButton} onPress={() => void takePhoto()}>
-                  <Text style={styles.imageActionText}>Kamerayı aç</Text>
-                </Pressable>
-              ) : null}
-              <Pressable style={styles.imageActionButton} onPress={() => void chooseImageFromLibrary()}>
-                <Text style={styles.imageActionText}>Galeriden seç</Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : (
-          <Text style={styles.previewText}>{body.trim() || "Anını birkaç kelimeyle anlat..."}</Text>
-        )}
-      </View>
-
-      <View style={styles.panel}>
-        <Text style={styles.label}>{mode === "image" ? "Fotoğrafa not ekle (isteğe bağlı)" : "Anlık yazın"}</Text>
-        <TextInput
-          value={body}
-          onChangeText={setBody}
-          placeholder="Bugün harika bir gün..."
-          placeholderTextColor={colors.muted}
-          multiline
-          maxLength={500}
-          style={styles.input}
-        />
-        <Text style={styles.counter}>{body.length}/500</Text>
-
-        <Text style={styles.label}>Kimlerle paylaşılsın?</Text>
-        <Text style={styles.audienceHint}>Herkesi seçebilir veya takipçilerinle birden fazla topluluğu birlikte işaretleyebilirsin.</Text>
-        {loadingCommunities ? <ActivityIndicator color={colors.accent} /> : (
-          <View style={styles.audienceOptions}>
-            <Pressable style={[styles.everyoneCard, shareWithEveryone && styles.everyoneCardActive]} onPress={selectEveryone}>
-              <View style={styles.audienceCopy}>
-                <Text style={[styles.everyoneTitle, shareWithEveryone && styles.communityTextActive]}>Herkes</Text>
-                <Text style={[styles.everyoneDescription, shareWithEveryone && styles.everyoneDescriptionActive]}>Takip eden veya etmeyen tüm Bialem üyeleri</Text>
-              </View>
-              <Text style={[styles.selectionMark, shareWithEveryone && styles.selectionMarkActive]}>{shareWithEveryone ? "✓" : "+"}</Text>
+        <Pressable style={styles.etoolButton} onPress={() => onChange({ rotation: element.rotation - 15 })}>
+          <Ionicons name="refresh-circle-outline" size={22} color={colors.ink} />
+          <Text style={styles.etoolLabel}>Sola</Text>
+        </Pressable>
+        <Pressable style={styles.etoolButton} onPress={() => onChange({ rotation: element.rotation + 15 })}>
+          <Ionicons name="refresh-circle" size={22} color={colors.ink} />
+          <Text style={styles.etoolLabel}>Sağa</Text>
+        </Pressable>
+        {element.type === "TEXT" && (
+          <>
+            <Pressable style={styles.etoolButton} onPress={() => onChange({ fontSize: Math.max(12, element.fontSize - 4) })}>
+              <Ionicons name="text-outline" size={18} color={colors.ink} />
+              <Text style={styles.etoolLabel}>-</Text>
             </Pressable>
-            <Text style={styles.orLabel}>VEYA HEDEFLERİ SEÇ</Text>
-            <View style={styles.communityRow}>
-              <Pressable style={[styles.communityChip, !shareWithEveryone && shareWithFollowers && styles.communityChipActive]} onPress={toggleFollowers}>
-                <Text style={[styles.communityText, !shareWithEveryone && shareWithFollowers && styles.communityTextActive]}>
-                  {!shareWithEveryone && shareWithFollowers ? "✓ " : ""}Takipçilerim
-                </Text>
+            <Pressable style={styles.etoolButton} onPress={() => onChange({ fontSize: Math.min(72, element.fontSize + 4) })}>
+              <Ionicons name="text" size={24} color={colors.ink} />
+              <Text style={styles.etoolLabel}>+</Text>
+            </Pressable>
+          </>
+        )}
+        <Pressable style={[styles.etoolButton, styles.etoolDelete]} onPress={onDelete}>
+          <Ionicons name="trash-outline" size={22} color={colors.danger} />
+          <Text style={[styles.etoolLabel, { color: colors.danger }]}>Sil</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+}
+
+function TextEditorSheet({
+  visible,
+  onClose,
+  onSubmit
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (text: string, style: Partial<StoryElement>) => void;
+}) {
+  const [text, setText] = useState("");
+  const [color, setColor] = useState("#FFFFFF");
+  const [bg, setBg] = useState("transparent");
+  const [size, setSize] = useState(28);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Yazı ekle</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Bir şeyler yaz..."
+            placeholderTextColor={colors.muted}
+            multiline
+            autoFocus
+            style={[styles.sheetInput, { color, fontSize: size }]}
+          />
+          <View style={styles.sheetRow}>
+            <Text style={styles.sheetLabel}>Renk</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {COLOR_PRESETS.map((c) => (
+                <Pressable key={c} onPress={() => setColor(c)} style={[styles.colorDot, { backgroundColor: c }, color === c && styles.colorDotActive]} />
+              ))}
+            </ScrollView>
+          </View>
+          <View style={styles.sheetRow}>
+            <Text style={styles.sheetLabel}>Arka plan</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {BG_PRESETS.map((b) => (
+                <Pressable key={b} onPress={() => setBg(b)} style={[styles.colorDot, { backgroundColor: b === "transparent" ? colors.border : b }, bg === b && styles.colorDotActive]} />
+              ))}
+            </ScrollView>
+          </View>
+          <View style={styles.sheetRow}>
+            <Text style={styles.sheetLabel}>Boyut</Text>
+            <Pressable style={styles.sizeButton} onPress={() => setSize((s) => Math.max(12, s - 4))}>
+              <Text style={styles.sizeButtonText}>-</Text>
+            </Pressable>
+            <Text style={styles.sizeValue}>{size}</Text>
+            <Pressable style={styles.sizeButton} onPress={() => setSize((s) => Math.min(72, s + 4))}>
+              <Text style={styles.sizeButtonText}>+</Text>
+            </Pressable>
+          </View>
+          <Pressable
+            style={[styles.sheetPrimary, (!text.trim()) && styles.disabled]}
+            disabled={!text.trim()}
+            onPress={() => {
+              onSubmit(text.trim(), { color, backgroundColor: bg, fontSize: size });
+              setText("");
+            }}
+          >
+            <Text style={styles.sheetPrimaryText}>Ekle</Text>
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function HashtagPickerSheet({
+  visible,
+  query,
+  onQueryChange,
+  hashtags,
+  loading,
+  onClose,
+  onSelect
+}: {
+  visible: boolean;
+  query: string;
+  onQueryChange: (q: string) => void;
+  hashtags: HashtagOption[];
+  loading: boolean;
+  onClose: () => void;
+  onSelect: (name: string) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Hashtag ekle</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          <View style={styles.sheetSearchRow}>
+            <Text style={styles.sheetHash}>#</Text>
+            <TextInput
+              value={query}
+              onChangeText={onQueryChange}
+              placeholder="hashtag ara"
+              placeholderTextColor={colors.muted}
+              autoFocus
+              style={styles.sheetSearchInput}
+            />
+          </View>
+          {loading ? <ActivityIndicator color={colors.accent} /> : (
+            <ScrollView style={{ maxHeight: 260 }}>
+              {hashtags.map((h) => (
+                <Pressable key={h.hashtag_id} style={styles.sheetRowItem} onPress={() => onSelect(h.normalized_name)}>
+                  <Text style={styles.sheetRowTitle}>{h.name}</Text>
+                  <Text style={styles.sheetRowMeta}>{h.usage_count} kullanım</Text>
+                </Pressable>
+              ))}
+              {query.trim() && !hashtags.some((h) => h.normalized_name === query.trim().toLowerCase()) && (
+                <Pressable style={styles.sheetRowItem} onPress={() => onSelect(query.trim().toLowerCase())}>
+                  <Text style={styles.sheetRowTitle}>#{query.trim()}</Text>
+                  <Text style={styles.sheetRowMeta}>Yeni oluştur</Text>
+                </Pressable>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function LocationPickerSheet({
+  visible,
+  presets,
+  onClose,
+  onSelect
+}: {
+  visible: boolean;
+  presets: typeof LOCATION_PRESETS;
+  onClose: () => void;
+  onSelect: (loc: (typeof LOCATION_PRESETS)[number]) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Konum ekle</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          <ScrollView style={{ maxHeight: 320 }}>
+            {presets.map((loc) => (
+              <Pressable key={loc.name} style={styles.sheetRowItem} onPress={() => onSelect(loc)}>
+                <Ionicons name="location" size={18} color={colors.accent} />
+                <Text style={styles.sheetRowTitle}>{loc.name}</Text>
               </Pressable>
-              {communities.map((item) => {
-                const selected = !shareWithEveryone && selectedCommunityIds.includes(item.community_id);
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function CommunityPickerSheet({
+  visible,
+  communities,
+  selectedIds,
+  loading,
+  onClose,
+  onToggle
+}: {
+  visible: boolean;
+  communities: CommunityOption[];
+  selectedIds: string[];
+  loading: boolean;
+  onClose: () => void;
+  onToggle: (id: string, name: string) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Topluluk etiketle</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          {loading ? <ActivityIndicator color={colors.accent} /> : (
+            <ScrollView style={{ maxHeight: 320 }}>
+              {communities.map((c, idx) => {
+                const id = c.community_id || (c.communities as { id?: string } | null)?.id;
+                if (!id) return null;
+                const selected = selectedIds.includes(id);
                 return (
-                  <Pressable key={item.community_id} style={[styles.communityChip, selected && styles.communityChipActive]} onPress={() => toggleCommunity(item.community_id)}>
-                    <Text style={[styles.communityText, selected && styles.communityTextActive]}>
-                      {selected ? "✓ " : ""}{item.communities?.name ?? "Topluluk"}
-                    </Text>
+                  <Pressable key={id || idx} style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]} onPress={() => onToggle(id, c.communities?.name ?? "Topluluk")}>
+                    <Text style={styles.sheetRowTitle}>{c.communities?.name ?? "Topluluk"}</Text>
+                    {selected && <Ionicons name="checkmark" size={20} color={colors.accent} />}
                   </Pressable>
                 );
               })}
-            </View>
-          </View>
-        )}
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable style={[styles.shareButton, sharing && styles.disabled]} onPress={() => void shareStory()} disabled={sharing}>
-          <Text style={styles.shareButtonText}>{sharing ? "Paylaşılıyor..." : "Anlığı paylaş"}</Text>
-        </Pressable>
+            </ScrollView>
+          )}
+        </View>
       </View>
-    </ScrollView>
+    </Modal>
+  );
+}
+
+function EventPickerSheet({
+  visible,
+  events,
+  selectedId,
+  loading,
+  onClose,
+  onSelect
+}: {
+  visible: boolean;
+  events: EventOption[];
+  selectedId: string | null;
+  loading: boolean;
+  onClose: () => void;
+  onSelect: (id: string, title: string) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Etkinlik etiketle</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          {loading ? <ActivityIndicator color={colors.accent} /> : (
+            <ScrollView style={{ maxHeight: 320 }}>
+              {events.map((e, idx) => {
+                const id = e.event_id || (e.events as { id?: string } | null)?.id;
+                if (!id) return null;
+                const selected = selectedId === id;
+                return (
+                  <Pressable key={id || idx} style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]} onPress={() => onSelect(id, e.events?.title ?? "Etkinlik")}>
+                    <Text style={styles.sheetRowTitle}>{e.events?.title ?? "Etkinlik"}</Text>
+                    {selected && <Ionicons name="checkmark" size={20} color={colors.accent} />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function ShareSheet({
+  visible,
+  onClose,
+  onShare,
+  sharing,
+  shareWithEveryone,
+  shareWithFollowers,
+  selectedCommunityIds,
+  communities,
+  onToggleEveryone,
+  onToggleFollowers,
+  onToggleCommunity
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onShare: () => void;
+  sharing: boolean;
+  shareWithEveryone: boolean;
+  shareWithFollowers: boolean;
+  selectedCommunityIds: string[];
+  communities: CommunityOption[];
+  onToggleEveryone: () => void;
+  onToggleFollowers: () => void;
+  onToggleCommunity: (id: string) => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.sheetOverlay}>
+        <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+        <View style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Paylaşım seçenekleri</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.ink} />
+            </Pressable>
+          </View>
+          <Pressable style={styles.sheetRowItem} onPress={onToggleEveryone}>
+            <Text style={styles.sheetRowTitle}>Herkes</Text>
+            {shareWithEveryone && <Ionicons name="checkmark" size={20} color={colors.accent} />}
+          </Pressable>
+          <Pressable style={styles.sheetRowItem} onPress={onToggleFollowers}>
+            <Text style={styles.sheetRowTitle}>Takipçilerim</Text>
+            {shareWithFollowers && <Ionicons name="checkmark" size={20} color={colors.accent} />}
+          </Pressable>
+          {communities.map((c) => {
+            const id = c.community_id || (c.communities as { id?: string } | null)?.id;
+            if (!id) return null;
+            return (
+              <Pressable key={id} style={styles.sheetRowItem} onPress={() => onToggleCommunity(id)}>
+                <Text style={styles.sheetRowTitle}>{c.communities?.name ?? "Topluluk"}</Text>
+                {selectedCommunityIds.includes(id) && <Ionicons name="checkmark" size={20} color={colors.accent} />}
+              </Pressable>
+            );
+          })}
+          <Pressable style={[styles.sheetPrimary, sharing && styles.disabled]} disabled={sharing} onPress={onShare}>
+            {sharing ? <ActivityIndicator size="small" color={colors.actionText} /> : <Text style={styles.sheetPrimaryText}>Story paylaş</Text>}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  page: { flexGrow: 1, padding: 16, gap: 14, backgroundColor: colors.page },
-  backButton: { alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  backText: { color: colors.ink, fontWeight: "800" },
-  hero: { gap: 8 },
-  kicker: { color: colors.accent, fontSize: 12, fontWeight: "900", letterSpacing: 1.4 },
-  title: { color: colors.ink, fontSize: 25, lineHeight: 31, fontWeight: "900" },
-  description: { color: colors.muted, fontSize: 15, lineHeight: 22 },
-  modeRow: { flexDirection: "row", padding: 5, gap: 5, borderRadius: 999, backgroundColor: colors.accentSoft },
-  modeButton: { flex: 1, paddingVertical: 11, borderRadius: 999 },
-  modeButtonActive: { backgroundColor: colors.surface },
-  modeText: { textAlign: "center", color: colors.muted, fontWeight: "800" },
-  modeTextActive: { color: colors.ink },
-  preview: { height: 330, borderRadius: 32, overflow: "hidden", borderWidth: 1, borderColor: colors.border },
-  textPreview: { alignItems: "center", justifyContent: "center", padding: 30, backgroundColor: colors.brandInk },
-  imagePreview: { backgroundColor: colors.surfaceStrong },
-  previewImage: { width: "100%", height: "100%" },
-  previewText: { color: colors.onBrand, fontSize: 28, lineHeight: 36, fontWeight: "900", textAlign: "center" },
-  emptyImage: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 7 },
-  emptyImageTitle: { color: colors.ink, fontSize: 19, fontWeight: "900" },
-  emptyImageText: { color: colors.muted, fontSize: 13, textAlign: "center" },
-  imageActionRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 9, marginTop: 8 },
-  imageActionButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.action },
-  imageActionText: { color: colors.actionText, fontSize: 13, fontWeight: "900" },
-  panel: { padding: 14, gap: 10, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  label: { color: colors.ink, fontSize: 14, fontWeight: "900", marginTop: 3 },
-  input: { minHeight: 92, padding: 13, borderRadius: 18, backgroundColor: colors.page, borderWidth: 1, borderColor: colors.border, color: colors.ink, fontSize: 15, textAlignVertical: "top" },
-  counter: { alignSelf: "flex-end", color: colors.muted, fontSize: 11 },
-  audienceHint: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  audienceOptions: { gap: 11 },
-  everyoneCard: { minHeight: 76, flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.page },
-  everyoneCardActive: { borderColor: colors.accent, backgroundColor: colors.accent },
-  audienceCopy: { flex: 1, gap: 3 },
-  everyoneTitle: { color: colors.ink, fontSize: 15, fontWeight: "900" },
-  everyoneDescription: { color: colors.muted, fontSize: 11, lineHeight: 16 },
-  everyoneDescriptionActive: { color: colors.onBrandMuted },
-  selectionMark: { width: 30, height: 30, overflow: "hidden", borderRadius: 15, color: colors.ink, backgroundColor: colors.surfaceStrong, textAlign: "center", textAlignVertical: "center", fontSize: 18, fontWeight: "900" },
-  selectionMarkActive: { color: colors.accent, backgroundColor: colors.onBrand },
-  orLabel: { color: colors.muted, fontSize: 9, fontWeight: "900", letterSpacing: 1.2 },
-  communityRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingVertical: 2 },
-  communityChip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.page },
-  communityChipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-  communityText: { color: colors.ink, fontSize: 13, fontWeight: "800" },
-  communityTextActive: { color: colors.onBrand },
-  error: { color: colors.danger, fontSize: 13, lineHeight: 19, fontWeight: "700" },
-  shareButton: { minHeight: 44, marginTop: 4, justifyContent: "center", paddingVertical: 10, borderRadius: 14, backgroundColor: colors.action },
-  shareButtonText: { color: colors.actionText, textAlign: "center", fontSize: 16, fontWeight: "900" },
-  disabled: { opacity: 0.55 }
+  root: { flex: 1, backgroundColor: colors.page },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8 },
+  iconButton: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: colors.surface },
+  topTitle: { fontSize: 17, fontWeight: "900", color: colors.ink },
+  shareTopButton: { minWidth: 72, height: 36, paddingHorizontal: 14, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: colors.action },
+  shareTopText: { color: colors.actionText, fontWeight: "900" },
+  disabled: { opacity: 0.5 },
+  canvasWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 8 },
+  canvas: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, borderRadius: 18, overflow: "hidden", backgroundColor: colors.surfaceStrong, position: "relative" },
+  canvasImage: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT },
+  emptyCanvas: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
+  emptyCanvasText: { color: colors.muted, fontSize: 15, fontWeight: "700" },
+  emptyActions: { flexDirection: "row", gap: 12 },
+  emptyAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.action },
+  emptyActionText: { color: colors.actionText, fontWeight: "900" },
+  bottomToolbar: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  toolButton: { alignItems: "center", gap: 4, padding: 8 },
+  toolLabel: { fontSize: 10, fontWeight: "800", color: colors.ink },
+  elementToolbar: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  elementToolbarScroll: { paddingHorizontal: 8, gap: 8, alignItems: "center" },
+  etoolButton: { alignItems: "center", gap: 3, paddingHorizontal: 12, paddingVertical: 6 },
+  etoolDelete: { marginLeft: 8 },
+  etoolLabel: { fontSize: 10, fontWeight: "800", color: colors.ink },
+  errorBanner: { marginHorizontal: 16, marginBottom: 8, padding: 10, borderRadius: 10, backgroundColor: colors.dangerSoft, color: colors.danger, fontWeight: "700", textAlign: "center" },
+  progressOverlay: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "rgba(0,0,0,0.55)" },
+  progressText: { color: "#fff", fontWeight: "900" },
+  sheetOverlay: { flex: 1, justifyContent: "flex-end" },
+  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.45)" },
+  sheetContent: { padding: 16, paddingBottom: 28, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.surface },
+  sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  sheetTitle: { fontSize: 18, fontWeight: "900", color: colors.ink },
+  sheetInput: { minHeight: 80, padding: 12, borderRadius: 16, backgroundColor: colors.page, borderWidth: 1, borderColor: colors.border, marginBottom: 12 },
+  sheetRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
+  sheetLabel: { width: 70, fontSize: 13, fontWeight: "900", color: colors.muted },
+  colorDot: { width: 28, height: 28, borderRadius: 14, marginRight: 8, borderWidth: 1, borderColor: colors.border },
+  colorDotActive: { borderWidth: 2, borderColor: colors.accent },
+  sizeButton: { width: 32, height: 32, alignItems: "center", justifyContent: "center", borderRadius: 8, backgroundColor: colors.page, borderWidth: 1, borderColor: colors.border },
+  sizeButtonText: { fontSize: 18, fontWeight: "900", color: colors.ink },
+  sizeValue: { width: 28, textAlign: "center", fontWeight: "900", color: colors.ink },
+  sheetPrimary: { marginTop: 4, height: 48, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: colors.action },
+  sheetPrimaryText: { color: colors.actionText, fontWeight: "900", fontSize: 16 },
+  sheetSearchRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.page, borderWidth: 1, borderColor: colors.border, marginBottom: 8 },
+  sheetHash: { fontSize: 20, fontWeight: "900", color: colors.accent },
+  sheetSearchInput: { flex: 1, fontSize: 16, color: colors.ink, fontWeight: "700" },
+  sheetRowItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sheetRowItemActive: { backgroundColor: colors.accentSoft },
+  sheetRowTitle: { fontSize: 15, fontWeight: "800", color: colors.ink },
+  sheetRowMeta: { fontSize: 12, color: colors.muted }
 });

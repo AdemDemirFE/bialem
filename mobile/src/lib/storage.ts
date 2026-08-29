@@ -106,6 +106,16 @@ export async function uploadStoryImage(params: { userId: string; storyId: string
   return { storagePath: data.publicUrl, bucketPath: path };
 }
 
+export async function uploadStoryMedia(params: { userId: string; image: PickedImage }) {
+  const extension = params.image.fileName.split(".").pop() || "jpg";
+  const path = `${params.userId}/story-${Date.now()}.${extension}`;
+  const fileData = params.image.bytes ?? (await uriToArrayBuffer(params.image.uri));
+  const { error: uploadError } = await api.storage.from("stories").upload(path, fileData, { contentType: params.image.mimeType });
+  if (uploadError) throw uploadError;
+  const { data } = api.storage.from("stories").getPublicUrl(path);
+  return { storagePath: data.publicUrl, bucketPath: path };
+}
+
 export async function removeStoryImage(publicUrl: string) {
   const marker = "/api/app/media/stories/";
   const path = publicUrl.split(marker)[1]?.split("?")[0];

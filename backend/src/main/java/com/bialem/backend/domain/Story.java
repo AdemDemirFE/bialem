@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -57,6 +58,16 @@ public class Story implements Serializable {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    @Size(max = 200)
+    @Column(name = "location_name", length = 200)
+    private String locationName;
+
+    @Column(name = "latitude", precision = 21, scale = 2)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 21, scale = 2)
+    private BigDecimal longitude;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "user", "preferences" }, allowSetters = true)
     private Profile author;
@@ -70,6 +81,37 @@ public class Story implements Serializable {
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @JsonIgnoreProperties(value = { "story", "community" }, allowSetters = true)
     private Set<StoryCommunityTarget> communityTargets = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @JsonIgnoreProperties(value = { "story", "hashtag" }, allowSetters = true)
+    private Set<StoryHashtag> storyHashtags = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @JsonIgnoreProperties(value = { "story" }, allowSetters = true)
+    private Set<StoryElement> storyElements = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(value = { "stories", "author", "community", "event" }, allowSetters = true)
+    private StoryGroup storyGroup;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties(
+        value = {
+            "community",
+            "category",
+            "createdBy",
+            "cancelledBy",
+            "participants",
+            "messages",
+            "ratings",
+            "posts",
+            "eventTickets",
+        },
+        allowSetters = true
+    )
+    private Event event;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -177,6 +219,45 @@ public class Story implements Serializable {
         this.expiresAt = expiresAt;
     }
 
+    public String getLocationName() {
+        return this.locationName;
+    }
+
+    public Story locationName(String locationName) {
+        this.setLocationName(locationName);
+        return this;
+    }
+
+    public void setLocationName(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public BigDecimal getLatitude() {
+        return this.latitude;
+    }
+
+    public Story latitude(BigDecimal latitude) {
+        this.setLatitude(latitude);
+        return this;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return this.longitude;
+    }
+
+    public Story longitude(BigDecimal longitude) {
+        this.setLongitude(longitude);
+        return this;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
     public Profile getAuthor() {
         return this.author;
     }
@@ -252,6 +333,94 @@ public class Story implements Serializable {
         return this;
     }
 
+    public Set<StoryHashtag> getStoryHashtags() {
+        return this.storyHashtags;
+    }
+
+    public void setStoryHashtags(Set<StoryHashtag> storyHashtags) {
+        if (this.storyHashtags != null) {
+            this.storyHashtags.forEach(i -> i.setStory(null));
+        }
+        if (storyHashtags != null) {
+            storyHashtags.forEach(i -> i.setStory(this));
+        }
+        this.storyHashtags = storyHashtags;
+    }
+
+    public Story storyHashtags(Set<StoryHashtag> storyHashtags) {
+        this.setStoryHashtags(storyHashtags);
+        return this;
+    }
+
+    public Story addStoryHashtags(StoryHashtag storyHashtag) {
+        this.storyHashtags.add(storyHashtag);
+        storyHashtag.setStory(this);
+        return this;
+    }
+
+    public Story removeStoryHashtags(StoryHashtag storyHashtag) {
+        this.storyHashtags.remove(storyHashtag);
+        storyHashtag.setStory(null);
+        return this;
+    }
+
+    public Set<StoryElement> getStoryElements() {
+        return this.storyElements;
+    }
+
+    public void setStoryElements(Set<StoryElement> storyElements) {
+        if (this.storyElements != null) {
+            this.storyElements.forEach(i -> i.setStory(null));
+        }
+        if (storyElements != null) {
+            storyElements.forEach(i -> i.setStory(this));
+        }
+        this.storyElements = storyElements;
+    }
+
+    public Story storyElements(Set<StoryElement> storyElements) {
+        this.setStoryElements(storyElements);
+        return this;
+    }
+
+    public Story addStoryElements(StoryElement storyElement) {
+        this.storyElements.add(storyElement);
+        storyElement.setStory(this);
+        return this;
+    }
+
+    public Story removeStoryElements(StoryElement storyElement) {
+        this.storyElements.remove(storyElement);
+        storyElement.setStory(null);
+        return this;
+    }
+
+    public StoryGroup getStoryGroup() {
+        return this.storyGroup;
+    }
+
+    public void setStoryGroup(StoryGroup storyGroup) {
+        this.storyGroup = storyGroup;
+    }
+
+    public Story storyGroup(StoryGroup storyGroup) {
+        this.setStoryGroup(storyGroup);
+        return this;
+    }
+
+    public Event getEvent() {
+        return this.event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
+
+    public Story event(Event event) {
+        this.setEvent(event);
+        return this;
+    }
+
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
 
     @Override
@@ -283,6 +452,7 @@ public class Story implements Serializable {
             ", shareWithFollowers='" + getShareWithFollowers() + "'" +
             ", createdAt='" + getCreatedAt() + "'" +
             ", expiresAt='" + getExpiresAt() + "'" +
+            ", locationName='" + getLocationName() + "'" +
             "}";
     }
 }
