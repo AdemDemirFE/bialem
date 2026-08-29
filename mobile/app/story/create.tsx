@@ -29,10 +29,12 @@ import {
   uploadStoryMedia
 } from "../../src/lib/storage";
 import { colors } from "../../src/theme/colors";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN = Dimensions.get("window");
-const CANVAS_WIDTH = Math.min(SCREEN.width - 32, 420);
-const CANVAS_HEIGHT = (CANVAS_WIDTH * 16) / 9;
+const CANVAS_MAX_WIDTH = Math.min(SCREEN.width - 32, 420);
+const TOP_BAR_HEIGHT = 56;
+const BOTTOM_TOOLBAR_HEIGHT = 72;
 
 const LOCATION_PRESETS = [
   { name: "Ankara", latitude: 39.9334, longitude: 32.8597 },
@@ -70,6 +72,10 @@ type HashtagOption = { hashtag_id: string; name: string; normalized_name: string
 export default function CreateStoryScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+  const canvasWidth = Math.min(SCREEN.width - 32, CANVAS_MAX_WIDTH);
+  const maxCanvasHeight = SCREEN.height - insets.top - insets.bottom - TOP_BAR_HEIGHT - BOTTOM_TOOLBAR_HEIGHT - 24;
+  const canvasHeight = Math.min(maxCanvasHeight, (canvasWidth * 16) / 9);
 
   const [media, setMedia] = useState<PickedImage | null>(null);
   const [elements, setElements] = useState<StoryElement[]>([]);
@@ -256,7 +262,7 @@ export default function CreateStoryScreen() {
   const selectedElement = useMemo(() => elements.find((el) => el.id === selectedId) ?? null, [elements, selectedId]);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingBottom: insets.bottom }]}>
       <View style={styles.topBar}>
         <Pressable accessibilityLabel="Geri" hitSlop={8} onPress={confirmBack} style={styles.iconButton}>
           <Ionicons name="chevron-back" size={28} color={colors.ink} />
@@ -274,7 +280,7 @@ export default function CreateStoryScreen() {
       </View>
 
       <View style={styles.canvasWrap}>
-        <View style={styles.canvas} onStartShouldSetResponder={() => { setSelectedId(null); return true; }}>
+        <View style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]} onStartShouldSetResponder={() => { setSelectedId(null); return true; }}>
           {!media ? (
             <View style={styles.emptyCanvas}>
               <Ionicons name="image-outline" size={48} color={colors.muted} />
@@ -293,14 +299,14 @@ export default function CreateStoryScreen() {
               </View>
             </View>
           ) : (
-            <Image source={{ uri: media.uri }} style={styles.canvasImage} resizeMode="cover" />
+            <Image source={{ uri: media.uri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
           )}
           {elements.map((el) => (
             <DraggableElement
               key={el.id}
               element={el}
-              canvasWidth={CANVAS_WIDTH}
-              canvasHeight={CANVAS_HEIGHT}
+              canvasWidth={canvasWidth}
+              canvasHeight={canvasHeight}
               selected={selectedId === el.id}
               onSelect={() => setSelectedId(el.id)}
               onChange={(patch) => updateElement(el.id, patch)}
@@ -310,13 +316,15 @@ export default function CreateStoryScreen() {
       </View>
 
       {selectedElement ? (
-        <ElementToolbar
-          element={selectedElement}
-          onChange={(patch) => updateElement(selectedElement.id, patch)}
-          onDelete={() => removeElement(selectedElement.id)}
-        />
+        <View style={{ paddingBottom: Math.max(8, insets.bottom) }}>
+          <ElementToolbar
+            element={selectedElement}
+            onChange={(patch) => updateElement(selectedElement.id, patch)}
+            onDelete={() => removeElement(selectedElement.id)}
+          />
+        </View>
       ) : (
-        <View style={styles.bottomToolbar}>
+        <View style={[styles.bottomToolbar, { paddingBottom: Math.max(10, insets.bottom) }]}>
           <ToolButton icon="text" label="Aa" onPress={() => setActiveSheet("text")} />
           <ToolButton icon="pricetag" label="#" onPress={() => setActiveSheet("hashtag")} />
           <ToolButton icon="location" label="Konum" onPress={() => setActiveSheet("location")} />
@@ -895,25 +903,24 @@ function ShareSheet({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.page },
+  root: { flex: 1, backgroundColor: colors.page, paddingBottom: 0 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8 },
   iconButton: { width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: colors.surface },
   topTitle: { fontSize: 17, fontWeight: "900", color: colors.ink },
   shareTopButton: { minWidth: 72, height: 36, paddingHorizontal: 14, alignItems: "center", justifyContent: "center", borderRadius: 999, backgroundColor: colors.action },
   shareTopText: { color: colors.actionText, fontWeight: "900" },
   disabled: { opacity: 0.5 },
-  canvasWrap: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 8 },
-  canvas: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, borderRadius: 18, overflow: "hidden", backgroundColor: colors.surfaceStrong, position: "relative" },
-  canvasImage: { width: CANVAS_WIDTH, height: CANVAS_HEIGHT },
+  canvasWrap: { flex: 1, alignItems: "center", justifyContent: "center" },
+  canvas: { borderRadius: 18, overflow: "hidden", backgroundColor: colors.surfaceStrong, position: "relative" },
   emptyCanvas: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24 },
   emptyCanvasText: { color: colors.muted, fontSize: 15, fontWeight: "700" },
   emptyActions: { flexDirection: "row", gap: 12 },
   emptyAction: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, backgroundColor: colors.action },
   emptyActionText: { color: colors.actionText, fontWeight: "900" },
-  bottomToolbar: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  bottomToolbar: { flexDirection: "row", justifyContent: "space-around", alignItems: "center", paddingVertical: 10, paddingHorizontal: 8, paddingBottom: 10, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
   toolButton: { alignItems: "center", gap: 4, padding: 8 },
   toolLabel: { fontSize: 10, fontWeight: "800", color: colors.ink },
-  elementToolbar: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
+  elementToolbar: { paddingVertical: 8, paddingBottom: 8, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface },
   elementToolbarScroll: { paddingHorizontal: 8, gap: 8, alignItems: "center" },
   etoolButton: { alignItems: "center", gap: 3, paddingHorizontal: 12, paddingVertical: 6 },
   etoolDelete: { marginLeft: 8 },
