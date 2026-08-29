@@ -16,4 +16,5 @@ public enum StoreOrderStatus {
     RETURN_REQUESTED,
     RETURNED,
     REFUNDED,
+    PARTIALLY_REFUNDED,
 }

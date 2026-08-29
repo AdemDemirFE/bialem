@@ -66,6 +66,9 @@ import StoreScreen from "../app/store/index";
 import StoreCartScreen from "../app/store/cart";
 import StoreCheckoutScreen from "../app/store/checkout";
 import StorePaymentScreen from "../app/store/payment";
+import PaymentSuccessScreen from "../app/payment/success";
+import PaymentFailureScreen from "../app/payment/failure";
+import PaymentPendingScreen from "../app/payment/pending";
 import StoreAddressesScreen from "../app/store/addresses";
 import StoreOrdersScreen from "../app/store/orders";
 import StoreOrderDetailScreen from "../app/store/orders/[id]";
@@ -192,6 +195,9 @@ export function App() {
               <Route path="/store/cart" element={<StoreCartScreen />} />
               <Route path="/store/checkout" element={<StoreCheckoutScreen />} />
               <Route path="/store/payment" element={<StorePaymentScreen />} />
+              <Route path="/payment/success" element={<PaymentSuccessScreen />} />
+              <Route path="/payment/failure" element={<PaymentFailureScreen />} />
+              <Route path="/payment/pending" element={<PaymentPendingScreen />} />
               <Route path="/store/addresses" element={<StoreAddressesScreen />} />
               <Route path="/cart" element={<CartScreen />} />
               <Route path="/store/orders" element={<StoreOrdersScreen />} />

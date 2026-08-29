@@ -1,0 +1,14 @@
+package com.bialem.backend.store.repository;
+
+import com.bialem.backend.store.domain.StorePaymentRefund;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface StorePaymentRefundRepository extends JpaRepository<StorePaymentRefund, Long> {
+    Optional<StorePaymentRefund> findByRefundReference(String refundReference);
+
+    List<StorePaymentRefund> findByPaymentId(Long paymentId);
+}

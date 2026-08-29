@@ -1,5 +1,6 @@
 package com.bialem.backend.store.service.dto;
 
+import com.bialem.backend.store.domain.enumeration.StorePaymentMethod;
 import com.bialem.backend.store.domain.enumeration.StorePaymentProviderType;
 import com.bialem.backend.store.domain.enumeration.StorePaymentStatus;
 import java.io.Serializable;
@@ -14,7 +15,7 @@ public class StorePaymentDTO implements Serializable {
     private BigDecimal amount;
     private String currency;
     private StorePaymentStatus status;
-    private String paymentMethod;
+    private StorePaymentMethod paymentMethod;
     private Instant paidAt;
     private String failureReason;
     private Instant createdAt;
@@ -67,11 +68,11 @@ public class StorePaymentDTO implements Serializable {
         this.status = status;
     }
 
-    public String getPaymentMethod() {
+    public StorePaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(StorePaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 

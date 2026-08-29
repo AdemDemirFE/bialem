@@ -180,6 +180,29 @@ export type StoreOrderStatusHistory = {
   createdAt: string;
 };
 
+export type StorePaymentInitiateResponse = {
+  orderNumber: string;
+  paymentStatus: string;
+  redirectUrl?: string;
+  htmlContent?: string;
+  transactionReference?: string;
+  message?: string;
+};
+
+export type StoreBankTransfer = {
+  id: number;
+  referenceCode: string;
+  amount: number;
+  currency?: string;
+  iban?: string;
+  accountHolder?: string;
+  bankName?: string;
+  receiptUrl?: string;
+  status: string;
+  adminNote?: string;
+  createdAt: string;
+};
+
 export type StoreOrder = {
   id: number;
   orderNumber: string;
@@ -274,6 +297,14 @@ export const storeApi = {
   checkoutSummary: () => api.rest.get<StoreCartSummary>("/api/store/checkout/summary"),
   checkout: (body: { shippingAddressId: number; billingAddressId?: number; couponCode?: string; customerNote?: string; paymentProvider: string; idempotencyKey: string }) =>
     api.rest.post<StoreOrder>("/api/store/checkout", body),
+
+  paymentOrder: (orderNumber: string) => api.rest.get<StoreOrder>(`/api/store/payments/order/${orderNumber}`),
+  initiatePayment: (body: { orderNumber: string; paymentMethod: string; cardHolderName?: string; cardNumber?: string; expireMonth?: string; expireYear?: string; cvc?: string; idempotencyKey: string }) =>
+    api.rest.post<StorePaymentInitiateResponse>("/api/store/payments/initiate", body),
+  paymentCallback: (orderNumber: string, params: Record<string, string>) =>
+    api.rest.post<StoreOrder>(`/api/store/payments/callback/${orderNumber}${buildQuery(params)}`, {}),
+  createBankTransfer: (body: { orderNumber: string; receiptUrl: string }) =>
+    api.rest.post<StoreBankTransfer>("/api/store/payments/bank-transfer", body),
 
   orders: (status?: string, page = 0, size = 20) => api.rest.get<PageResponse<StoreOrder>>(`/api/store/orders${buildQuery({ status, page, size })}`),
   order: (id: number) => api.rest.get<StoreOrder>(`/api/store/orders/${id}`),

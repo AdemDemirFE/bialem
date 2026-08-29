@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260830000000-1" author="bialem">
+        <addColumn tableName="store_payment">
+            <column name="refunded_amount" type="decimal(21,2)" defaultValueNumeric="0"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260830000000-2" author="bialem">
+        <modifyDataType tableName="store_payment" columnName="payment_method" newDataType="varchar(80)"/>
+    </changeSet>
+
+    <changeSet id="20260830000000-3" author="bialem">
+        <createTable tableName="store_payment_transaction">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="transaction_reference" type="varchar(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)" defaultValue="TRY"/>
+            <column name="provider_request" type="varchar(4000)"/>
+            <column name="provider_response" type="text"/>
+            <column name="failure_reason" type="varchar(1000)"/>
+            <column name="processed_at" type="${datetimeType}"/>
+            <column name="payment_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="store_payment_transaction" baseColumnNames="payment_id" constraintName="fk_store_payment_transaction__payment" referencedTableName="store_payment" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260830000000-4" author="bialem">
+        <createTable tableName="store_payment_refund">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="refund_reference" type="varchar(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="varchar(1000)"/>
+            <column name="provider_reference" type="varchar(255)"/>
+            <column name="provider_response" type="text"/>
+            <column name="payment_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="approved_by" type="bigint"/>
+            <column name="approved_at" type="${datetimeType}"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="store_payment_refund" baseColumnNames="payment_id" constraintName="fk_store_payment_refund__payment" referencedTableName="store_payment" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_payment_refund" baseColumnNames="approved_by" constraintName="fk_store_payment_refund__approved_by" referencedTableName="profile" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260830000000-5" author="bialem">
+        <createTable tableName="store_bank_transfer">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="reference_code" type="varchar(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)" defaultValue="TRY"/>
+            <column name="iban" type="varchar(64)"/>
+            <column name="account_holder" type="varchar(255)"/>
+            <column name="bank_name" type="varchar(255)"/>
+            <column name="receipt_url" type="varchar(2048)"/>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="admin_note" type="varchar(1000)"/>
+            <column name="order_id" type="bigint">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="approved_by" type="bigint"/>
+            <column name="approved_at" type="${datetimeType}"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="store_bank_transfer" baseColumnNames="order_id" constraintName="fk_store_bank_transfer__order" referencedTableName="store_order" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_bank_transfer" baseColumnNames="approved_by" constraintName="fk_store_bank_transfer__approved_by" referencedTableName="profile" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260830000000-6" author="bialem">
+        <createTable tableName="store_payment_webhook">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="provider" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_reference" type="varchar(255)"/>
+            <column name="payload" type="text"/>
+            <column name="signature" type="varchar(1000)"/>
+            <column name="signature_valid" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processing_error" type="varchar(1000)"/>
+            <column name="payment_id" type="bigint"/>
+            <column name="received_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="processed_at" type="${datetimeType}"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="store_payment_webhook" baseColumnNames="payment_id" constraintName="fk_store_payment_webhook__payment" referencedTableName="store_payment" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260830000000-7" author="bialem">
+        <createSequence sequenceName="store_payment_transaction_seq" startValue="1" incrementBy="1"/>
+        <createSequence sequenceName="store_payment_refund_seq" startValue="1" incrementBy="1"/>
+        <createSequence sequenceName="store_bank_transfer_seq" startValue="1" incrementBy="1"/>
+        <createSequence sequenceName="store_payment_webhook_seq" startValue="1" incrementBy="1"/>
+    </changeSet>
+
+</databaseChangeLog>

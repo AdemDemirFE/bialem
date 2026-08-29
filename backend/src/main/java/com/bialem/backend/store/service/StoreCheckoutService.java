@@ -174,11 +174,6 @@ public class StoreCheckoutService {
 
         addStatusHistory(order, null, StoreOrderStatus.PENDING_PAYMENT, "Sipariş oluşturuldu, ödeme bekleniyor");
 
-        // Simulate immediate payment success for abstraction demo; in production integrate provider SDK/webhook.
-        if (processPayment(payment, order)) {
-            fulfillOrder(order, payment);
-        }
-
         return mapper.toOrderDetailDTO(order);
     }
 

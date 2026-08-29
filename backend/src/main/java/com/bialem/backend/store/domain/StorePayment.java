@@ -1,5 +1,6 @@
 package com.bialem.backend.store.domain;
 
+import com.bialem.backend.store.domain.enumeration.StorePaymentMethod;
 import com.bialem.backend.store.domain.enumeration.StorePaymentProviderType;
 import com.bialem.backend.store.domain.enumeration.StorePaymentStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -8,6 +9,8 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
@@ -31,6 +34,10 @@ public class StorePayment implements Serializable {
     @Column(name = "provider", nullable = false)
     private StorePaymentProviderType provider;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", length = 80)
+    private StorePaymentMethod paymentMethod;
+
     @Size(max = 255)
     @Column(name = "transaction_id", length = 255)
     private String transactionId;
@@ -38,6 +45,9 @@ public class StorePayment implements Serializable {
     @NotNull
     @Column(name = "amount", nullable = false, precision = 21, scale = 2)
     private BigDecimal amount;
+
+    @Column(name = "refunded_amount", precision = 21, scale = 2)
+    private BigDecimal refundedAmount = BigDecimal.ZERO;
 
     @NotNull
     @Size(max = 8)
@@ -48,10 +58,6 @@ public class StorePayment implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private StorePaymentStatus status = StorePaymentStatus.PENDING;
-
-    @Size(max = 80)
-    @Column(name = "payment_method", length = 80)
-    private String paymentMethod;
 
     @Column(name = "paid_at")
     private Instant paidAt;
@@ -77,6 +83,18 @@ public class StorePayment implements Serializable {
     @JsonIgnoreProperties(value = { "items", "statusHistory", "payment", "shipping" }, allowSetters = true)
     private StoreOrder order;
 
+    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "payment" }, allowSetters = true)
+    private List<StorePaymentTransaction> transactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "payment" }, allowSetters = true)
+    private List<StorePaymentRefund> refunds = new ArrayList<>();
+
+    @OneToMany(mappedBy = "payment", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties(value = { "payment" }, allowSetters = true)
+    private List<StorePaymentWebhook> webhooks = new ArrayList<>();
+
     @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -100,6 +118,14 @@ public class StorePayment implements Serializable {
         this.provider = provider;
     }
 
+    public StorePaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(StorePaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
     public String getTransactionId() {
         return transactionId;
     }
@@ -116,6 +142,14 @@ public class StorePayment implements Serializable {
         this.amount = amount;
     }
 
+    public BigDecimal getRefundedAmount() {
+        return refundedAmount;
+    }
+
+    public void setRefundedAmount(BigDecimal refundedAmount) {
+        this.refundedAmount = refundedAmount;
+    }
+
     public String getCurrency() {
         return currency;
     }
@@ -130,14 +164,6 @@ public class StorePayment implements Serializable {
 
     public void setStatus(StorePaymentStatus status) {
         this.status = status;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
     }
 
     public Instant getPaidAt() {
@@ -186,6 +212,30 @@ public class StorePayment implements Serializable {
 
     public void setOrder(StoreOrder order) {
         this.order = order;
+    }
+
+    public List<StorePaymentTransaction> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<StorePaymentTransaction> transactions) {
+        this.transactions = transactions;
+    }
+
+    public List<StorePaymentRefund> getRefunds() {
+        return refunds;
+    }
+
+    public void setRefunds(List<StorePaymentRefund> refunds) {
+        this.refunds = refunds;
+    }
+
+    public List<StorePaymentWebhook> getWebhooks() {
+        return webhooks;
+    }
+
+    public void setWebhooks(List<StorePaymentWebhook> webhooks) {
+        this.webhooks = webhooks;
     }
 
     public Instant getCreatedAt() {

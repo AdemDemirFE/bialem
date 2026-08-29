@@ -15,6 +15,7 @@ export default function CheckoutScreen() {
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -91,11 +92,27 @@ export default function CheckoutScreen() {
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <Pressable
-          disabled={!selectedAddress || !cart || cart.items.length === 0}
-          style={[s.payBtn, (!selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
-          onPress={() => router.push(`/store/payment?addressId=${selectedAddress}&note=${encodeURIComponent(note)}` as never)}
+          disabled={creating || !selectedAddress || !cart || cart.items.length === 0}
+          style={[s.payBtn, (creating || !selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
+          onPress={async () => {
+            if (!selectedAddress) return;
+            setCreating(true);
+            try {
+              const order = await storeApi.checkout({
+                shippingAddressId: selectedAddress,
+                customerNote: note || undefined,
+                paymentProvider: "MOCK",
+                idempotencyKey: `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              });
+              router.push(`/store/payment?orderNumber=${order.orderNumber}&addressId=${selectedAddress}&note=${encodeURIComponent(note)}` as never);
+            } catch (e) {
+              showAppError(e instanceof Error ? e.message : "Sipariş oluşturulamadı");
+            } finally {
+              setCreating(false);
+            }
+          }}
         >
-          <Text style={s.payBtnText}>Ödemeye Geç</Text>
+          <Text style={s.payBtnText}>{creating ? "Oluşturuluyor..." : "Ödemeye Geç"}</Text>
         </Pressable>
       </View>
     </View>

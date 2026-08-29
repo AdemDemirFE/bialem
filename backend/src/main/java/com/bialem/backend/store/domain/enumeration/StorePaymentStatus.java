@@ -5,6 +5,7 @@ public enum StorePaymentStatus {
     PROCESSING,
     SUCCESS,
     FAILED,
-    REFUNDED,
     CANCELLED,
+    REFUNDED,
+    PARTIALLY_REFUNDED,
 }
