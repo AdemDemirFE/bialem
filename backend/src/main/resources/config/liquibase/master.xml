@@ -111,4 +111,5 @@
     <include file="config/liquibase/changelog/20260829160000_store_module_recreate_schema.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829140000_store_module.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829150000_store_module_missing_columns.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829170000_store_seed_data.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

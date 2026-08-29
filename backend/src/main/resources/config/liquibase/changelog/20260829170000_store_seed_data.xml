@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Store modulu ornek/seed verileri.
+        Sadece store_product tablosu bos oldugunda calisir; zaten veri varsa
+        tekrar eklemez.
+        Varsayilan olarak sadece dev ortaminda calisir; production'da calismasi
+        istenirse context kismi kaldırilabilir.
+    -->
+
+    <changeSet id="20260829170000-1" author="bialem" context="dev">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM store_product</sqlCheck>
+        </preConditions>
+        <sqlFile
+            path="config/liquibase/seed/store_seed.sql"
+            relativeToChangelogFile="false"
+            splitStatements="true"
+            stripComments="true"/>
+    </changeSet>
+
+</databaseChangeLog>
