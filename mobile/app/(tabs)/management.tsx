@@ -36,6 +36,7 @@ export default function ManagementScreen() {
       <Menu href="/management/roles" icon="key-outline" title="Roller ve Yetkiler" subtitle="Platform rollerini görüntüleyin" />
       <Menu href="/management/moderation" icon="shield-checkmark-outline" title="Moderasyon" subtitle="Rapor ve içerik yönetimi" />
       <Menu href="/management/data" icon="analytics-outline" title="Veriler" subtitle="Platform istatistikleri" />
+      <Menu href="/management/store" icon="storefront-outline" title="Mağaza" subtitle="Ürün, sipariş, kargo ve müşteri yönetimi" />
     </View>
   </ScrollView>;
 }

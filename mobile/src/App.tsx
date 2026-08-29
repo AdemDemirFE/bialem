@@ -25,6 +25,14 @@ import ManagementNotificationDetailScreen from "../app/management/notifications/
 import ManagementRolesScreen from "../app/management/roles";
 import ManagementModerationScreen from "../app/management/moderation";
 import ManagementDataScreen from "../app/management/data";
+import StoreManagementScreen from "../app/management/store";
+import StoreManagementProductsScreen from "../app/management/store/products";
+import StoreManagementCategoriesScreen from "../app/management/store/categories";
+import StoreManagementBrandsScreen from "../app/management/store/brands";
+import StoreManagementOrdersScreen from "../app/management/store/orders";
+import StoreManagementShipmentsScreen from "../app/management/store/shipments";
+import StoreManagementAddressesScreen from "../app/management/store/addresses";
+import StoreManagementReviewsScreen from "../app/management/store/reviews";
 import HomeScreen from "../app/index";
 import AccountScreen from "../app/account";
 import SettingsScreen from "../app/settings";
@@ -145,6 +153,14 @@ export function App() {
               <Route path="/management/roles" element={<ManagementRolesScreen />} />
               <Route path="/management/moderation" element={<ManagementModerationScreen />} />
               <Route path="/management/data" element={<ManagementDataScreen />} />
+              <Route path="/management/store" element={<StoreManagementScreen />} />
+              <Route path="/management/store/products" element={<StoreManagementProductsScreen />} />
+              <Route path="/management/store/categories" element={<StoreManagementCategoriesScreen />} />
+              <Route path="/management/store/brands" element={<StoreManagementBrandsScreen />} />
+              <Route path="/management/store/orders" element={<StoreManagementOrdersScreen />} />
+              <Route path="/management/store/shipments" element={<StoreManagementShipmentsScreen />} />
+              <Route path="/management/store/addresses" element={<StoreManagementAddressesScreen />} />
+              <Route path="/management/store/reviews" element={<StoreManagementReviewsScreen />} />
               <Route path="/my-plans" element={<MyPlansScreen />} />
               <Route path="/city-radar" element={<CityRadarScreen />} />
               <Route path="/city-event/:id" element={<CityEventScreen />} />
