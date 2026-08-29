@@ -108,4 +108,5 @@
     <include file="config/liquibase/changelog/20260829120600_added_entity_Ticket.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829120601_added_entity_constraints_Ticket.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829130000_story_system_revamp.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829140000_store_module.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

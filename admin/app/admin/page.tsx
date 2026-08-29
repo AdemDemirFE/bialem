@@ -465,6 +465,7 @@ export default async function AdminHomePage() {
             style={{
               display: "inline-block",
               marginTop: 16,
+              marginRight: 10,
               padding: "12px 18px",
               borderRadius: 999,
               background: "#7b35ff",
@@ -474,6 +475,21 @@ export default async function AdminHomePage() {
             }}
           >
             Bialem Avantaj yönetimi
+          </Link>
+          <Link
+            href="/admin/store"
+            style={{
+              display: "inline-block",
+              marginTop: 16,
+              padding: "12px 18px",
+              borderRadius: 999,
+              background: "#0ea5e9",
+              color: "#fff",
+              textDecoration: "none",
+              fontWeight: 800
+            }}
+          >
+            Mağaza yönetimi
           </Link>
         </div>
       </section>

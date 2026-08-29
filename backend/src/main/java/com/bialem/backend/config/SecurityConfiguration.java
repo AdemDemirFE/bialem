@@ -58,6 +58,7 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/swagger-ui/**")).permitAll()
                     .requestMatchers(mvc.pattern("/api/admin/communities/*/members"), mvc.pattern("/api/admin/communities/*/members/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/admin/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
+                    .requestMatchers(mvc.pattern("/api/store/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/app/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/push-device-tokens/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account")).authenticated()

@@ -93,6 +93,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="store"
+        options={{
+          title: "Mağaza",
+          tabBarLabel: "Mağaza",
+          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "bag" : "bag-outline"} focused={focused} color={color} size={size} />
+        }}
+      />
+      <Tabs.Screen
         name="communities"
         options={{
           title: "Topluluklar",

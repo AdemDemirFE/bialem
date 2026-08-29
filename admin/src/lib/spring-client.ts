@@ -204,6 +204,23 @@ export function createSpringClient(options: SpringClientOptions) {
   }
 
   return {
+    rest: {
+      async get<T>(path: string): Promise<T> {
+        return request<T>(path, { method: "GET" });
+      },
+      async post<T>(path: string, json: unknown): Promise<T> {
+        return request<T>(path, { method: "POST", json });
+      },
+      async put<T>(path: string, json: unknown): Promise<T> {
+        return request<T>(path, { method: "PUT", json });
+      },
+      async patch<T>(path: string, json: unknown): Promise<T> {
+        return request<T>(path, { method: "PATCH", json });
+      },
+      async delete<T>(path: string): Promise<T> {
+        return request<T>(path, { method: "DELETE" });
+      }
+    },
     from(table: string) {
       return new QueryBuilder(table);
     },

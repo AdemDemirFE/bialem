@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260829140000-1" author="bialem">
+        <createTable tableName="store_category">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="varchar(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="varchar(2000)"/>
+            <column name="image_url" type="varchar(2048)"/>
+            <column name="sort_order" type="int" defaultValueNumeric="0"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+            <column name="created_by" type="varchar(80)"/>
+            <column name="updated_by" type="varchar(80)"/>
+            <column name="deleted_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_category" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_category" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_category" columnName="deleted_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-2" author="bialem">
+        <createTable tableName="store_brand">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="varchar(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="varchar(2000)"/>
+            <column name="logo_url" type="varchar(2048)"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+            <column name="created_by" type="varchar(80)"/>
+            <column name="updated_by" type="varchar(80)"/>
+            <column name="deleted_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_brand" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_brand" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_brand" columnName="deleted_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-3" author="bialem">
+        <createTable tableName="store_product">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slug" type="varchar(300)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="short_description" type="varchar(500)"/>
+            <column name="description" type="text"/>
+            <column name="sku" type="varchar(120)">
+                <constraints unique="true"/>
+            </column>
+            <column name="barcode" type="varchar(120)"/>
+            <column name="price" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discounted_price" type="decimal(21,2)"/>
+            <column name="currency" type="varchar(8)" defaultValue="TRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stock_quantity" type="int" defaultValueNumeric="0"/>
+            <column name="low_stock_threshold" type="int" defaultValueNumeric="5"/>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_featured" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight" type="decimal(10,3)"/>
+            <column name="width" type="decimal(10,2)"/>
+            <column name="height" type="decimal(10,2)"/>
+            <column name="length" type="decimal(10,2)"/>
+            <column name="rating_average" type="decimal(3,2)" defaultValueNumeric="0"/>
+            <column name="review_count" type="int" defaultValueNumeric="0"/>
+            <column name="sales_count" type="int" defaultValueNumeric="0"/>
+            <column name="category_id" type="bigint"/>
+            <column name="brand_id" type="bigint"/>
+            <column name="seller_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+            <column name="created_by" type="varchar(80)"/>
+            <column name="updated_by" type="varchar(80)"/>
+            <column name="deleted_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_product" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_product" columnName="updated_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_product" columnName="deleted_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-4" author="bialem">
+        <createTable tableName="store_product_image">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="image_url" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="thumbnail_url" type="varchar(2048)"/>
+            <column name="sort_order" type="int" defaultValueNumeric="0"/>
+            <column name="is_primary" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alt_text" type="varchar(300)"/>
+            <column name="product_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_product_image" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_product_image" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-5" author="bialem">
+        <createTable tableName="store_product_variant">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="variant_name" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sku" type="varchar(120)">
+                <constraints unique="true"/>
+            </column>
+            <column name="price" type="decimal(21,2)"/>
+            <column name="discounted_price" type="decimal(21,2)"/>
+            <column name="stock_quantity" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="varchar(2048)"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_product_variant" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_product_variant" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-6" author="bialem">
+        <createTable tableName="store_product_attribute">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="attribute_key" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attribute_value" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="int" defaultValueNumeric="0"/>
+            <column name="product_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_product_attribute" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_product_attribute" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-7" author="bialem">
+        <createTable tableName="store_cart_item">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="quantity" type="int" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount_amount" type="decimal(21,2)" defaultValueNumeric="0"/>
+            <column name="user_id" type="bigint"/>
+            <column name="product_id" type="bigint"/>
+            <column name="variant_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_cart_item" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_cart_item" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-8" author="bialem">
+        <createTable tableName="store_address">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="varchar(30)"/>
+            <column name="country" type="varchar(100)" defaultValue="Türkiye"/>
+            <column name="city" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="district" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="neighborhood" type="varchar(100)"/>
+            <column name="address_line" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="postal_code" type="varchar(20)"/>
+            <column name="note" type="varchar(1000)"/>
+            <column name="is_default" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_address" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_address" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-9" author="bialem">
+        <createTable tableName="store_coupon">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="varchar(80)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="discount_type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount_value" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="minimum_cart_amount" type="decimal(21,2)"/>
+            <column name="maximum_discount" type="decimal(21,2)"/>
+            <column name="start_date" type="${datetimeType}"/>
+            <column name="end_date" type="${datetimeType}"/>
+            <column name="usage_limit" type="int"/>
+            <column name="per_user_limit" type="int"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usage_count" type="int" defaultValueNumeric="0"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_coupon" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_coupon" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-10" author="bialem">
+        <createTable tableName="store_order">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_number" type="varchar(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="user_id" type="bigint"/>
+            <column name="shipping_address_snapshot" type="text"/>
+            <column name="billing_address_snapshot" type="text"/>
+            <column name="subtotal" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount_amount" type="decimal(21,2)" defaultValueNumeric="0"/>
+            <column name="shipping_amount" type="decimal(21,2)" defaultValueNumeric="0"/>
+            <column name="total_amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)" defaultValue="TRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shipping_status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_note" type="varchar(2000)"/>
+            <column name="coupon_code" type="varchar(120)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_order" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_order" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-11" author="bialem">
+        <createTable tableName="store_order_item">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="bigint"/>
+            <column name="product_id" type="bigint"/>
+            <column name="product_name_snapshot" type="varchar(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_sku_snapshot" type="varchar(120)"/>
+            <column name="product_image_snapshot" type="varchar(2048)"/>
+            <column name="quantity" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount" type="decimal(21,2)" defaultValueNumeric="0"/>
+            <column name="total_price" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variant_snapshot" type="varchar(1000)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="store_order_item" columnName="created_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-12" author="bialem">
+        <createTable tableName="store_order_status_history">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="bigint"/>
+            <column name="old_status" type="varchar(255)"/>
+            <column name="new_status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="varchar(80)"/>
+            <column name="note" type="varchar(2000)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="store_order_status_history" columnName="created_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-13" author="bialem">
+        <createTable tableName="store_payment">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="bigint"/>
+            <column name="provider" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_id" type="varchar(255)"/>
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)" defaultValue="TRY">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_method" type="varchar(80)"/>
+            <column name="paid_at" type="${datetimeType}"/>
+            <column name="failure_reason" type="varchar(1000)"/>
+            <column name="provider_response" type="varchar(4000)"/>
+            <column name="idempotency_key" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="callback_payload" type="text"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_payment" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_payment" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-14" author="bialem">
+        <createTable tableName="store_shipping">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="bigint"/>
+            <column name="carrier" type="varchar(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tracking_number" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shipping_status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shipped_at" type="${datetimeType}"/>
+            <column name="estimated_delivery_date" type="date"/>
+            <column name="delivered_at" type="${datetimeType}"/>
+            <column name="carrier_response" type="varchar(2000)"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_shipping" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_shipping" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-15" author="bialem">
+        <createTable tableName="store_review">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="bigint"/>
+            <column name="user_id" type="bigint"/>
+            <column name="order_id" type="bigint"/>
+            <column name="order_item_id" type="bigint"/>
+            <column name="rating" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(200)"/>
+            <column name="comment" type="varchar(2000)"/>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="helpful_count" type="int" defaultValueNumeric="0"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="${datetimeType}"/>
+        </createTable>
+        <dropDefaultValue tableName="store_review" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="store_review" columnName="updated_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-16" author="bialem">
+        <createTable tableName="store_review_image">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="review_id" type="bigint"/>
+            <column name="image_url" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="thumbnail_url" type="varchar(2048)"/>
+            <column name="sort_order" type="int" defaultValueNumeric="0"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="store_review_image" columnName="created_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260829140000-17" author="bialem">
+        <createTable tableName="store_wishlist">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint"/>
+            <column name="product_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="store_wishlist" columnName="created_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <!-- Foreign keys -->
+    <changeSet id="20260829140000-18" author="bialem">
+        <addForeignKeyConstraint baseTableName="store_category" baseColumnNames="parent_id" constraintName="fk_store_category_parent" referencedTableName="store_category" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product" baseColumnNames="category_id" constraintName="fk_store_product_category" referencedTableName="store_category" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product" baseColumnNames="brand_id" constraintName="fk_store_product_brand" referencedTableName="store_brand" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product" baseColumnNames="seller_id" constraintName="fk_store_product_seller" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product_image" baseColumnNames="product_id" constraintName="fk_store_product_image_product" referencedTableName="store_product" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product_variant" baseColumnNames="product_id" constraintName="fk_store_product_variant_product" referencedTableName="store_product" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_product_attribute" baseColumnNames="product_id" constraintName="fk_store_product_attribute_product" referencedTableName="store_product" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_cart_item" baseColumnNames="user_id" constraintName="fk_store_cart_item_user" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_cart_item" baseColumnNames="product_id" constraintName="fk_store_cart_item_product" referencedTableName="store_product" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_cart_item" baseColumnNames="variant_id" constraintName="fk_store_cart_item_variant" referencedTableName="store_product_variant" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_address" baseColumnNames="user_id" constraintName="fk_store_address_user" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_order" baseColumnNames="user_id" constraintName="fk_store_order_user" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_order_item" baseColumnNames="order_id" constraintName="fk_store_order_item_order" referencedTableName="store_order" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_order_status_history" baseColumnNames="order_id" constraintName="fk_store_order_status_history_order" referencedTableName="store_order" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_payment" baseColumnNames="order_id" constraintName="fk_store_payment_order" referencedTableName="store_order" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_shipping" baseColumnNames="order_id" constraintName="fk_store_shipping_order" referencedTableName="store_order" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_review" baseColumnNames="product_id" constraintName="fk_store_review_product" referencedTableName="store_product" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_review" baseColumnNames="user_id" constraintName="fk_store_review_user" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_review_image" baseColumnNames="review_id" constraintName="fk_store_review_image_review" referencedTableName="store_review" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_wishlist" baseColumnNames="user_id" constraintName="fk_store_wishlist_user" referencedTableName="profile" referencedColumnNames="id"/>
+        <addForeignKeyConstraint baseTableName="store_wishlist" baseColumnNames="product_id" constraintName="fk_store_wishlist_product" referencedTableName="store_product" referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Indexes -->
+    <changeSet id="20260829140000-19" author="bialem">
+        <createIndex tableName="store_product" indexName="idx_store_product_slug">
+            <column name="slug"/>
+        </createIndex>
+        <createIndex tableName="store_product" indexName="idx_store_product_category">
+            <column name="category_id"/>
+        </createIndex>
+        <createIndex tableName="store_product" indexName="idx_store_product_brand">
+            <column name="brand_id"/>
+        </createIndex>
+        <createIndex tableName="store_product" indexName="idx_store_product_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="store_product" indexName="idx_store_product_sku">
+            <column name="sku"/>
+        </createIndex>
+        <createIndex tableName="store_order" indexName="idx_store_order_number">
+            <column name="order_number"/>
+        </createIndex>
+        <createIndex tableName="store_order" indexName="idx_store_order_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="store_order" indexName="idx_store_order_status">
+            <column name="order_status"/>
+        </createIndex>
+        <createIndex tableName="store_order" indexName="idx_store_order_payment_status">
+            <column name="payment_status"/>
+        </createIndex>
+        <createIndex tableName="store_order" indexName="idx_store_order_created_at">
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="store_review" indexName="idx_store_review_product">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex tableName="store_review" indexName="idx_store_review_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="store_review" indexName="idx_store_review_rating">
+            <column name="rating"/>
+        </createIndex>
+        <createIndex tableName="store_address" indexName="idx_store_address_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="store_shipping" indexName="idx_store_shipping_order">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex tableName="store_shipping" indexName="idx_store_shipping_tracking">
+            <column name="tracking_number"/>
+        </createIndex>
+        <createIndex tableName="store_cart_item" indexName="idx_store_cart_item_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="store_category" indexName="idx_store_category_slug">
+            <column name="slug"/>
+        </createIndex>
+        <createIndex tableName="store_category" indexName="idx_store_category_parent">
+            <column name="parent_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Authority seed for store admin -->
+    <changeSet id="20260829140000-20" author="bialem">
+        <sql splitStatements="true">
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_STORE_MANAGER' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_STORE_MANAGER');
+            INSERT INTO jhi_authority(name) SELECT 'ROLE_STORE_ADMIN' WHERE NOT EXISTS (SELECT 1 FROM jhi_authority WHERE name='ROLE_STORE_ADMIN');
+        </sql>
+    </changeSet>
+
+    <!-- Store notification templates -->
+    <changeSet id="20260829140000-21" author="bialem">
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_CREATED"/>
+            <column name="event_type" value="STORE_ORDER_CREATED"/>
+            <column name="name" value="Yeni Mağaza Siparişi"/>
+            <column name="title_template" value="Siparişiniz alındı"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz oluşturuldu. Toplam: {{totalAmount}} {{currency}}"/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_PAYMENT_SUCCESS"/>
+            <column name="event_type" value="STORE_PAYMENT_SUCCESS"/>
+            <column name="name" value="Ödeme Başarılı"/>
+            <column name="title_template" value="Ödemeniz başarılı"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişinizin ödemesi alındı."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_PAYMENT_FAILED"/>
+            <column name="event_type" value="STORE_PAYMENT_FAILED"/>
+            <column name="name" value="Ödeme Başarısız"/>
+            <column name="title_template" value="Ödemeniz başarısız"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişinizin ödemesi tamamlanamadı."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="HIGH"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_APPROVED"/>
+            <column name="event_type" value="STORE_ORDER_APPROVED"/>
+            <column name="name" value="Sipariş Onaylandı"/>
+            <column name="title_template" value="Siparişiniz onaylandı"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz onaylandı ve hazırlanıyor."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_PREPARING"/>
+            <column name="event_type" value="STORE_ORDER_PREPARING"/>
+            <column name="name" value="Sipariş Hazırlanıyor"/>
+            <column name="title_template" value="Siparişiniz hazırlanıyor"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz hazırlanıyor."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_SHIPPED"/>
+            <column name="event_type" value="STORE_ORDER_SHIPPED"/>
+            <column name="name" value="Sipariş Kargoda"/>
+            <column name="title_template" value="Siparişiniz kargoya verildi"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz {{carrier}} kargoya verildi. Takip no: {{trackingNumber}}"/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_IN_TRANSIT"/>
+            <column name="event_type" value="STORE_ORDER_IN_TRANSIT"/>
+            <column name="name" value="Sipariş Yolda"/>
+            <column name="title_template" value="Siparişiniz yolda"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz teslimat adresine doğru yola çıktı."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_OUT_FOR_DELIVERY"/>
+            <column name="event_type" value="STORE_ORDER_OUT_FOR_DELIVERY"/>
+            <column name="name" value="Sipariş Dağıtımda"/>
+            <column name="title_template" value="Siparişiniz dağıtımda"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz bugün teslim edilecek."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="HIGH"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_DELIVERED"/>
+            <column name="event_type" value="STORE_ORDER_DELIVERED"/>
+            <column name="name" value="Sipariş Teslim Edildi"/>
+            <column name="title_template" value="Siparişiniz teslim edildi"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz teslim edildi. İyi günlerde kullanın!"/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="NORMAL"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+        <insert tableName="notification_template">
+            <column name="id" valueComputed="nextval('sequence_generator')"/>
+            <column name="code" value="STORE_ORDER_CANCELLED"/>
+            <column name="event_type" value="STORE_ORDER_CANCELLED"/>
+            <column name="name" value="Sipariş İptal"/>
+            <column name="title_template" value="Siparişiniz iptal edildi"/>
+            <column name="body_template" value="{{orderNumber}} numaralı siparişiniz iptal edildi."/>
+            <column name="route_template" value="/store/orders/{{orderId}}"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="in_app_enabled" valueBoolean="true"/>
+            <column name="push_enabled" valueBoolean="true"/>
+            <column name="priority" value="HIGH"/>
+            <column name="schedule_type" value="IMMEDIATE"/>
+            <column name="created_at" valueDate="${now}"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

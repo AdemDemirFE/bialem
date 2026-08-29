@@ -3,6 +3,7 @@ package com.bialem.backend.service;
 import com.bialem.backend.domain.*;
 import com.bialem.backend.domain.enumeration.*;
 import com.bialem.backend.security.SecurityUtils;
+import com.bialem.backend.store.domain.*;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -68,6 +69,23 @@ public class AppSupport {
         TABLES.put("ai_usage_logs", AiUsageLog.class);
         TABLES.put("roles", Role.class);
         TABLES.put("user_roles", UserRole.class);
+        TABLES.put("store_category", StoreCategory.class);
+        TABLES.put("store_brand", StoreBrand.class);
+        TABLES.put("store_product", StoreProduct.class);
+        TABLES.put("store_product_image", StoreProductImage.class);
+        TABLES.put("store_product_variant", StoreProductVariant.class);
+        TABLES.put("store_product_attribute", StoreProductAttribute.class);
+        TABLES.put("store_cart_item", StoreCartItem.class);
+        TABLES.put("store_address", StoreAddress.class);
+        TABLES.put("store_coupon", StoreCoupon.class);
+        TABLES.put("store_order", StoreOrder.class);
+        TABLES.put("store_order_item", StoreOrderItem.class);
+        TABLES.put("store_order_status_history", StoreOrderStatusHistory.class);
+        TABLES.put("store_payment", StorePayment.class);
+        TABLES.put("store_shipping", StoreShipping.class);
+        TABLES.put("store_review", StoreReview.class);
+        TABLES.put("store_review_image", StoreReviewImage.class);
+        TABLES.put("store_wishlist", StoreWishlist.class);
     }
 
     @PersistenceContext
