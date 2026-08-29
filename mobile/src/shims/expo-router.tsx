@@ -165,7 +165,8 @@ Stack.Screen = function StackScreen({ options }: { options?: Record<string, unkn
     }
     navigate(resolveBackFallback(location.pathname), { replace: true });
   };
-  return <AppHeader title={String(options.title)} onBack={showBack ? goBack : undefined} />;
+  const action = typeof options?.headerRight === "function" ? (options.headerRight as () => ReactNode)() : (options?.headerRight as ReactNode);
+  return <AppHeader title={String(options.title)} onBack={showBack ? goBack : undefined} action={action} />;
 };
 
 function resolveBackFallback(pathname: string) {

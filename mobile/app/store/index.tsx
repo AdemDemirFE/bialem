@@ -83,11 +83,18 @@ export default function StoreScreen() {
           title: "Mağaza",
           headerShown: true,
           headerRight: () => (
-            <Link href="/store/cart" asChild>
-              <Pressable style={s.cartBtn}>
-                <Ionicons name="cart-outline" size={24} color={colors.ink} />
-              </Pressable>
-            </Link>
+            <View style={s.headerActions}>
+              <Link href="/store/orders" asChild>
+                <Pressable style={s.headerBtn}>
+                  <Ionicons name="cube-outline" size={22} color={colors.ink} />
+                </Pressable>
+              </Link>
+              <Link href="/store/cart" asChild>
+                <Pressable style={s.headerBtn}>
+                  <Ionicons name="cart-outline" size={24} color={colors.ink} />
+                </Pressable>
+              </Link>
+            </View>
           ),
         }}
       />
@@ -198,7 +205,8 @@ const s = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   searchInput: { flex: 1, color: colors.ink, fontSize: 14 },
-  cartBtn: { padding: 8 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 4 },
+  headerBtn: { padding: 8 },
   categoryRow: { gap: 10, paddingRight: 16 },
   categoryChip: {
     width: 86,

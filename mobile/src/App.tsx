@@ -65,6 +65,7 @@ import AdvantageRedeemScreen from "../app/advantages/redeem";
 import StoreScreen from "../app/store/index";
 import StoreCartScreen from "../app/store/cart";
 import StoreCheckoutScreen from "../app/store/checkout";
+import StorePaymentScreen from "../app/store/payment";
 import StoreAddressesScreen from "../app/store/addresses";
 import StoreOrdersScreen from "../app/store/orders";
 import StoreOrderDetailScreen from "../app/store/orders/[id]";
@@ -133,7 +134,6 @@ export function App() {
               <Route element={<TabsLayout />}>
                 <Route path="/feed" element={<FeedScreen />} />
                 <Route path="/store" element={<StoreScreen />} />
-                <Route path="/cart" element={<CartScreen />} />
                 <Route path="/communities" element={<CommunitiesScreen />} />
                 <Route path="/calendar" element={<CalendarScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
@@ -191,7 +191,9 @@ export function App() {
               <Route path="/advantages/:id" element={<AdvantageDetailScreen />} />
               <Route path="/store/cart" element={<StoreCartScreen />} />
               <Route path="/store/checkout" element={<StoreCheckoutScreen />} />
+              <Route path="/store/payment" element={<StorePaymentScreen />} />
               <Route path="/store/addresses" element={<StoreAddressesScreen />} />
+              <Route path="/cart" element={<CartScreen />} />
               <Route path="/store/orders" element={<StoreOrdersScreen />} />
               <Route path="/store/orders/:id" element={<StoreOrderDetailScreen />} />
               <Route path="/store/product/:slug" element={<StoreProductScreen />} />

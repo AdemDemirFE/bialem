@@ -3,7 +3,7 @@ import { useRouter, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { showAppAlert, showAppConfirm, showAppError } from "../../src/components/AppAlert";
+import { showAppError } from "../../src/components/AppAlert";
 import { storeApi, type StoreAddress, type StoreCartSummary } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
 
@@ -15,7 +15,6 @@ export default function CheckoutScreen() {
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -34,40 +33,6 @@ export default function CheckoutScreen() {
     };
     void load();
   }, []);
-
-  const pay = async () => {
-    if (!selectedAddress) {
-      showAppError("Lütfen teslimat adresi seçin");
-      return;
-    }
-    if (!cart || cart.items.length === 0) {
-      showAppError("Sepetiniz boş");
-      return;
-    }
-    const ok = await showAppConfirm({ title: "Ödeme onayı", text: `${formatPrice(cart.totalAmount)} tutarında ödeme yapmak istiyor musunuz?` });
-    if (!ok) return;
-    setProcessing(true);
-    try {
-      const order = await storeApi.checkout({
-        shippingAddressId: selectedAddress,
-        customerNote: note || undefined,
-        paymentProvider: "IYZICO",
-        idempotencyKey: `checkout-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      });
-      showAppAlert({
-        title: "Siparişiniz oluşturuldu!",
-        text: `Sipariş No: ${order.orderNumber}\nToplam: ${formatPrice(order.totalAmount)}`,
-        icon: "success",
-        confirmText: "Siparişlerim",
-      }).then(() => {
-        router.replace(`/store/orders/${order.id}` as never);
-      });
-    } catch (e) {
-      showAppError(e instanceof Error ? e.message : "Ödeme başarısız");
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -126,11 +91,11 @@ export default function CheckoutScreen() {
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <Pressable
-          disabled={processing || !selectedAddress || !cart || cart.items.length === 0}
-          style={[s.payBtn, (processing || !selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
-          onPress={pay}
+          disabled={!selectedAddress || !cart || cart.items.length === 0}
+          style={[s.payBtn, (!selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
+          onPress={() => router.push(`/store/payment?addressId=${selectedAddress}&note=${encodeURIComponent(note)}` as never)}
         >
-          <Text style={s.payBtnText}>{processing ? "İşleniyor..." : `Öde ${formatPrice(cart?.totalAmount || 0)}`}</Text>
+          <Text style={s.payBtnText}>Ödemeye Geç</Text>
         </Pressable>
       </View>
     </View>

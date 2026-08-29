@@ -8,14 +8,22 @@ import { colors } from "../../../src/theme/colors";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Bekliyor",
+  PENDING_PAYMENT: "Ödeme Bekliyor",
+  PAID: "Ödendi",
   WAITING_APPROVAL: "Onay Bekliyor",
+  WAITING_ADMIN_APPROVAL: "Yönetici Onayı Bekliyor",
   APPROVED: "Onaylandı",
   PREPARING: "Hazırlanıyor",
   READY_FOR_SHIPPING: "Kargoya Hazır",
   SHIPPED: "Kargoda",
+  IN_TRANSIT: "Yolda",
+  OUT_FOR_DELIVERY: "Dağıtımda",
   DELIVERED: "Teslim Edildi",
   CANCELLED: "İptal",
-  REFUNDED: "İade",
+  REFUNDED: "İade Edildi",
+  RETURN_REQUESTED: "İade Talebi",
+  RETURNED: "İade Edildi",
+  PAYMENT_FAILED: "Ödeme Başarısız",
 };
 
 export default function StoreOrdersManagementScreen() {
