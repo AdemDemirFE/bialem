@@ -7,11 +7,12 @@ import com.bialem.backend.service.dto.CommunityDTO;
 import com.bialem.backend.service.dto.CommunityMemberDTO;
 import com.bialem.backend.service.dto.ProfileDTO;
 import org.mapstruct.*;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for the entity {@link CommunityMember} and its DTO {@link CommunityMemberDTO}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CommunityMemberMapper extends EntityMapper<CommunityMemberDTO, CommunityMember> {
     @Mapping(target = "community", source = "community", qualifiedByName = "communityId")
     @Mapping(target = "user", source = "user", qualifiedByName = "profileId")

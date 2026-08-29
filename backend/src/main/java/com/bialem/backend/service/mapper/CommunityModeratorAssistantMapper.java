@@ -7,11 +7,12 @@ import com.bialem.backend.service.dto.CommunityDTO;
 import com.bialem.backend.service.dto.CommunityModeratorAssistantDTO;
 import com.bialem.backend.service.dto.ProfileDTO;
 import org.mapstruct.*;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for the entity {@link CommunityModeratorAssistant} and its DTO {@link CommunityModeratorAssistantDTO}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CommunityModeratorAssistantMapper extends EntityMapper<CommunityModeratorAssistantDTO, CommunityModeratorAssistant> {
     @Mapping(target = "community", source = "community", qualifiedByName = "communityId")
     @Mapping(target = "user", source = "user", qualifiedByName = "profileId")

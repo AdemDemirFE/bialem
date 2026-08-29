@@ -5,11 +5,12 @@ import com.bialem.backend.domain.Report;
 import com.bialem.backend.service.dto.ProfileDTO;
 import com.bialem.backend.service.dto.ReportDTO;
 import org.mapstruct.*;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for the entity {@link Report} and its DTO {@link ReportDTO}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ReportMapper extends EntityMapper<ReportDTO, Report> {
     @Mapping(target = "reporter", source = "reporter", qualifiedByName = "profileId")
     @Mapping(target = "resolvedBy", source = "resolvedBy", qualifiedByName = "profileId")

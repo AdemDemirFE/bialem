@@ -7,11 +7,12 @@ import com.bialem.backend.service.dto.HonorBadgeDTO;
 import com.bialem.backend.service.dto.ProfileDTO;
 import com.bialem.backend.service.dto.UserHonorBadgeDTO;
 import org.mapstruct.*;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for the entity {@link UserHonorBadge} and its DTO {@link UserHonorBadgeDTO}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserHonorBadgeMapper extends EntityMapper<UserHonorBadgeDTO, UserHonorBadge> {
     @Mapping(target = "user", source = "user", qualifiedByName = "profileId")
     @Mapping(target = "badge", source = "badge", qualifiedByName = "honorBadgeId")

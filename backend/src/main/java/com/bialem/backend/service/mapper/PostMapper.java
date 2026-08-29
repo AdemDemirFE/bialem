@@ -9,11 +9,12 @@ import com.bialem.backend.service.dto.EventDTO;
 import com.bialem.backend.service.dto.PostDTO;
 import com.bialem.backend.service.dto.ProfileDTO;
 import org.mapstruct.*;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Mapper for the entity {@link Post} and its DTO {@link PostDTO}.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper extends EntityMapper<PostDTO, Post> {
     @Mapping(target = "community", source = "community", qualifiedByName = "communityId")
     @Mapping(target = "event", source = "event", qualifiedByName = "eventId")
