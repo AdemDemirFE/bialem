@@ -53,6 +53,15 @@ import OrganizerRequestScreen from "../app/organizer-request";
 import AdvantagesScreen from "../app/advantages/index";
 import AdvantageDetailScreen from "../app/advantages/[id]";
 import AdvantageRedeemScreen from "../app/advantages/redeem";
+import StoreScreen from "../app/store/index";
+import StoreCartScreen from "../app/store/cart";
+import StoreCheckoutScreen from "../app/store/checkout";
+import StoreAddressesScreen from "../app/store/addresses";
+import StoreOrdersScreen from "../app/store/orders";
+import StoreOrderDetailScreen from "../app/store/orders/[id]";
+import StoreProductScreen from "../app/store/product/[slug]";
+import StoreCategoryScreen from "../app/store/category/[slug]";
+import StoreSearchScreen from "../app/store/search";
 import LegalScreen from "../app/legal/[document]";
 import ResetPasswordScreen from "../app/reset-password";
 import ForgotPasswordScreen from "../app/forgot-password";
@@ -114,6 +123,7 @@ export function App() {
               <Route path="/" element={<HomeScreen />} />
               <Route element={<TabsLayout />}>
                 <Route path="/feed" element={<FeedScreen />} />
+                <Route path="/store" element={<StoreScreen />} />
                 <Route path="/communities" element={<CommunitiesScreen />} />
                 <Route path="/assistant" element={<AssistantScreen />} />
                 <Route path="/calendar" element={<CalendarScreen />} />
@@ -162,6 +172,14 @@ export function App() {
               <Route path="/advantages" element={<AdvantagesScreen />} />
               <Route path="/advantages/redeem" element={<AdvantageRedeemScreen />} />
               <Route path="/advantages/:id" element={<AdvantageDetailScreen />} />
+              <Route path="/store/cart" element={<StoreCartScreen />} />
+              <Route path="/store/checkout" element={<StoreCheckoutScreen />} />
+              <Route path="/store/addresses" element={<StoreAddressesScreen />} />
+              <Route path="/store/orders" element={<StoreOrdersScreen />} />
+              <Route path="/store/orders/:id" element={<StoreOrderDetailScreen />} />
+              <Route path="/store/product/:slug" element={<StoreProductScreen />} />
+              <Route path="/store/category/:slug" element={<StoreCategoryScreen />} />
+              <Route path="/store/search" element={<StoreSearchScreen />} />
               <Route path="/legal/:document" element={<LegalScreen />} />
               <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
               <Route path="/reset-password" element={<ResetPasswordScreen />} />
