@@ -524,6 +524,25 @@ export default function ProfileScreen() {
       ) : null}
 
       <View style={styles.panel}>
+        <Text style={styles.panelTitle}>Alışveriş</Text>
+        <Link href="/store/addresses" asChild>
+          <Pressable style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Adreslerim</Text>
+          </Pressable>
+        </Link>
+        <Link href="/store/orders" asChild>
+          <Pressable style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Siparişlerim</Text>
+          </Pressable>
+        </Link>
+        <Link href="/store/cart" asChild>
+          <Pressable style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Sepetim</Text>
+          </Pressable>
+        </Link>
+      </View>
+
+      <View style={styles.panel}>
         <Text style={styles.panelTitle}>Hızlı işlemler</Text>
         <Link href="/organizer-request" asChild>
           <Pressable style={styles.primaryButton}>

@@ -69,7 +69,7 @@ export default function OrdersScreen() {
                 </View>
                 <Text style={s.date}>{new Date(item.createdAt).toLocaleString("tr-TR")}</Text>
                 <Text style={s.total}>{formatPrice(item.totalAmount)}</Text>
-                {item.items.slice(0, 1).map((i: StoreOrderItem) => (
+                {(item.items ?? []).slice(0, 1).map((i: StoreOrderItem) => (
                   <Text key={i.id} style={s.itemName}>{i.productName} x{i.quantity}</Text>
                 ))}
               </Pressable>
