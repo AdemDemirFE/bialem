@@ -137,12 +137,58 @@ Use MCPs task-appropriately. Do not call them unnecessarily.
 - Keep credentials in environment variables / secret managers, never in source.
 - Verify changes in local/test before staging/production.
 
-## Git Rules
+# Git Workflow Rules
 
-- Do not run `git commit`, `git push`, `git reset`, `git rebase`, or other mutations unless explicitly asked.
-- Before any commit, review `git status`, `git diff`, and recent `git log`.
-- Stage only intended files; never commit secrets.
-- Write concise commit messages matching repo style.
+## Mandatory Git Workflow
+
+After completing EVERY coding task that modifies project files:
+
+1. Inspect the changed files.
+2. Run `git status`.
+3. Review the diff with `git diff`.
+4. Stage the intended changes with:
+   `git add .`
+5. Create a descriptive commit:
+   `git commit -m "<type>: <short description>"`
+6. Push immediately:
+   `git push origin main`
+7. Verify that the push completed successfully.
+8. Report the commit hash and push status to the user.
+
+Do NOT finish a coding task without committing and pushing the changes.
+
+## Commit Message Format
+
+Use conventional commit style:
+
+- feat: new functionality
+- fix: bug fix
+- refactor: code restructuring
+- ui: UI/UX changes
+- perf: performance improvements
+- chore: configuration/build/tooling
+- docs: documentation
+- test: tests
+
+Examples:
+
+feat: add story location tagging
+fix: resolve notification badge issue
+ui: improve story creation interface
+refactor: simplify product filtering
+
+## Important
+
+Never commit secrets, credentials, API keys, `.env` files containing secrets,
+generated build artifacts, node_modules, target directories, or temporary files.
+
+Before committing, inspect `git status` and `git diff`.
+
+If `git push` fails, do NOT claim the task is complete.
+Fix the Git problem or clearly report the push failure.
+
+If there are unrelated pre-existing changes, do not overwrite or discard them.
+Only commit changes belonging to the current task.
 
 ## Definition of Done
 
