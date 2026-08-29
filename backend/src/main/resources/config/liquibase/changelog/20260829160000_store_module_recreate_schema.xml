@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Daha once calismis olan eski store modulu tablolarini (core_modules.xml
+        kaynakli) temizleyip, ardindan 20260829140000_store_module.xml icerisindeki
+        guncel store semasinin olusmasini saglar.
+
+        UYARI: Bu changelog mevcut store_category, store_product ve
+        store_product_image tablolarini ve iceriklerini KALICI olarak siler.
+        Yalnizca test/local ortamlarda veya store verisi olmayan durumlarda
+        kullanilmalidir.
+    -->
+
+    <changeSet id="20260829160000-1" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_product_image"/>
+        </preConditions>
+        <dropTable tableName="store_product_image" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet id="20260829160000-2" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_product"/>
+        </preConditions>
+        <dropTable tableName="store_product" cascadeConstraints="true"/>
+    </changeSet>
+
+    <changeSet id="20260829160000-3" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_category"/>
+        </preConditions>
+        <dropTable tableName="store_category" cascadeConstraints="true"/>
+    </changeSet>
+
+</databaseChangeLog>
