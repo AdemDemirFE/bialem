@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { showAppError } from "../../../src/components/AppAlert";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementOrder } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
 
@@ -71,15 +71,15 @@ export default function StoreOrdersManagementScreen() {
     }
   };
 
-  const cancelOrder = (id: number) => {
-    Alert.alert("Siparişi iptal et", "Bu sipariş iptal edilecek.", [
-      { text: "Vazgeç", style: "cancel" },
-      {
-        text: "İptal Et",
-        style: "destructive",
-        onPress: () => void runAction(id, () => storeManagementApi.cancelOrder(id, "Yönetici tarafından iptal edildi"), "İptal"),
-      },
-    ]);
+  const cancelOrder = async (id: number) => {
+    const confirmed = await showAppConfirm({
+      title: "Siparişi iptal et",
+      text: "Bu sipariş iptal edilecek.",
+      confirmText: "İptal Et",
+      confirmDanger: true
+    });
+    if (!confirmed) return;
+    await runAction(id, () => storeManagementApi.cancelOrder(id, "Yönetici tarafından iptal edildi"), "İptal");
   };
 
   const formatPrice = (n?: number, currency = "TRY") => {

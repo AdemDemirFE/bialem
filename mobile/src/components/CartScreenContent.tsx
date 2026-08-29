@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAppError } from "./AppAlert";
+import { notifyCartUpdated } from "../lib/cart-events";
 import { storeApi, type StoreCartItem, type StoreCartSummary } from "../lib/store-api";
 import { colors } from "../theme/colors";
 
@@ -32,6 +33,7 @@ export function CartScreenContent() {
   const updateQty = async (id: number, qty: number) => {
     try {
       setCart(await storeApi.updateCartItem(id, qty));
+      notifyCartUpdated();
     } catch (e) {
       showAppError(e instanceof Error ? e.message : "Güncellenemedi");
     }
@@ -40,6 +42,7 @@ export function CartScreenContent() {
   const remove = async (id: number) => {
     try {
       setCart(await storeApi.removeCartItem(id));
+      notifyCartUpdated();
     } catch (e) {
       showAppError(e instanceof Error ? e.message : "Silinemedi");
     }

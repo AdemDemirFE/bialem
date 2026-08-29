@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { showAppError } from "../../../src/components/AppAlert";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { showAppConfirm, showAppError, showAppSelectAlert } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementOrder } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
 
@@ -44,38 +44,34 @@ export default function StoreShipmentsManagementScreen() {
     void load(0, true);
   };
 
-  const createShipping = (orderId: number) => {
-    Alert.alert("Kargo oluştur", "Siparişe varsayılan kargo kaydı ekleniyor. Detayları sonradan düzenleyebilirsiniz.", [
-      { text: "İptal", style: "cancel" },
-      {
-        text: "Oluştur",
-        onPress: async () => {
-          try {
-            await storeManagementApi.createShipping(orderId, { carrier: "Kargo Firması", trackingNumber: "-" });
-            void load(0, true);
-          } catch (e) {
-            showAppError(e instanceof Error ? e.message : "Kargo oluşturulamadı");
-          }
-        },
-      },
-    ]);
+  const createShipping = async (orderId: number) => {
+    const confirmed = await showAppConfirm({
+      title: "Kargo oluştur",
+      text: "Siparişe varsayılan kargo kaydı ekleniyor. Detayları sonradan düzenleyebilirsiniz.",
+      confirmText: "Oluştur"
+    });
+    if (!confirmed) return;
+    try {
+      await storeManagementApi.createShipping(orderId, { carrier: "Kargo Firması", trackingNumber: "-" });
+      void load(0, true);
+    } catch (e) {
+      showAppError(e instanceof Error ? e.message : "Kargo oluşturulamadı");
+    }
   };
 
-  const updateStatus = (orderId: number) => {
-    Alert.alert("Kargo Durumu", "Yeni durum seçin", [
-      { text: "İptal", style: "cancel" },
-      ...SHIPPING_STATUSES.map((status) => ({
-        text: status,
-        onPress: async () => {
-          try {
-            await storeManagementApi.updateShippingStatus(orderId, status);
-            void load(0, true);
-          } catch (e) {
-            showAppError(e instanceof Error ? e.message : "Durum güncellenemedi");
-          }
-        },
-      })),
-    ]);
+  const updateStatus = async (orderId: number) => {
+    const status = await showAppSelectAlert({
+      title: "Kargo Durumu",
+      text: "Yeni durum seçin",
+      options: SHIPPING_STATUSES.map((s) => ({ value: s, label: s }))
+    });
+    if (!status) return;
+    try {
+      await storeManagementApi.updateShippingStatus(orderId, status);
+      void load(0, true);
+    } catch (e) {
+      showAppError(e instanceof Error ? e.message : "Durum güncellenemedi");
+    }
   };
 
   return (

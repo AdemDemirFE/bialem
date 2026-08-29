@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { showAppConfirm } from "../../src/components/AppAlert";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   Image,
@@ -248,15 +248,18 @@ export default function CreateStoryScreen() {
     }
   };
 
-  const confirmBack = () => {
+  const confirmBack = async () => {
     if (!media && !caption && elements.length === 0) {
       router.back();
       return;
     }
-    Alert.alert("Story'den çık?", "Yaptığın değişiklikler kaybolacak.", [
-      { text: "Kal", style: "cancel" },
-      { text: "Çık", style: "destructive", onPress: () => router.back() }
-    ]);
+    const confirmed = await showAppConfirm({
+      title: "Story'den çık?",
+      text: "Yaptığın değişiklikler kaybolacak.",
+      confirmText: "Çık",
+      confirmDanger: true
+    });
+    if (confirmed) router.back();
   };
 
   const selectedElement = useMemo(() => elements.find((el) => el.id === selectedId) ?? null, [elements, selectedId]);

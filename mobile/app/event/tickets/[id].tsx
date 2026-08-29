@@ -3,13 +3,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View
 } from "react-native";
+import { showAppAlert } from "../../../src/components/AppAlert";
 import { useAuth } from "../../../src/lib/auth";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
@@ -80,11 +80,11 @@ export default function EventTicketSelectionScreen() {
 
   const createOrder = async () => {
     if (!user) {
-      Alert.alert("Giriş gerekli", "Bilet satın almak için oturum açmalısınız.");
+      await showAppAlert({ title: "Giriş gerekli", text: "Bilet satın almak için oturum açmalısınız." });
       return;
     }
     if (selectedItems.length === 0) {
-      Alert.alert("Bilet seçin", "Lütfen en az bir bilet tipi seçin.");
+      await showAppAlert({ title: "Bilet seçin", text: "Lütfen en az bir bilet tipi seçin." });
       return;
     }
     setCreating(true);

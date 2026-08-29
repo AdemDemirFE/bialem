@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAppError } from "../../src/components/AppAlert";
 import { SkeletonList } from "../../src/components/SkeletonList";
+import { CART_REFRESH_EVENT } from "../../src/lib/cart-events";
 import { storeApi, type StoreCategory, type StoreProductListItem } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
 
@@ -34,6 +35,31 @@ export default function StoreScreen() {
   const [bestSellers, setBestSellers] = useState<StoreProductListItem[]>([]);
   const [discounts, setDiscounts] = useState<StoreProductListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cartCount, setCartCount] = useState(0);
+
+  const refreshCartCount = useCallback(async () => {
+    try {
+      const summary = await storeApi.cart();
+      setCartCount(summary.items?.reduce((sum, item) => sum + (item.quantity ?? 1), 0) ?? 0);
+    } catch {
+      setCartCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshCartCount();
+    const interval = setInterval(() => void refreshCartCount(), 8000);
+    const onUpdate = () => void refreshCartCount();
+    if (typeof window !== "undefined") {
+      window.addEventListener(CART_REFRESH_EVENT, onUpdate);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener(CART_REFRESH_EVENT, onUpdate);
+      }
+    };
+  }, [refreshCartCount]);
 
   const load = useCallback(async () => {
     try {
@@ -92,6 +118,11 @@ export default function StoreScreen() {
               <Link href="/store/cart" asChild>
                 <Pressable style={s.headerBtn}>
                   <Ionicons name="cart-outline" size={24} color={colors.ink} />
+                  {cartCount > 0 ? (
+                    <View style={s.cartBadge}>
+                      <Text style={s.cartBadgeText}>{cartCount > 99 ? "99+" : cartCount}</Text>
+                    </View>
+                  ) : null}
                 </Pressable>
               </Link>
             </View>
@@ -207,6 +238,8 @@ const s = StyleSheet.create({
   searchInput: { flex: 1, color: colors.ink, fontSize: 14 },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 4 },
   headerBtn: { padding: 8 },
+  cartBadge: { position: "absolute", top: 2, right: 2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: "center", justifyContent: "center", paddingHorizontal: 3, borderWidth: 1.5, borderColor: colors.surface },
+  cartBadgeText: { color: "#fff", fontSize: 9, fontWeight: "900" },
   categoryRow: { gap: 10, paddingRight: 16 },
   categoryChip: {
     width: 86,

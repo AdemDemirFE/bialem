@@ -4,4 +4,5 @@ public enum StorePaymentProviderType {
     IYZICO,
     PAYTR,
     STRIPE,
+    MOCK,
 }

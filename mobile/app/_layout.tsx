@@ -1,7 +1,7 @@
 import { Stack, bindRouter } from "../src/shims/expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "../src/lib/auth";
 import { colors } from "../src/theme/colors";
 import { ThemeProvider, useTheme } from "../src/theme/theme";
@@ -19,6 +19,8 @@ export default function RootLayout() {
 function RootNavigator() {
   const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const showAssistant = location.pathname === "/feed";
   useSwipeBack(true);
 
   useEffect(() => {
@@ -37,7 +39,7 @@ function RootNavigator() {
           contentStyle: { backgroundColor: colors.page }
         }}
       />
-      <FloatingAssistantButton />
+      {showAssistant ? <FloatingAssistantButton /> : null}
     </AuthProvider>
   );
 }

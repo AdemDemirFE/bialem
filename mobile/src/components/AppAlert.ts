@@ -79,6 +79,48 @@ export async function showAppConfirm({
   return result.isConfirmed;
 }
 
+type SelectOption = { value: string; label: string };
+
+export async function showAppSelectAlert({
+  title,
+  text,
+  options,
+  confirmText = "Tamam",
+  cancelText = "Vazgeç"
+}: {
+  title: string;
+  text?: string;
+  options: SelectOption[];
+  confirmText?: string;
+  cancelText?: string;
+}): Promise<string | null> {
+  const { value, isConfirmed } = await Swal.fire({
+    title,
+    text,
+    input: "select",
+    inputOptions: options.reduce<Record<string, string>>((acc, opt) => {
+      acc[opt.value] = opt.label;
+      return acc;
+    }, {}),
+    confirmButtonText: confirmText,
+    cancelButtonText: cancelText,
+    showCancelButton: true,
+    reverseButtons: true,
+    buttonsStyling: false,
+    customClass: {
+      popup: "bialem-alert",
+      title: "bialem-alert-title",
+      htmlContainer: "bialem-alert-text",
+      confirmButton: "bialem-alert-btn",
+      cancelButton: "bialem-alert-btn bialem-alert-btn-ghost",
+      input: "bialem-alert-select"
+    },
+    color: brand.ink,
+    background: brand.surface
+  });
+  return isConfirmed && value ? String(value) : null;
+}
+
 export function showAppError(message: string, title = "İşlem tamamlanamadı") {
   return showAppAlert({ title, text: message, icon: "error" });
 }

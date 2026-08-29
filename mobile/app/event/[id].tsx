@@ -4,7 +4,6 @@ import QRCode from "react-native-qrcode-svg";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   Share,
@@ -475,15 +474,14 @@ export default function EventDetailScreen() {
     setCancellingEvent(false);
   };
 
-  const handleCancelEvent = () => {
-    Alert.alert(
-      "Etkinliği iptal et",
-      "Etkinlik yayından kaldırılacak, açık katılımlar iptal edilecek ve katılımcılara bildirim gönderilecek. Bu işlemi yapmak istiyor musunuz?",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        { text: "Etkinliği iptal et", style: "destructive", onPress: () => void cancelEvent() }
-      ]
-    );
+  const handleCancelEvent = async () => {
+    const confirmed = await showAppConfirm({
+      title: "Etkinliği iptal et",
+      text: "Etkinlik yayından kaldırılacak, açık katılımlar iptal edilecek ve katılımcılara bildirim gönderilecek. Bu işlemi yapmak istiyor musunuz?",
+      confirmText: "Etkinliği iptal et",
+      confirmDanger: true
+    });
+    if (confirmed) void cancelEvent();
   };
 
   const isEventStaff = canReviewEvent || Boolean(participationSummary?.can_manage);

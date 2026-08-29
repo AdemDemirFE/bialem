@@ -2,7 +2,8 @@ import * as ExpoLinking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { showAppConfirm } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -87,23 +88,21 @@ export default function OrderDetailScreen() {
 
   const cancelOrder = async () => {
     if (!order) return;
-    Alert.alert("Siparişi iptal et", "Bu siparişi iptal etmek istediğinize emin misiniz?", [
-      { text: "Vazgeç", style: "cancel" },
-      {
-        text: "İptal et",
-        style: "destructive",
-        onPress: async () => {
-          setCancelling(true);
-          const result = await api.rpc("cancel_order", { target_order_id: order.id });
-          setCancelling(false);
-          if (result.error) {
-            setError(result.error.message);
-            return;
-          }
-          router.replace("/my-tickets" as never);
-        }
-      }
-    ]);
+    const confirmed = await showAppConfirm({
+      title: "Siparişi iptal et",
+      text: "Bu siparişi iptal etmek istediğinize emin misiniz?",
+      confirmText: "İptal et",
+      confirmDanger: true
+    });
+    if (!confirmed) return;
+    setCancelling(true);
+    const result = await api.rpc("cancel_order", { target_order_id: order.id });
+    setCancelling(false);
+    if (result.error) {
+      setError(result.error.message);
+      return;
+    }
+    router.replace("/my-tickets" as never);
   };
 
   if (loading) {

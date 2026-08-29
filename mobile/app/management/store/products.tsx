@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { showAppError } from "../../../src/components/AppAlert";
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementProduct } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
 
@@ -44,22 +44,20 @@ export default function StoreProductsManagementScreen() {
     void load(0, true);
   };
 
-  const deleteProduct = (id: number, name: string) => {
-    Alert.alert("Ürünü sil?", `${name} adlı ürün silinecek.`, [
-      { text: "İptal", style: "cancel" },
-      {
-        text: "Sil",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await storeManagementApi.deleteProduct(id);
-            setItems((prev) => prev.filter((p) => p.id !== id));
-          } catch (e) {
-            showAppError(e instanceof Error ? e.message : "Silinemedi");
-          }
-        },
-      },
-    ]);
+  const deleteProduct = async (id: number, name: string) => {
+    const confirmed = await showAppConfirm({
+      title: "Ürünü sil?",
+      text: `${name} adlı ürün silinecek.`,
+      confirmText: "Sil",
+      confirmDanger: true
+    });
+    if (!confirmed) return;
+    try {
+      await storeManagementApi.deleteProduct(id);
+      setItems((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      showAppError(e instanceof Error ? e.message : "Silinemedi");
+    }
   };
 
   const formatPrice = (n?: number | null, currency = "TRY") => {

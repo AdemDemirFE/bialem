@@ -1,8 +1,9 @@
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
+import { showAppConfirm } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { getProfileFollowState, setProfileFollow, type FollowState } from "../../src/lib/follows";
 import { profileStatusLabel } from "../../src/lib/profile-status";
@@ -180,34 +181,30 @@ export default function UserProfileDetailScreen() {
     setFollowingBusy(false);
   };
 
-  const blockProfile = () => {
+  const blockProfile = async () => {
     if (!id || isOwnProfile) return;
 
-    Alert.alert(
-      "Kullanıcıyı engelle",
-      "Birbirinizi takip edemez, profillerinizi ve içeriklerinizi göremezsiniz. Bu işlemi ayarlardan geri alabilirsiniz.",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Engelle",
-          style: "destructive",
-          onPress: async () => {
-            setError(null);
-            const { error: blockError } = await api.rpc("set_profile_block", {
-              target_user_id: id,
-              target_blocked: true
-            });
+    const confirmed = await showAppConfirm({
+      title: "Kullanıcıyı engelle",
+      text: "Birbirinizi takip edemez, profillerinizi ve içeriklerinizi göremezsiniz. Bu işlemi ayarlardan geri alabilirsiniz.",
+      confirmText: "Engelle",
+      confirmDanger: true
+    });
 
-            if (blockError) {
-              setError("Kullanıcı şu anda engellenemedi. Lütfen tekrar deneyin.");
-              return;
-            }
+    if (!confirmed) return;
 
-            router.replace("/people" as never);
-          }
-        }
-      ]
-    );
+    setError(null);
+    const { error: blockError } = await api.rpc("set_profile_block", {
+      target_user_id: id,
+      target_blocked: true
+    });
+
+    if (blockError) {
+      setError("Kullanıcı şu anda engellenemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    router.replace("/people" as never);
   };
 
   const handleSubmitReview = async () => {
