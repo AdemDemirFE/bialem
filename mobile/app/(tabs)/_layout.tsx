@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/lib/auth";
+import { CART_REFRESH_EVENT } from "../../src/lib/cart-events";
 import { canSeeManagement } from "../../src/lib/permissions";
+import { storeApi } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
 import { useTheme } from "../../src/theme/theme";
 
@@ -11,6 +14,51 @@ function TabIcon({ name, focused, color, size }: { name: string; focused: boolea
   return (
     <View style={[styles.iconShell, focused && styles.iconShellActive]}>
       <Ionicons name={name} color={color} size={focused ? size + 1 : size} />
+      {focused ? <View style={styles.activeDot} /> : null}
+    </View>
+  );
+}
+
+function CartTabIcon({ color, size, focused }: { color: string; size: number; focused: boolean }) {
+  const { user, loading: authLoading } = useAuth();
+  const [count, setCount] = useState(0);
+
+  const refresh = useCallback(async () => {
+    try {
+      const summary = await storeApi.cart();
+      setCount(summary.items?.reduce((sum, item) => sum + (item.quantity ?? 1), 0) ?? 0);
+    } catch {
+      setCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authLoading || !user) {
+      setCount(0);
+      return;
+    }
+    void refresh();
+    const interval = setInterval(() => void refresh(), 8000);
+    const onUpdate = () => void refresh();
+    if (typeof window !== "undefined") {
+      window.addEventListener(CART_REFRESH_EVENT, onUpdate);
+    }
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== "undefined") {
+        window.removeEventListener(CART_REFRESH_EVENT, onUpdate);
+      }
+    };
+  }, [refresh, authLoading, user]);
+
+  return (
+    <View style={[styles.iconShell, focused && styles.iconShellActive]}>
+      <Ionicons name={focused ? "cart" : "cart-outline"} color={color} size={focused ? size + 1 : size} />
+      {count > 0 ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
+        </View>
+      ) : null}
       {focused ? <View style={styles.activeDot} /> : null}
     </View>
   );
@@ -101,6 +149,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="cart"
+        options={{
+          title: "Sepetim",
+          tabBarLabel: "Sepetim",
+          tabBarIcon: ({ color, size, focused }) => <CartTabIcon color={color} size={size} focused={focused} />
+        }}
+      />
+      <Tabs.Screen
         name="communities"
         options={{
           title: "Topluluklar",
@@ -114,14 +170,6 @@ export default function TabsLayout() {
           title: "Takvim",
           tabBarLabel: "Takvim",
           tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "calendar" : "calendar-outline"} focused={focused} color={color} size={size} />
-        }}
-      />
-      <Tabs.Screen
-        name="assistant"
-        options={{
-          title: "Bialem Asistan",
-          tabBarLabel: "Asistan",
-          tabBarIcon: ({ color, size, focused }) => <TabIcon name={focused ? "sparkles" : "sparkles-outline"} focused={focused} color={color} size={size} />
         }}
       />
       <Tabs.Screen
@@ -153,5 +201,7 @@ const styles = StyleSheet.create({
   loadingText: { color: colors.muted, fontSize: 13, fontWeight: "700" },
   iconShell: { width: 30, height: 27, alignItems: "center", justifyContent: "center" },
   iconShellActive: { transform: [{ translateY: -1 }] },
-  activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.action }
+  activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.action },
+  badge: { position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.danger, alignItems: "center", justifyContent: "center", paddingHorizontal: 3, borderWidth: 1.5, borderColor: colors.surface },
+  badgeText: { color: "#fff", fontSize: 9, fontWeight: "900" }
 });

@@ -6,9 +6,10 @@ import RootLayout from "../app/_layout";
 import TabsLayout from "../app/(tabs)/_layout";
 import FeedScreen from "../app/(tabs)/feed";
 import CommunitiesScreen from "../app/(tabs)/communities";
-import AssistantScreen from "../app/(tabs)/assistant";
 import NotificationsScreen from "../app/(tabs)/notifications";
 import CalendarScreen from "../app/(tabs)/calendar";
+import AssistantScreen from "../app/(tabs)/assistant";
+import CartScreen from "../app/(tabs)/cart";
 import MessagesScreen from "../app/messages/index";
 import DirectChatScreen from "../app/messages/[id]";
 import ProfileScreen from "../app/(tabs)/profile";
@@ -132,8 +133,8 @@ export function App() {
               <Route element={<TabsLayout />}>
                 <Route path="/feed" element={<FeedScreen />} />
                 <Route path="/store" element={<StoreScreen />} />
+                <Route path="/cart" element={<CartScreen />} />
                 <Route path="/communities" element={<CommunitiesScreen />} />
-                <Route path="/assistant" element={<AssistantScreen />} />
                 <Route path="/calendar" element={<CalendarScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
                 <Route path="/management" element={<ManagementScreen />} />

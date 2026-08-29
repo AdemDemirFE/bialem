@@ -6,6 +6,7 @@ import { AuthProvider } from "../src/lib/auth";
 import { colors } from "../src/theme/colors";
 import { ThemeProvider, useTheme } from "../src/theme/theme";
 import { useSwipeBack } from "../src/lib/swipe-back";
+import { FloatingAssistantButton } from "../src/components/FloatingAssistantButton";
 
 export default function RootLayout() {
   return (
@@ -36,6 +37,7 @@ function RootNavigator() {
           contentStyle: { backgroundColor: colors.page }
         }}
       />
+      <FloatingAssistantButton />
     </AuthProvider>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showAppAlert, showAppError } from "../../../src/components/AppAlert";
+import { notifyCartUpdated } from "../../../src/lib/cart-events";
 import { api } from "../../../src/lib/api";
 import { storeApi, type StoreProduct, type StoreProductImage, type StoreReview, type StoreReviewSummary } from "../../../src/lib/store-api";
 import { colors } from "../../../src/theme/colors";
@@ -54,6 +55,7 @@ export default function ProductDetailScreen() {
     if (!product) return;
     try {
       await storeApi.addToCart({ productId: product.id, variantId: selectedVariant, quantity });
+      notifyCartUpdated();
       showAppAlert({ title: "Sepete eklendi", icon: "success" });
     } catch (e) {
       showAppError(e instanceof Error ? e.message : "Sepete eklenemedi");

@@ -125,7 +125,11 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Pressable disabled={processing} style={[s.payBtn, processing && s.disabled]} onPress={pay}>
+        <Pressable
+          disabled={processing || !selectedAddress || !cart || cart.items.length === 0}
+          style={[s.payBtn, (processing || !selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
+          onPress={pay}
+        >
           <Text style={s.payBtnText}>{processing ? "İşleniyor..." : `Öde ${formatPrice(cart?.totalAmount || 0)}`}</Text>
         </Pressable>
       </View>
