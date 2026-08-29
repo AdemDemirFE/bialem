@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20260829120300-1" author="bialem">
+        <createTable tableName="ticket_order">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_number" type="varchar(120)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="total_amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="paid_at" type="${datetimeType}"/>
+            <column name="user_id" type="bigint"/>
+        </createTable>
+        <dropDefaultValue tableName="ticket_order" columnName="created_at" columnDataType="${datetimeType}"/>
+        <dropDefaultValue tableName="ticket_order" columnName="paid_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+</databaseChangeLog>

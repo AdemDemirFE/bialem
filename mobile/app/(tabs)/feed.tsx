@@ -82,8 +82,8 @@ export default function FeedScreen() {
         : Promise.resolve({ data: [], error: null })
     ]);
 
-    const nextFollowedIds = (followsResult.data ?? []).map((item) => item.followed_id);
-    const nextJoinedIds = (membershipsResult.data ?? []).map((item) => item.community_id);
+    const nextFollowedIds = ((followsResult.data ?? []) as Array<{ followed_id: string }>).map((item) => item.followed_id);
+    const nextJoinedIds = ((membershipsResult.data ?? []) as Array<{ community_id: string }>).map((item) => item.community_id);
     setFollowedIds(nextFollowedIds);
     setJoinedCommunityIds(nextJoinedIds);
 

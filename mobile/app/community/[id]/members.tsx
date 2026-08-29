@@ -98,7 +98,7 @@ export default function CommunityMembersScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <FlatList
         data={members}
-        keyExtractor={(member) => member.user_id}
+        keyExtractor={(member: CommunityMember) => member.user_id}
         contentContainerStyle={styles.page}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadMembers("refresh")} tintColor={colors.accent} />}
@@ -141,7 +141,7 @@ export default function CommunityMembersScreen() {
             {error ? <Text style={styles.error}>{error}</Text> : null}
           </View>
         )}
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: CommunityMember }) => (
           <Link href={{ pathname: "/user/[id]", params: { id: item.user_id } }} asChild>
             <Pressable style={styles.memberCard}>
               <View style={styles.avatar}>

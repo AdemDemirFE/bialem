@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20260829120500-1" author="bialem">
+        <createTable tableName="payment">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="provider" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_transaction_id" type="varchar(255)"/>
+            <column name="amount" type="decimal(21,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="varchar(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_date" type="${datetimeType}"/>
+            <column name="failure_reason" type="varchar(1000)"/>
+            <column name="provider_response" type="varchar(4000)"/>
+            <column name="idempotency_key" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="callback_payload" type="varchar(4000)"/>
+            <column name="order_id" type="bigint"/>
+        </createTable>
+        <dropDefaultValue tableName="payment" columnName="payment_date" columnDataType="${datetimeType}"/>
+    </changeSet>
+</databaseChangeLog>

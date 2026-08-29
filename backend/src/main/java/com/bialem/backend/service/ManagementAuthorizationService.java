@@ -1,14 +1,25 @@
 package com.bialem.backend.service;
 
+import com.bialem.backend.repository.ProfileRepository;
+import com.bialem.backend.repository.UserRoleRepository;
 import com.bialem.backend.security.AuthoritiesConstants;
 import com.bialem.backend.security.SecurityUtils;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service("managementAuthorization")
 public class ManagementAuthorizationService {
+
+    private final ProfileRepository profileRepository;
+    private final UserRoleRepository userRoleRepository;
+
+    public ManagementAuthorizationService(ProfileRepository profileRepository, UserRoleRepository userRoleRepository) {
+        this.profileRepository = profileRepository;
+        this.userRoleRepository = userRoleRepository;
+    }
     public enum Permission {
         MANAGEMENT_ACCESS, USER_VIEW, USER_CREATE, USER_EDIT, USER_ACTIVATE, USER_SUSPEND, USER_ROLE_MANAGE,
         COMMUNITY_VIEW, COMMUNITY_CREATE, COMMUNITY_EDIT, COMMUNITY_MEMBER_MANAGE, COMMUNITY_MODERATE,
@@ -28,10 +39,22 @@ public class ManagementAuthorizationService {
 
     public Set<Permission> currentPermissions() {
         if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.SUPER_ADMIN)) return Collections.unmodifiableSet(EnumSet.allOf(Permission.class));
-        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN)) return ADMIN;
+        if (SecurityUtils.hasCurrentUserThisAuthority(AuthoritiesConstants.ADMIN) || hasAppAdminRole()) return ADMIN;
         return Set.of();
     }
 
     public boolean has(Permission permission) { return currentPermissions().contains(permission); }
     public boolean canAccessManagement() { return has(Permission.MANAGEMENT_ACCESS); }
+
+    private boolean hasAppAdminRole() {
+        return SecurityUtils.getCurrentUserLogin()
+            .flatMap(profileRepository::findOneByUser_Login)
+            .map(profile ->
+                userRoleRepository
+                    .findByUser(profile)
+                    .stream()
+                    .anyMatch(userRole -> userRole.getRole() != null && "admin".equalsIgnoreCase(userRole.getRole().getCode()))
+            )
+            .orElse(false);
+    }
 }

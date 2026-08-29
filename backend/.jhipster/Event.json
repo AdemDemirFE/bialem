@@ -166,6 +166,13 @@
       "relationshipName": "posts",
       "relationshipSide": "right",
       "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "eventTicket",
+      "otherEntityRelationshipName": "event",
+      "relationshipName": "eventTickets",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
     }
   ],
   "searchEngine": "no",

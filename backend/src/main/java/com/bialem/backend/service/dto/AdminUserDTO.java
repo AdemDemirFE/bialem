@@ -6,9 +6,10 @@ import com.bialem.backend.domain.User;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Set;
-import java.util.Map;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +60,10 @@ public class AdminUserDTO implements Serializable {
     }
 
     public AdminUserDTO(User user) {
+        this(user, Collections.emptySet());
+    }
+
+    public AdminUserDTO(User user, Set<String> appRoleCodes) {
         this.id = user.getId();
         this.login = user.getLogin();
         this.firstName = user.getFirstName();
@@ -72,7 +77,7 @@ public class AdminUserDTO implements Serializable {
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
         this.authorities = user.getAuthorities().stream().map(Authority::getName).collect(Collectors.toSet());
-        this.permissions = permissionsFor(this.authorities);
+        this.permissions = permissionsFor(this.authorities, appRoleCodes);
     }
 
     public Long getId() {
@@ -183,9 +188,10 @@ public class AdminUserDTO implements Serializable {
 
     public void setPermissions(Map<String, Boolean> permissions) { this.permissions = permissions; }
 
-    private static Map<String, Boolean> permissionsFor(Set<String> authorities) {
+    private static Map<String, Boolean> permissionsFor(Set<String> authorities, Set<String> appRoleCodes) {
         boolean superAdmin = authorities.contains("ROLE_SUPER_ADMIN");
-        boolean admin = superAdmin || authorities.contains("ROLE_ADMIN");
+        boolean appAdmin = appRoleCodes != null && appRoleCodes.contains("admin");
+        boolean admin = superAdmin || authorities.contains("ROLE_ADMIN") || appAdmin;
         Map<String, Boolean> result = new LinkedHashMap<>();
         result.put("manageUsers", admin);
         result.put("manageCommunities", admin || authorities.contains("ROLE_COMMUNITY_MANAGER"));

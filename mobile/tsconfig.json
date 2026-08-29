@@ -9,8 +9,20 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "paths": {
-      "react-native": ["node_modules/react-native-web"]
+      "react-native": ["src/shims/react-native"],
+      "@expo/vector-icons": ["src/shims/vector-icons"],
+      "expo-router": ["src/shims/expo-router"],
+      "expo-linking": ["src/shims/expo-linking"],
+      "expo-camera": ["src/shims/expo-camera"],
+      "expo-sharing": ["src/shims/expo-sharing"],
+      "expo-status-bar": ["src/shims/expo-status-bar"],
+      "expo-location": ["src/shims/expo-location"],
+      "expo-image-picker": ["src/shims/expo-image-picker"],
+      "expo-haptics": ["src/shims/expo-haptics"],
+      "expo-constants": ["src/shims/expo-constants"],
+      "react-native-view-shot": ["src/shims/view-shot"],
+      "@react-native-community/datetimepicker": ["src/shims/datetimepicker"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"]
 }

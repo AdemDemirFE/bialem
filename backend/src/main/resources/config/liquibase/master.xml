@@ -94,4 +94,17 @@
     <include file="config/liquibase/changelog/20260822233000_calendar_aggregate.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260824120000_platform_rbac.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260824170000_single_platform_authority.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120000_added_entity_StoryReaction.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120001_added_entity_constraints_StoryReaction.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120100_story_view_unique_constraint.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120200_added_entity_EventTicket.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120201_added_entity_constraints_EventTicket.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120300_added_entity_Order.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120301_added_entity_constraints_Order.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120400_added_entity_OrderItem.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120401_added_entity_constraints_OrderItem.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120500_added_entity_Payment.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120501_added_entity_constraints_Payment.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120600_added_entity_Ticket.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260829120601_added_entity_constraints_Ticket.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

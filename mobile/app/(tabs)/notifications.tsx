@@ -213,7 +213,7 @@ export default function NotificationsScreen() {
   return (
     <FlatList
       data={visibleItems}
-      keyExtractor={(item) => String(item.id)}
+      keyExtractor={(item: AppNotification) => String(item.id)}
       renderItem={renderItem}
       contentContainerStyle={styles.page}
       ListHeaderComponent={<ListHeader />}

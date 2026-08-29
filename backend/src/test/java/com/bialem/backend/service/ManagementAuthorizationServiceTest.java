@@ -3,14 +3,19 @@ package com.bialem.backend.service;
 import static com.bialem.backend.service.ManagementAuthorizationService.Permission.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.bialem.backend.repository.ProfileRepository;
+import com.bialem.backend.repository.UserRoleRepository;
 import com.bialem.backend.security.AuthoritiesConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 class ManagementAuthorizationServiceTest {
-    private final ManagementAuthorizationService service = new ManagementAuthorizationService();
+    private final ProfileRepository profileRepository = Mockito.mock(ProfileRepository.class);
+    private final UserRoleRepository userRoleRepository = Mockito.mock(UserRoleRepository.class);
+    private final ManagementAuthorizationService service = new ManagementAuthorizationService(profileRepository, userRoleRepository);
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
     @Test void normalUserHasNoManagementAccess() {

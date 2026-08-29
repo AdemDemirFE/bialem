@@ -58,7 +58,7 @@ export function createSpringClient(options: SpringClientOptions) {
     return payload as T;
   }
 
-  class QueryBuilder implements PromiseLike<{ data: any; error: { message: string } | null; count: number | null }> {
+  class QueryBuilder<T = any> implements PromiseLike<{ data: T; error: { message: string } | null; count: number | null }> {
     private action = "select";
     private selectClause = "*";
     private filters: Filter[] = [];
@@ -145,18 +145,18 @@ export function createSpringClient(options: SpringClientOptions) {
       return this;
     }
 
-    maybeSingle() {
+    maybeSingle<U = T>() {
       this.singleResult = true;
       this.limitValue = 1;
-      return this;
+      return this as unknown as QueryBuilder<U>;
     }
 
-    single() {
-      return this.maybeSingle();
+    single<U = T>() {
+      return this.maybeSingle<U>();
     }
 
-    then<TResult1 = { data: any; error: { message: string } | null; count: number | null }, TResult2 = never>(
-      onfulfilled?: ((value: { data: any; error: { message: string } | null; count: number | null }) => TResult1 | PromiseLike<TResult1>) | null,
+    then<TResult1 = { data: T; error: { message: string } | null; count: number | null }, TResult2 = never>(
+      onfulfilled?: ((value: { data: T; error: { message: string } | null; count: number | null }) => TResult1 | PromiseLike<TResult1>) | null,
       onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
     ) {
       return this.execute().then(onfulfilled, onrejected);
@@ -238,11 +238,11 @@ export function createSpringClient(options: SpringClientOptions) {
           return { data: null, error: asError(error instanceof Error ? error.message : "İşlem başarısız") };
         }
       }) as Promise<{ data: any; error: { message: string } | null }> & {
-        maybeSingle: () => Promise<{ data: any; error: { message: string } | null }>;
+        maybeSingle: <U = any>() => Promise<{ data: U; error: { message: string } | null }>;
       };
-      pending.maybeSingle = () => {
+      pending.maybeSingle = <U = any>() => {
         single = true;
-        return pending;
+        return pending as Promise<{ data: U; error: { message: string } | null }>;
       };
       return pending;
     },
@@ -296,7 +296,11 @@ export function createSpringClient(options: SpringClientOptions) {
     channel(_name: string) {
       let timer: ReturnType<typeof setInterval> | null = null;
       const handlers: Array<() => void> = [];
-      const channel = {
+      const channel: {
+        on(_event: string, _filter: unknown, callback: () => void): typeof channel;
+        subscribe(): typeof channel;
+        _cleanup?: () => void;
+      } = {
         on(_event: string, _filter: unknown, callback: () => void) {
           handlers.push(callback);
           return channel;
@@ -306,7 +310,7 @@ export function createSpringClient(options: SpringClientOptions) {
           return channel;
         }
       };
-      (channel as { _cleanup?: () => void })._cleanup = () => {
+      channel._cleanup = () => {
         if (timer) clearInterval(timer);
       };
       return channel;

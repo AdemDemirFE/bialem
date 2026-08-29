@@ -63,5 +63,5 @@ export const getRequestedProfileIds = async (targetUserIds: string[]) => {
     .in("target_user_id", targetUserIds);
 
   if (error) return new Set<string>();
-  return new Set((data ?? []).map((item) => item.target_user_id as string));
+  return new Set(((data ?? []) as Array<{ target_user_id: string }>).map((item) => item.target_user_id));
 };

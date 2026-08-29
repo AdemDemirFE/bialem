@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type UserConfig, type ConfigEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -106,7 +106,7 @@ function bialemBrandAssets(): Plugin {
   };
 }
 
-export default defineConfig(async ({ mode, command }) => {
+export default defineConfig(async ({ mode, command }: ConfigEnv): Promise<UserConfig> => {
   const env = await loadEnvForMode(mode);
   const isProdLike = mode === "production" || mode === "android-test";
   // Default: browser calls the real API URL (e.g. http://191.215.36.29:8184).
@@ -166,8 +166,8 @@ export default defineConfig(async ({ mode, command }) => {
             "/api": {
               target: env.apiBaseUrl,
               changeOrigin: true,
-              configure(proxy) {
-                proxy.on("proxyReq", (proxyReq) => {
+              configure(proxy: any) {
+                proxy.on("proxyReq", (proxyReq: any) => {
                   proxyReq.removeHeader("origin");
                   proxyReq.removeHeader("referer");
                 });
@@ -176,8 +176,8 @@ export default defineConfig(async ({ mode, command }) => {
             "/management": {
               target: env.apiBaseUrl,
               changeOrigin: true,
-              configure(proxy) {
-                proxy.on("proxyReq", (proxyReq) => {
+              configure(proxy: any) {
+                proxy.on("proxyReq", (proxyReq: any) => {
                   proxyReq.removeHeader("origin");
                   proxyReq.removeHeader("referer");
                 });

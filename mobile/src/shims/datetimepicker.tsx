@@ -6,11 +6,17 @@ export type DateTimePickerEvent = { type: string };
 export default function DateTimePicker({
   value,
   onChange,
-  mode
+  mode,
+  display,
+  is24Hour,
+  minimumDate
 }: {
   value: Date;
   onChange?: (event: DateTimePickerEvent, date?: Date) => void;
   mode?: string;
+  display?: string;
+  is24Hour?: boolean;
+  minimumDate?: Date;
 }) {
   const [open, setOpen] = useState(true);
   if (Platform.OS !== "web" || !open) return null;

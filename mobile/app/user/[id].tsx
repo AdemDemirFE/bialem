@@ -30,6 +30,12 @@ type UserReviewRecord = {
   rating: number;
   review_text: string | null;
   created_at: string;
+  profiles: {
+    id: string;
+    display_name: string;
+    username: string;
+    avatar_url: string | null;
+  } | null;
 };
 
 type ReviewableEvent = {
@@ -82,11 +88,7 @@ export default function UserProfileDetailScreen() {
 
     const [profileResult, reviewsResult, eventsResult, followSummaryResult, reliabilityResult, badgesResult, teamIdentityResult, followStateResult] = await Promise.all([
       api.rpc("get_public_profile_card", { target_user_id: id }),
-      api
-        .from("user_reviews")
-        .select("id, reviewer_id, reviewed_user_id, event_id, rating, review_text, created_at")
-        .eq("reviewed_user_id", id)
-        .order("created_at", { ascending: false }),
+      api.rpc("get_user_reviews", { target_user_id: id }),
       api.rpc("get_reviewable_events", { target_user_id: id }),
       api.rpc("get_public_follow_summary", { target_user_id: id }).maybeSingle(),
       api.rpc("get_user_reliability", { target_user_id: id }).maybeSingle(),
@@ -394,13 +396,29 @@ export default function UserProfileDetailScreen() {
               <View style={styles.stack}>
                 {reviews.map((review) => (
                   <View key={review.id} style={styles.reviewCard}>
-                    <View style={styles.reviewIdentity}>
-                      <Text style={styles.reviewTitle}>
-                        {review.rating}/5 - {maskUser(review.reviewer_id)}
-                      </Text>
+                    <View style={styles.reviewHeader}>
+                      {review.profiles?.avatar_url ? (
+                        <Image source={{ uri: review.profiles.avatar_url }} style={styles.reviewerAvatar} />
+                      ) : (
+                        <View style={styles.reviewerAvatarPlaceholder}>
+                          <Text style={styles.reviewerAvatarInitial}>{(review.profiles?.display_name ?? "?").slice(0, 1).toUpperCase()}</Text>
+                        </View>
+                      )}
+                      <View style={styles.reviewerInfo}>
+                        <Pressable
+                          onPress={() => {
+                            if (review.profiles?.id) router.push(`/user/${review.profiles.id}` as never);
+                          }}
+                          disabled={!review.profiles?.id}
+                        >
+                          <Text style={styles.reviewerName}>{review.profiles?.display_name ?? maskUser(review.reviewer_id)}</Text>
+                        </Pressable>
+                        {review.profiles?.username ? <Text style={styles.reviewerUsername}>@{review.profiles.username}</Text> : null}
+                        <Text style={styles.reviewMeta}>{formatDate(review.created_at)}</Text>
+                      </View>
                       <TeamIdentityBadge role={reviewTeamRoles.get(review.reviewer_id)} compact />
                     </View>
-                    <Text style={styles.reviewMeta}>{formatDate(review.created_at)}</Text>
+                    <Text style={styles.reviewTitle}>{review.rating}/5</Text>
                     <Text style={styles.reviewText}>{review.review_text || "Yalnızca puan bırakıldı."}</Text>
                   </View>
                 ))}
@@ -752,12 +770,44 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surfaceStrong,
     padding: 14,
-    gap: 6
+    gap: 8
   },
-  reviewIdentity: {
+  reviewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6
+    gap: 12
+  },
+  reviewerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22
+  },
+  reviewerAvatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.accentSoft
+  },
+  reviewerAvatarInitial: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: "900"
+  },
+  reviewerInfo: {
+    flex: 1,
+    gap: 2
+  },
+  reviewerName: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: "800"
+  },
+  reviewerUsername: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "700"
   },
   reviewTitle: {
     color: colors.ink,

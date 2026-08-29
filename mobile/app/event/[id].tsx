@@ -651,6 +651,11 @@ export default function EventDetailScreen() {
                 <Text style={styles.panelText}>Yer açıldığında talebin otomatik olarak değerlendirmeye alınacak.</Text>
               </View>
             ) : null}
+            {event.status === "published" && !isEventStaff ? (
+              <Pressable style={styles.secondaryActionButton} onPress={() => router.push(`/event/tickets/${event.id}` as never)}>
+                <Text style={styles.secondaryActionText}>Bilet al</Text>
+              </Pressable>
+            ) : null}
             {event.status === "cancelled" ? null : isEventStaff ? (
               <View style={styles.statusBanner}>
                 <Text style={styles.statusBannerText}>Bu etkinliği yönetici yetkisiyle görüntülüyorsunuz.</Text>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20260829120001-1" author="bialem">
+        <addForeignKeyConstraint baseColumnNames="story_id"
+                                 baseTableName="story_reaction"
+                                 constraintName="fk_story_reaction__story_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="story"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="user_id"
+                                 baseTableName="story_reaction"
+                                 constraintName="fk_story_reaction__user_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="profile"
+                                 />
+
+        <addUniqueConstraint
+            columnNames="story_id, user_id"
+            constraintName="ux_story_reaction__story_user"
+            tableName="story_reaction"
+        />
+
+        <createIndex indexName="idx_story_reaction_story_id" tableName="story_reaction">
+            <column name="story_id"/>
+        </createIndex>
+        <createIndex indexName="idx_story_reaction_user_id" tableName="story_reaction">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

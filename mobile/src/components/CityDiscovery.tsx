@@ -33,7 +33,7 @@ export function CityDiscovery({ city, children }: { city?: string | null; childr
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
-  const radarScrollRef = useRef<ScrollView>(null);
+  const radarScrollRef = useRef<typeof ScrollView>(null);
   const radarScrollOffset = useRef(0);
 
   const loadEvents = async () => {

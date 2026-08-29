@@ -1,9 +1,15 @@
+import type { JSX } from "react";
 import { Text, View } from "react-native";
 import glyphMap from "react-native-vector-icons/glyphmaps/Ionicons.json";
 
 type Props = { name: string; size?: number; color?: string };
 
-export function Ionicons({ name, size = 20, color = "#111" }: Props) {
+interface IoniconsType {
+  (props: Props): JSX.Element;
+  glyphMap: Record<string, number>;
+}
+
+const Ionicons: IoniconsType = (({ name, size = 20, color = "#111" }: Props) => {
   const glyph = (glyphMap as Record<string, number>)[name] ?? (glyphMap as Record<string, number>)[`${name}-outline`];
   return (
     <View pointerEvents="none" style={{ width: size, height: size, alignItems: "center", justifyContent: "center", overflow: "visible" }}>
@@ -12,6 +18,9 @@ export function Ionicons({ name, size = 20, color = "#111" }: Props) {
       </Text>
     </View>
   );
-}
+}) as IoniconsType;
 
-export default { Ionicons };
+Ionicons.glyphMap = glyphMap;
+
+export { Ionicons };
+export default Ionicons;

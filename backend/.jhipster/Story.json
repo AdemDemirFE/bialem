@@ -60,6 +60,13 @@
       "relationshipType": "one-to-many"
     },
     {
+      "otherEntityName": "storyReaction",
+      "otherEntityRelationshipName": "story",
+      "relationshipName": "reactions",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-many"
+    },
+    {
       "otherEntityName": "storyCommunityTarget",
       "otherEntityRelationshipName": "story",
       "relationshipName": "communityTargets",

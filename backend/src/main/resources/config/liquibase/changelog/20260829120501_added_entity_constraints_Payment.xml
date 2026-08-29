@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="20260829120501-1" author="bialem">
+        <addForeignKeyConstraint baseColumnNames="order_id"
+                                 baseTableName="payment"
+                                 constraintName="fk_payment__order_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="ticket_order"
+                                 />
+        <createIndex indexName="idx_payment_order_id" tableName="payment">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex indexName="idx_payment_provider_tx" tableName="payment">
+            <column name="provider_transaction_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

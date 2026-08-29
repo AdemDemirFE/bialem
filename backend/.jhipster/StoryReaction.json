@@ -1,0 +1,37 @@
+{
+  "annotations": {
+    "changelogDate": "20260829120000"
+  },
+  "applications": ["bialem"],
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "reactionType",
+      "fieldType": "StoryReactionType",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "HEART,LAUGH,FIRE,CLAP,LOVE,WOW,SAD"
+    },
+    {
+      "fieldName": "createdAt",
+      "fieldType": "Instant",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "name": "StoryReaction",
+  "relationships": [
+    {
+      "otherEntityName": "story",
+      "relationshipName": "story",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "profile",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

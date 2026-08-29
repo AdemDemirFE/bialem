@@ -15,4 +15,8 @@ export async function getInitialURL() {
   return window.location.href;
 }
 
-export default { createURL, openURL, getInitialURL, useURL };
+export async function openSettings() {
+  if (typeof window !== "undefined") window.open("/settings", "_self");
+}
+
+export default { createURL, openURL, getInitialURL, useURL, openSettings };

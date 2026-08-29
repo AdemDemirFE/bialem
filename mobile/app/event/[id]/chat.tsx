@@ -23,7 +23,7 @@ export default function EventChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const listRef = useRef<FlatList<ChatMessage>>(null);
+  const listRef = useRef<typeof FlatList>(null);
   const [eventTitle, setEventTitle] = useState("Etkinlik sohbeti");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageTeamRoles, setMessageTeamRoles] = useState<Map<string, PlatformTeamRole>>(new Map());
@@ -131,12 +131,12 @@ export default function EventChatScreen() {
         <FlatList
           ref={listRef}
           data={messages}
-          keyExtractor={(item) => item.message_id}
+          keyExtractor={(item: ChatMessage) => item.message_id}
           contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={<Text style={styles.empty}>İlk mesajı göndererek buluşmayı başlat.</Text>}
-          renderItem={({ item }) => {
+          renderItem={({ item }: { item: ChatMessage }) => {
             const mine = item.author_id === user?.id;
             return (
               <View style={[styles.message, mine && styles.messageMine]}>

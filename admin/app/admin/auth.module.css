@@ -112,3 +112,10 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+.note {
+  margin: 0 0 12px;
+  color: #53617f;
+  font-size: 14px;
+  text-align: center;
+}

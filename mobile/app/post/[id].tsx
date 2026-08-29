@@ -52,7 +52,7 @@ type CommentRecord = {
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
-  const commentInputRef = useRef<TextInput>(null);
+  const commentInputRef = useRef<typeof TextInput>(null);
   const [post, setPost] = useState<PostRecord | null>(null);
   const [community, setCommunity] = useState<CommunityRecord | null>(null);
   const [comments, setComments] = useState<CommentRecord[]>([]);

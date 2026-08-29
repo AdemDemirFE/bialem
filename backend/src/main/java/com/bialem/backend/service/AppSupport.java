@@ -7,6 +7,7 @@ import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
@@ -40,6 +41,7 @@ public class AppSupport {
         TABLES.put("post_media", PostMedia.class);
         TABLES.put("stories", Story.class);
         TABLES.put("story_views", StoryView.class);
+        TABLES.put("story_reactions", StoryReaction.class);
         TABLES.put("story_community_targets", StoryCommunityTarget.class);
         TABLES.put("follows", Follow.class);
         TABLES.put("follow_requests", FollowRequest.class);
@@ -51,6 +53,11 @@ public class AppSupport {
         TABLES.put("city_events", CityEvent.class);
         TABLES.put("city_event_interests", CityEventInterest.class);
         TABLES.put("city_event_ticket_offers", CityEventTicketOffer.class);
+        TABLES.put("event_tickets", EventTicket.class);
+        TABLES.put("ticket_orders", Order.class);
+        TABLES.put("order_items", OrderItem.class);
+        TABLES.put("payments", Payment.class);
+        TABLES.put("tickets", Ticket.class);
         TABLES.put("partner_venues", PartnerVenue.class);
         TABLES.put("partner_venue_staff", PartnerVenueStaff.class);
         TABLES.put("partner_offers", PartnerOffer.class);
@@ -133,7 +140,12 @@ public class AppSupport {
         Class<?> type = entity.getClass();
         while (type != null && type != Object.class) {
             for (Field field : type.getDeclaredFields()) {
-                if (Collection.class.isAssignableFrom(field.getType()) || field.getName().contains("$")) {
+                if (
+                    Modifier.isStatic(field.getModifiers()) ||
+                    Modifier.isTransient(field.getModifiers()) ||
+                    Collection.class.isAssignableFrom(field.getType()) ||
+                    field.getName().contains("$")
+                ) {
                     continue;
                 }
                 field.setAccessible(true);
@@ -204,6 +216,7 @@ public class AppSupport {
         if (entity instanceof UserReview review) {
             out.put("reviewer_id", review.getReviewer() == null ? null : stringify(review.getReviewer().getId()));
             out.put("reviewed_user_id", review.getReviewedUser() == null ? null : stringify(review.getReviewedUser().getId()));
+            out.put("profiles", profileEmbed(review.getReviewer()));
         }
         if (entity instanceof CommunityModeratorAssistant assistant) {
             out.put("profiles", profileEmbed(assistant.getUser()));

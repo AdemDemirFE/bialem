@@ -70,14 +70,15 @@ export default function AccountScreen() {
     setBusy(true);
     setError(null);
     const { data, error: functionError } = await api.functions.invoke("delete-account", { body: {} });
+    const result = data as { deleted?: boolean; error?: string } | null;
 
-    if (functionError || !data?.deleted) {
-      setError(data?.error || functionError?.message || "Hesap silinemedi. Lütfen tekrar deneyin.");
+    if (functionError || !result?.deleted) {
+      setError(result?.error || functionError?.message || "Hesap silinemedi. Lütfen tekrar deneyin.");
       setBusy(false);
       return;
     }
 
-    await api.auth.signOut({ scope: "local" });
+    await api.auth.signOut();
     router.replace("/");
   };
 

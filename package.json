@@ -36,6 +36,8 @@
     "1:dev": "npm --workspace mobile run 1:dev",
     "1:dev:proxy": "npm --workspace mobile run 1:dev:proxy",
     "2:prod": "npm --workspace mobile run 2:prod",
+    "3:test": "npm --workspace mobile run 3:test",
+    "web:3:test": "npm run 3:test",
     "3:android-test": "npm --workspace mobile run 3:android-test",
 
     "1:dev:admin": "npm --workspace admin run 1:dev",

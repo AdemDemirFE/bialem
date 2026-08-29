@@ -52,9 +52,10 @@ export default function AssistantScreen() {
       }
     });
 
-    const answer = data?.answer || data?.reply;
+    const payload = data as { answer?: string; reply?: string; error?: string } | null;
+    const answer = payload?.answer || payload?.reply;
     if (functionError || !answer) {
-      setError(data?.error || functionError?.message || "Asistan yanıt veremedi.");
+      setError(payload?.error || functionError?.message || "Asistan yanıt veremedi.");
       setSending(false);
       return;
     }

@@ -52,7 +52,7 @@ export default function EventPosterScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
-  const posterRef = useRef<View>(null);
+  const posterRef = useRef<typeof View>(null);
   const [event, setEvent] = useState<PosterEvent | null>(null);
   const [communityName, setCommunityName] = useState("Bialem Topluluğu");
   const [loading, setLoading] = useState(true);

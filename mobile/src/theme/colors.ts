@@ -15,6 +15,7 @@ export type ThemePalette = {
   success: ColorValue;
   warning: ColorValue;
   danger: ColorValue;
+  dangerSoft: ColorValue;
   shadow: ColorValue;
 };
 
@@ -43,6 +44,7 @@ const lightPalette: Palette = {
   success: "#168aaf",
   warning: "#fbc94d",
   danger: "#c94568",
+  dangerSoft: "#ffe4e6",
   shadow: "rgba(10, 24, 51, 0.1)"
 };
 
@@ -61,6 +63,7 @@ const darkPalette: Palette = {
   success: "#55bdd3",
   warning: "#f6cd58",
   danger: "#f07891",
+  dangerSoft: "#4a1a24",
   shadow: "rgba(0, 0, 0, 0.4)"
 };
 
@@ -94,6 +97,7 @@ export const colors: ThemePalette & BrandPalette = {
   success: adaptive("success"),
   warning: adaptive("warning"),
   danger: adaptive("danger"),
+  dangerSoft: adaptive("dangerSoft"),
   shadow: adaptive("shadow"),
   // Brand surfaces stay dark in both themes; they are not semantic text colors.
   brandInk: "#0b1730",

@@ -100,7 +100,7 @@ public class AccountResource {
     public AdminUserDTO getAccount() {
         return userService
             .getUserWithAuthorities()
-            .map(AdminUserDTO::new)
+            .map(user -> new AdminUserDTO(user, userService.findAppRoleCodesForUser(user)))
             .orElseThrow(() -> new AccountResourceException("User could not be found"));
     }
 

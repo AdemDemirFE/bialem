@@ -13,7 +13,7 @@ export default function DirectChatScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useAuth();
-  const listRef = useRef<FlatList<DirectMessage>>(null);
+  const listRef = useRef<typeof FlatList>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -70,12 +70,12 @@ export default function DirectChatScreen() {
         <FlatList
           ref={listRef}
           data={messages}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item: DirectMessage) => String(item.id)}
           contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={<View style={styles.empty}><Ionicons name="sparkles-outline" size={30} color={colors.accent} /><Text style={styles.emptyTitle}>Sohbeti başlat</Text><Text style={styles.muted}>Samimi bir merhaba her şeyi başlatabilir.</Text></View>}
-          renderItem={({ item }) => {
+          renderItem={({ item }: { item: DirectMessage }) => {
             const mine = String(item.senderProfileId) === String(profile?.id);
             return <View style={[styles.bubble, mine && styles.mine]}><Text style={[styles.message, mine && styles.mineText]}>{item.body}</Text><Text style={[styles.time, mine && styles.mineTime]}>{formatTime(item.createdAt)}{mine ? item.readAt ? "  ✓✓" : "  ✓" : ""}</Text></View>;
           }}

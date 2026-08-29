@@ -2,7 +2,7 @@ export async function requestForegroundPermissionsAsync() {
   return { status: "granted", granted: true };
 }
 
-export async function getCurrentPositionAsync() {
+export async function getCurrentPositionAsync(_options?: { accuracy?: number }): Promise<{ coords: { latitude: number; longitude: number } }> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error("Konum desteklenmiyor"));
@@ -19,7 +19,7 @@ export const Accuracy = {
   Balanced: 3
 } as const;
 
-type GeocodedAddress = {
+export type LocationGeocodedAddress = {
   name?: string;
   street?: string;
   district?: string;
@@ -27,6 +27,8 @@ type GeocodedAddress = {
   region?: string;
   country?: string;
 };
+
+type GeocodedAddress = LocationGeocodedAddress;
 
 export async function reverseGeocodeAsync({ latitude, longitude }: { latitude: number; longitude: number }): Promise<GeocodedAddress[]> {
   const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`, {

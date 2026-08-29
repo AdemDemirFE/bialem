@@ -41,13 +41,15 @@ function resolveTarget(to: string | { pathname?: string; params?: Record<string,
   return query ? `${path}${path.includes("?") ? "&" : "?"}${query}` : path;
 }
 
+export type Href = string | { pathname?: string; params?: Record<string, string | number | undefined> };
+
 const HeaderContext = createContext<(options: Record<string, unknown>) => void>(() => undefined);
 
 export function useRouter() {
   const navigate = useNavigate();
   return {
-    push: (to: never) => navigate(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> })),
-    replace: (to: never) => navigate(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> }), { replace: true }),
+    push: (to: Href) => navigate(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> })),
+    replace: (to: Href) => navigate(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> }), { replace: true }),
     back: () => navigate(-1)
   };
 }
@@ -61,10 +63,10 @@ export function bindRouter(navigate: (to: string, opts?: { replace?: boolean }) 
 }
 
 export const router = {
-  push(to: never) {
+  push(to: Href) {
     navigateRef?.(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> }));
   },
-  replace(to: never) {
+  replace(to: Href) {
     navigateRef?.(resolveTarget(to as string | { pathname?: string; params?: Record<string, string> }), { replace: true });
   },
   back() {
@@ -72,7 +74,7 @@ export const router = {
   }
 };
 
-export function useLocalSearchParams<T extends Record<string, string>>() {
+export function useLocalSearchParams<T extends Record<string, string | string[] | undefined>>() {
   const params = useParams();
   const [search] = useSearchParams();
   const merged: Record<string, string> = { ...(params as Record<string, string>) };
@@ -242,7 +244,15 @@ export function Tabs({
   );
 }
 
-Tabs.Screen = function TabsScreen(_props: { name: string; options?: Record<string, unknown> }) {
+Tabs.Screen = function TabsScreen(_props: {
+  name: string;
+  options?: {
+    title?: string;
+    href?: string | null;
+    tabBarLabel?: string;
+    tabBarIcon?: (info: { color: string; size: number; focused: boolean }) => ReactNode;
+  } & Record<string, unknown>;
+}) {
   return null;
 };
 

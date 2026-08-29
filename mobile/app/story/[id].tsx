@@ -1,7 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { useAuth } from "../../src/lib/auth";
 import { removeStoryImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
@@ -17,9 +26,29 @@ type StoryDetail = {
   body: string | null;
   media_url: string | null;
   created_at: string;
+  is_viewed?: boolean;
+  viewer_count: number;
+  reactions: Record<string, number>;
+  my_reaction?: string | null;
+};
+
+type ProfileCard = {
+  id: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
 };
 
 const STORY_MS = 6000;
+const REACTIONS = [
+  { key: "heart", emoji: "❤️" },
+  { key: "laugh", emoji: "😂" },
+  { key: "fire", emoji: "🔥" },
+  { key: "clap", emoji: "👏" },
+  { key: "love", emoji: "😍" },
+  { key: "wow", emoji: "😮" },
+  { key: "sad", emoji: "😢" }
+];
 
 export default function StoryViewerScreen() {
   const router = useRouter();
@@ -33,6 +62,11 @@ export default function StoryViewerScreen() {
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showViewers, setShowViewers] = useState(false);
+  const [viewers, setViewers] = useState<ProfileCard[]>([]);
+  const [loadingViewers, setLoadingViewers] = useState(false);
+  const [myReaction, setMyReaction] = useState<string | null>(null);
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({});
   const pausedRef = useRef(false);
   const holdPausedRef = useRef(false);
   const buttonPausedRef = useRef(false);
@@ -40,6 +74,7 @@ export default function StoryViewerScreen() {
   const lastTickRef = useRef<number | null>(null);
   const goNextRef = useRef<() => void>(() => undefined);
   const story = queue[index] ?? null;
+  const isOwnStory = Boolean(story && user && story.author_id === user.id);
 
   useEffect(() => {
     pausedRef.current = paused;
@@ -73,7 +108,31 @@ export default function StoryViewerScreen() {
   useEffect(() => {
     if (!story?.story_id) return;
     void api.rpc("mark_story_viewed", { target_story_id: story.story_id });
+    setMyReaction(story.my_reaction ?? null);
+    setReactionCounts(story.reactions ?? {});
   }, [story?.story_id]);
+
+  useEffect(() => {
+    if (!story || loading || confirmDelete || showViewers) return;
+    elapsedRef.current = 0;
+    lastTickRef.current = null;
+    setProgress(0);
+    let frame = 0;
+    const tick = (now: number) => {
+      if (lastTickRef.current == null) lastTickRef.current = now;
+      if (!pausedRef.current) elapsedRef.current += now - lastTickRef.current;
+      lastTickRef.current = now;
+      const ratio = Math.min(1, elapsedRef.current / STORY_MS);
+      setProgress(ratio);
+      if (ratio >= 1) {
+        goNextRef.current();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [story?.story_id, loading, confirmDelete, showViewers]);
 
   const closeViewer = () => {
     if (typeof window !== "undefined" && window.history.length > 1) router.back();
@@ -98,30 +157,8 @@ export default function StoryViewerScreen() {
 
   goNextRef.current = goNext;
 
-  useEffect(() => {
-    if (!story || loading || confirmDelete) return;
-    elapsedRef.current = 0;
-    lastTickRef.current = null;
-    setProgress(0);
-    let frame = 0;
-    const tick = (now: number) => {
-      if (lastTickRef.current == null) lastTickRef.current = now;
-      if (!pausedRef.current) elapsedRef.current += now - lastTickRef.current;
-      lastTickRef.current = now;
-      const ratio = Math.min(1, elapsedRef.current / STORY_MS);
-      setProgress(ratio);
-      if (ratio >= 1) {
-        goNextRef.current();
-        return;
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [story?.story_id, loading, confirmDelete]);
-
   const syncPaused = () => {
-    const next = holdPausedRef.current || buttonPausedRef.current;
+    const next = holdPausedRef.current || buttonPausedRef.current || showViewers;
     setPaused(next);
   };
 
@@ -191,6 +228,36 @@ export default function StoryViewerScreen() {
     syncPaused();
   };
 
+  const openViewers = async () => {
+    if (!story || !isOwnStory) return;
+    setShowViewers(true);
+    setLoadingViewers(true);
+    const result = await api.rpc("get_story_viewers", { target_story_id: story.story_id });
+    setViewers((Array.isArray(result.data) ? result.data : []) as ProfileCard[]);
+    setLoadingViewers(false);
+  };
+
+  const closeViewers = () => {
+    setShowViewers(false);
+    setViewers([]);
+    syncPaused();
+  };
+
+  const sendReaction = async (key: string) => {
+    if (!story) return;
+    const next = myReaction === key ? null : key;
+    setMyReaction(next);
+    setReactionCounts((prev) => ({
+      ...prev,
+      [key]: Math.max(0, (prev[key] ?? 0) + (next === key ? 1 : -1))
+    }));
+    if (next === null) {
+      await api.rpc("remove_story_reaction", { target_story_id: story.story_id });
+    } else {
+      await api.rpc("set_story_reaction", { target_story_id: story.story_id, target_reaction_type: key });
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -255,24 +322,31 @@ export default function StoryViewerScreen() {
       </View>
 
       <View style={styles.header} pointerEvents="box-none">
-        <View style={styles.avatar}>
+        <Pressable style={styles.avatar} onPress={() => router.push(`/user/${story.author_id}` as never)}>
           {story.avatar_url ? (
             <Image source={{ uri: story.avatar_url }} style={styles.avatarImage} />
           ) : (
             <Text style={styles.avatarText}>{story.display_name.slice(0, 1).toUpperCase()}</Text>
           )}
-        </View>
+        </Pressable>
         <View style={styles.authorCopy} pointerEvents="none">
-          <Text style={styles.author}>{story.display_name}</Text>
+          <Pressable onPress={() => router.push(`/user/${story.author_id}` as never)}>
+            <Text style={styles.author}>{story.display_name}</Text>
+          </Pressable>
           <Text style={styles.meta}>
             {story.community_name || "Takipçileriyle paylaştı"} · {formatAge(story.created_at)}
           </Text>
+          {isOwnStory ? (
+            <Pressable onPress={openViewers}>
+              <Text style={styles.viewerCount}>{story.viewer_count} görüntüleme</Text>
+            </Pressable>
+          ) : null}
         </View>
         <View style={styles.headerActions}>
           <Pressable style={styles.iconButton} onPress={togglePause} accessibilityLabel={paused ? "Başlat" : "Durdur"}>
             <Ionicons name={paused ? "play" : "pause"} size={18} color={colors.onBrand} />
           </Pressable>
-          {story.author_id === user?.id ? (
+          {isOwnStory ? (
             <Pressable style={styles.deleteButton} onPress={requestDelete} disabled={deleting} accessibilityLabel="Sil">
               {deleting ? <ActivityIndicator size="small" color={colors.onBrand} /> : <Ionicons name="trash-outline" size={16} color={colors.onBrand} />}
             </Pressable>
@@ -294,9 +368,26 @@ export default function StoryViewerScreen() {
         <Text style={styles.sideHint}>{index > 0 ? "‹" : ""}</Text>
         <Text style={styles.sideHint}>{index < queue.length - 1 ? "›" : ""}</Text>
       </View>
-      <Text style={styles.expiry} pointerEvents="none">
-        {paused ? "Duraklatıldı" : "Bu anlık 24 saat sonra kaybolur."}
-      </Text>
+
+      <View style={styles.footer}>
+        <View style={styles.reactionBar}>
+          {REACTIONS.map(({ key, emoji }) => {
+            const count = reactionCounts[key] ?? 0;
+            const active = myReaction === key;
+            return (
+              <Pressable
+                key={key}
+                style={[styles.reactionButton, active && styles.reactionButtonActive]}
+                onPress={() => void sendReaction(key)}
+              >
+                <Text style={styles.reactionEmoji}>{emoji}</Text>
+                {count > 0 ? <Text style={styles.reactionCount}>{count}</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+        <Text style={styles.expiry}>{paused ? "Duraklatıldı" : "Bu anlık 24 saat sonra kaybolur."}</Text>
+      </View>
 
       {confirmDelete ? (
         <View style={styles.confirmScrim}>
@@ -314,6 +405,50 @@ export default function StoryViewerScreen() {
           </View>
         </View>
       ) : null}
+
+      <Modal visible={showViewers} animationType="slide" transparent onRequestClose={closeViewers}>
+        <View style={styles.modalScrim}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Görüntüleyenler</Text>
+              <Pressable onPress={closeViewers} style={styles.modalClose}>
+                <Ionicons name="close" size={24} color={colors.ink} />
+              </Pressable>
+            </View>
+            {loadingViewers ? (
+              <ActivityIndicator color={colors.accent} style={styles.modalLoader} />
+            ) : viewers.length === 0 ? (
+              <Text style={styles.modalEmpty}>Henüz kimse görüntülememiş.</Text>
+            ) : (
+              <FlatList
+                data={viewers}
+                keyExtractor={(item: ProfileCard) => item.id}
+                renderItem={({ item }: { item: ProfileCard }) => (
+                  <Pressable
+                    style={styles.viewerRow}
+                    onPress={() => {
+                      closeViewers();
+                      router.push(`/user/${item.id}` as never);
+                    }}
+                  >
+                    {item.avatar_url ? (
+                      <Image source={{ uri: item.avatar_url }} style={styles.viewerAvatar} />
+                    ) : (
+                      <View style={styles.viewerAvatarPlaceholder}>
+                        <Text style={styles.viewerAvatarInitial}>{item.display_name.slice(0, 1).toUpperCase()}</Text>
+                      </View>
+                    )}
+                    <View style={styles.viewerInfo}>
+                      <Text style={styles.viewerName}>{item.display_name}</Text>
+                      <Text style={styles.viewerUsername}>@{item.username}</Text>
+                    </View>
+                  </Pressable>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -343,16 +478,23 @@ const styles = StyleSheet.create({
   authorCopy: { flex: 1, gap: 2 },
   author: { color: colors.onBrand, fontSize: 15, fontWeight: "900" },
   meta: { color: "rgba(255,255,255,0.78)", fontSize: 11, fontWeight: "700" },
+  viewerCount: { color: colors.action, fontSize: 11, fontWeight: "800" },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.45)" },
   deleteButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(196,45,74,0.88)" },
-  content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingTop: 130, paddingBottom: 90, zIndex: 0 },
+  content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 30, paddingTop: 130, paddingBottom: 140, zIndex: 0 },
   body: { color: colors.onBrand, fontSize: 18, lineHeight: 25, fontWeight: "800", textAlign: "center", padding: 14, borderRadius: 18, backgroundColor: "rgba(3,12,35,0.48)" },
   textStoryBody: { fontSize: 30, lineHeight: 38, backgroundColor: "transparent" },
   inlineError: { marginTop: 14, color: colors.onBrand, textAlign: "center", fontSize: 13, fontWeight: "800", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: "rgba(196,45,74,0.88)" },
   sideHints: { position: "absolute", left: 10, right: 10, top: "48%", zIndex: 2, flexDirection: "row", justifyContent: "space-between" },
   sideHint: { color: "rgba(255,255,255,0.35)", fontSize: 36, fontWeight: "200" },
-  expiry: { position: "absolute", bottom: 34, left: 20, right: 20, zIndex: 2, color: "rgba(255,255,255,0.7)", fontSize: 11, textAlign: "center", fontWeight: "700" },
+  footer: { position: "absolute", bottom: 24, left: 14, right: 14, zIndex: 5, alignItems: "center", gap: 10 },
+  reactionBar: { flexDirection: "row", gap: 8, flexWrap: "wrap", justifyContent: "center" },
+  reactionButton: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(0,0,0,0.45)" },
+  reactionButtonActive: { backgroundColor: "rgba(255,173,31,0.35)" },
+  reactionEmoji: { fontSize: 18 },
+  reactionCount: { color: colors.onBrand, fontSize: 11, fontWeight: "800" },
+  expiry: { color: "rgba(255,255,255,0.7)", fontSize: 11, textAlign: "center", fontWeight: "700" },
   error: { color: colors.onBrand, textAlign: "center", fontSize: 16, lineHeight: 23 },
   closeButton: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999, backgroundColor: colors.action },
   closeText: { color: colors.actionText, fontWeight: "900" },
@@ -364,5 +506,19 @@ const styles = StyleSheet.create({
   confirmCancel: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.page },
   confirmCancelText: { color: colors.ink, fontWeight: "800" },
   confirmDelete: { flex: 1, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "#c42d4a" },
-  confirmDeleteText: { color: colors.onBrand, fontWeight: "800" }
+  confirmDeleteText: { color: colors.onBrand, fontWeight: "800" },
+  modalScrim: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(3,12,35,0.72)" },
+  modalCard: { maxHeight: "70%", backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20 },
+  modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  modalTitle: { color: colors.ink, fontSize: 18, fontWeight: "900" },
+  modalClose: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: colors.page },
+  modalLoader: { marginVertical: 24 },
+  modalEmpty: { color: colors.muted, textAlign: "center", marginVertical: 24, fontWeight: "600" },
+  viewerRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
+  viewerAvatar: { width: 44, height: 44, borderRadius: 22 },
+  viewerAvatarPlaceholder: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: colors.accentSoft },
+  viewerAvatarInitial: { color: colors.accent, fontSize: 17, fontWeight: "900" },
+  viewerInfo: { flex: 1, gap: 2 },
+  viewerName: { color: colors.ink, fontSize: 15, fontWeight: "800" },
+  viewerUsername: { color: colors.muted, fontSize: 13, fontWeight: "600" }
 });

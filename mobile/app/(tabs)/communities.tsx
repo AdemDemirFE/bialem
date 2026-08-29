@@ -42,6 +42,29 @@ type Membership = {
 type CommunityView = "official" | "local" | "mine";
 type PartnerFilter = "all" | "verified" | "new";
 
+type CommunityResponse = Partial<Community> & {
+  community_id?: string | number | null;
+  communityId?: string | number | null;
+  coverImageUrl?: string | null;
+  communityType?: Community["community_type"];
+  partnerTrustLevel?: Community["partner_trust_level"];
+  isVerifiedPartner?: boolean;
+  createdAt?: string;
+  membershipStatus?: string | null;
+  membershipRole?: Membership["role"] | null;
+  isMember?: boolean;
+  data?: CommunityResponse | null;
+  community?: CommunityResponse | null;
+  communities?: CommunityResponse | null;
+};
+
+type MembershipResponse = {
+  community_id?: string | number | null;
+  role?: Membership["role"] | null;
+  status?: string | null;
+  communities?: CommunityResponse | null;
+};
+
 const PAGE_SIZE = 6;
 const NEW_COMMUNITY_DAYS = 14;
 const fallbackColors = ["#7047d7", "#168aaf", "#f6a51c", "#176b87"];
@@ -69,6 +92,28 @@ function matchesSearch(community: Community, query: string) {
   return searchableText.includes(query);
 }
 
+function normalizeCommunity(row: CommunityResponse): Community | null {
+  const nested = row.data ?? row.community ?? row.communities ?? {};
+  const value = { ...row, ...nested };
+  const id = String(value.id ?? value.community_id ?? value.communityId ?? "");
+  if (!id || id === "null" || id === "undefined") return null;
+  return {
+    ...value,
+    id,
+    name: String(value.name ?? "").trim() || `Topluluk #${id}`,
+    slug: String(value.slug ?? id),
+    description: value.description ?? null,
+    cover_image_url: value.cover_image_url ?? value.coverImageUrl ?? null,
+    community_type: value.community_type ?? value.communityType ?? "category_hub",
+    partner_trust_level: value.partner_trust_level ?? value.partnerTrustLevel ?? "new",
+    is_verified_partner: value.is_verified_partner ?? value.isVerifiedPartner ?? false,
+    created_at: value.created_at ?? value.createdAt ?? new Date(0).toISOString(),
+    membership_status: row.membership_status ?? row.membershipStatus ?? value.membership_status ?? value.membershipStatus ?? null,
+    membership_role: row.membership_role ?? row.membershipRole ?? value.membership_role ?? value.membershipRole ?? null,
+    is_member: row.is_member ?? row.isMember ?? value.is_member ?? value.isMember ?? false
+  };
+}
+
 export default function CommunitiesScreen() {
   const { user } = useAuth();
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -80,6 +125,7 @@ export default function CommunitiesScreen() {
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLocaleLowerCase("tr-TR"));
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [failedCoverIds, setFailedCoverIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +135,7 @@ export default function CommunitiesScreen() {
     else setRefreshing(true);
     setError(null);
 
-    const [communitiesResult, assistantsResult] = await Promise.all([
+    const [communitiesResult, assistantsResult, membershipDetailsResult] = await Promise.all([
       user ? api.rpc("get_communities_with_my_membership") : api
         .from("communities")
         .select("id, name, slug, description, cover_image_url, community_type, partner_trust_level, is_verified_partner, created_at")
@@ -97,15 +143,33 @@ export default function CommunitiesScreen() {
         .order("created_at", { ascending: false }),
       user
         ? api.from("community_moderator_assistants").select("community_id").eq("user_id", user.id)
+        : Promise.resolve({ data: [], error: null }),
+      user
+        ? api.from("community_members").select("community_id, role, status, communities(*)").eq("user_id", user.id)
         : Promise.resolve({ data: [], error: null })
     ]);
 
     if (communitiesResult.error) {
       setError(communitiesResult.error.message || "Topluluklar yüklenemedi.");
     } else {
-      const loadedCommunities=((communitiesResult.data ?? []) as Array<Community & {community_id?:string|null}>)
-        .map(community => ({ ...community, id: String(community.id ?? community.community_id ?? "") }))
-        .filter(community => community.id !== "" && community.id !== "null" && community.id !== "undefined");
+      const rpcCommunities = ((communitiesResult.data ?? []) as CommunityResponse[])
+        .map(normalizeCommunity)
+        .filter((community): community is Community => community !== null);
+      const membershipCommunities = ((membershipDetailsResult.data ?? []) as MembershipResponse[])
+        .map((membership) => normalizeCommunity({
+          ...(membership.communities ?? {}),
+          id: String(membership.communities?.id ?? membership.community_id),
+          community_id: membership.community_id,
+          membership_status: membership.status ?? null,
+          membership_role: membership.role ?? null,
+          is_member: String(membership.status ?? "").toLowerCase() === "approved"
+        }))
+        .filter((community): community is Community => community !== null && !community.name.startsWith("Topluluk #"));
+      const realMembershipIds = new Set(membershipCommunities.map((community) => community.id));
+      const loadedCommunities = [...new Map([
+        ...rpcCommunities.filter((community) => !community.name.startsWith("Topluluk #") || realMembershipIds.has(community.id)),
+        ...membershipCommunities
+      ].map((community) => [community.id, community])).values()];
       setCommunities(loadedCommunities);
       setMemberships(
         loadedCommunities.reduce<Record<string, Membership>>((result, community) => {
@@ -118,7 +182,7 @@ export default function CommunitiesScreen() {
           return result;
         }, {})
       );
-      setAssistantCommunityIds(assistantsResult.error ? [] : (assistantsResult.data ?? []).map((assistant) => String(assistant.community_id)));
+      setAssistantCommunityIds(assistantsResult.error ? [] : ((assistantsResult.data ?? []) as Array<{ community_id: string }>).map((assistant) => String(assistant.community_id)));
     }
 
     setLoading(false);
@@ -230,7 +294,8 @@ export default function CommunitiesScreen() {
     const canInspect = canOpen || requestPending;
     const isPartner = community.community_type === "partner_hub";
     const recentlyAdded = isRecentlyAdded(community.created_at);
-    const coverSource = getCommunityCover(community.slug, community.cover_image_url);
+    const remoteCoverFailed = failedCoverIds.has(community.id);
+    const coverSource = getCommunityCover(community.slug, remoteCoverFailed ? null : community.cover_image_url);
     const eyebrow = isModerator
       ? isPartner ? "BAĞIMSIZ YÖNETİCİ" : "BİALEM MODERATÖRÜ"
       : isAssistant ? "MODERATÖR YARDIMCISI"
@@ -253,7 +318,15 @@ export default function CommunitiesScreen() {
       <View key={community.id} style={styles.card}>
         <Pressable onPress={() => canInspect && router.push({ pathname: "/community/[id]", params: { id: community.id } })}>
           {coverSource ? (
-            <ImageBackground source={coverSource} style={styles.cover} imageStyle={styles.coverImage}>
+            <ImageBackground
+              source={coverSource}
+              style={styles.cover}
+              imageStyle={styles.coverImage}
+              onError={() => {
+                if (!community.cover_image_url || remoteCoverFailed) return;
+                setFailedCoverIds((current) => new Set(current).add(community.id));
+              }}
+            >
               <View style={styles.coverShade} />
               <View style={styles.coverContent}>{coverContent}</View>
             </ImageBackground>

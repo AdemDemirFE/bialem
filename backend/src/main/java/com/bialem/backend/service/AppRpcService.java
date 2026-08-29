@@ -2,6 +2,9 @@ package com.bialem.backend.service;
 
 import com.bialem.backend.domain.*;
 import com.bialem.backend.domain.enumeration.*;
+import com.bialem.backend.domain.enumeration.StoryReactionType;
+import com.bialem.backend.payment.*;
+import com.bialem.backend.repository.*;
 import com.bialem.backend.security.AuthoritiesConstants;
 import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.notification.NotificationEvent;
@@ -40,13 +43,28 @@ public class AppRpcService {
     private final TransactionTemplate transactions;
     private final NotificationEventPublisher notificationEvents;
     private final CommunityAuthorizationService communityAuthorization;
+    private final PaymentService paymentService;
+    private final EventTicketRepository eventTicketRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final TicketRepository ticketRepository;
+    private final PaymentRepository paymentRepository;
 
     public AppRpcService(AppSupport support, PlatformTransactionManager transactionManager, NotificationEventPublisher notificationEvents,
-        CommunityAuthorizationService communityAuthorization) {
+        CommunityAuthorizationService communityAuthorization, PaymentService paymentService,
+        EventTicketRepository eventTicketRepository, OrderRepository orderRepository,
+        OrderItemRepository orderItemRepository, TicketRepository ticketRepository,
+        PaymentRepository paymentRepository) {
         this.support = support;
         this.transactions = new TransactionTemplate(transactionManager);
         this.notificationEvents = notificationEvents;
         this.communityAuthorization = communityAuthorization;
+        this.paymentService = paymentService;
+        this.eventTicketRepository = eventTicketRepository;
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.ticketRepository = ticketRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public AppQueryResponse invoke(String name, Map<String, Object> args) {
@@ -127,11 +145,23 @@ public class AppRpcService {
             case "get_story_feed" -> storyFeed(me);
             case "get_story_detail" -> storyDetail(id(args.get("target_story_id")));
             case "mark_story_viewed" -> markStoryViewed(me, id(args.get("target_story_id")));
+            case "get_story_viewers" -> storyViewers(me, id(args.get("target_story_id")));
+            case "set_story_reaction" -> setStoryReaction(me, id(args.get("target_story_id")), str(args.get("target_reaction_type")));
+            case "get_story_reactions" -> storyReactions(me, id(args.get("target_story_id")));
+            case "remove_story_reaction" -> removeStoryReaction(me, id(args.get("target_story_id")));
             case "create_story_with_audience" -> createStory(me, args);
+            case "get_user_reviews" -> userReviews(id(args.get("target_user_id")));
             case "get_city_radar" -> cityRadar(me, str(args.get("target_city")));
             case "set_city_event_interest" -> setCityInterest(me, id(args.get("target_event_id")), bool(args.get("target_looking_for_company")));
             case "clear_city_event_interest" -> clearCityInterest(me, id(args.get("target_event_id")));
             case "get_city_event_ticket_offers" -> ticketOffers(id(args.get("target_event_id")));
+            case "get_event_tickets" -> eventTickets(id(args.get("target_event_id")));
+            case "create_ticket_order" -> createTicketOrder(me, args);
+            case "initiate_payment" -> initiatePayment(me, args);
+            case "handle_payment_callback" -> handlePaymentCallback(args);
+            case "get_my_tickets" -> myTickets(me);
+            case "get_order" -> orderDetail(me, id(args.get("target_order_id")));
+            case "cancel_order" -> cancelTicketOrder(me, id(args.get("target_order_id")));
             case "issue_partner_offer_redemption" -> issueRedemption(me, id(args.get("target_offer_id")));
             case "redeem_partner_offer" -> redeemOffer(str(args.get("redemption_code")), str(args.get("target_code")));
             case "register_current_device_push_token" -> registerPush(me, args);
@@ -391,7 +421,11 @@ public class AppRpcService {
                 membershipPriority(candidate) > membershipPriority(current) ? candidate : current);
         }
         return em
-            .createQuery("select c from Community c where c.parent is null order by c.createdAt desc", Community.class)
+            .createQuery(
+                "select c from Community c where c.parent is null and c.name is not null and trim(c.name) <> '' " +
+                "and c.slug is not null and trim(c.slug) <> '' order by c.createdAt desc",
+                Community.class
+            )
             .getResultList()
             .stream()
             .map(community -> {
@@ -891,7 +925,8 @@ public class AppRpcService {
     private Map<String, Object> storyRow(Story story, boolean viewed) {
         Profile author = story.getAuthor();
         Map<String, Object> row = new LinkedHashMap<>();
-        row.put("story_id", support.stringify(story.getId()));
+        Long storyId = story.getId();
+        row.put("story_id", support.stringify(storyId));
         row.put("author_id", author == null ? null : support.stringify(author.getId()));
         row.put("display_name", author == null || author.getDisplayName() == null ? "" : author.getDisplayName());
         row.put("avatar_url", author == null ? null : author.getAvatarUrl());
@@ -918,7 +953,122 @@ public class AppRpcService {
         row.put("media_url", story.getMediaUrl());
         row.put("created_at", story.getCreatedAt() == null ? null : story.getCreatedAt().toString());
         row.put("is_viewed", viewed);
+        row.put("viewer_count", storyId == null ? 0 : storyViewerCount(storyId));
+        row.put("reactions", storyId == null ? Map.of() : storyReactionsSummary(storyId));
         return row;
+    }
+
+    private long storyViewerCount(Long storyId) {
+        return em.createQuery("select count(v) from StoryView v where v.story.id = :id", Long.class)
+            .setParameter("id", storyId)
+            .getSingleResult();
+    }
+
+    private Map<String, Long> storyReactionsSummary(Long storyId) {
+        List<Object[]> rows = em.createQuery(
+            "select r.reactionType, count(r) from StoryReaction r where r.story.id = :id group by r.reactionType",
+            Object[].class
+        ).setParameter("id", storyId).getResultList();
+        Map<String, Long> summary = new LinkedHashMap<>();
+        for (StoryReactionType type : StoryReactionType.values()) {
+            summary.put(type.name().toLowerCase(Locale.ROOT), 0L);
+        }
+        for (Object[] row : rows) {
+            summary.put(((StoryReactionType) row[0]).name().toLowerCase(Locale.ROOT), (Long) row[1]);
+        }
+        return summary;
+    }
+
+    private List<Map<String, Object>> storyViewers(Profile me, Long storyId) {
+        Story story = em.find(Story.class, storyId);
+        if (story == null || !story.getAuthor().getId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu storynin görüntüleyenlerini göremezsiniz.");
+        }
+        return em.createQuery(
+            "select v.viewer from StoryView v where v.story.id = :id order by v.viewedAt desc",
+            Profile.class
+        )
+            .setParameter("id", storyId)
+            .getResultList()
+            .stream()
+            .map(viewer -> {
+                Map<String, Object> row = support.profileEmbed(viewer);
+                row.put("viewed_at", null);
+                return row;
+            })
+            .toList();
+    }
+
+    private boolean setStoryReaction(Profile me, Long storyId, String reactionTypeName) {
+        Story story = em.find(Story.class, storyId);
+        if (story == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story bulunamadı");
+        }
+        StoryReactionType reactionType;
+        try {
+            reactionType = StoryReactionType.valueOf(reactionTypeName.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz reaction tipi");
+        }
+        StoryReaction existing = one(
+            "select r from StoryReaction r where r.story.id = :story and r.user = :me",
+            StoryReaction.class,
+            Map.of("story", storyId, "me", me)
+        );
+        if (existing == null) {
+            existing = new StoryReaction();
+            existing.setStory(story);
+            existing.setUser(me);
+            existing.setCreatedAt(Instant.now());
+        }
+        existing.setReactionType(reactionType);
+        em.merge(existing);
+        return true;
+    }
+
+    private boolean removeStoryReaction(Profile me, Long storyId) {
+        StoryReaction existing = one(
+            "select r from StoryReaction r where r.story.id = :story and r.user = :me",
+            StoryReaction.class,
+            Map.of("story", storyId, "me", me)
+        );
+        if (existing != null) {
+            em.remove(existing);
+        }
+        return true;
+    }
+
+    private Map<String, Object> storyReactions(Profile me, Long storyId) {
+        Story story = em.find(Story.class, storyId);
+        if (story == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story bulunamadı");
+        }
+        StoryReaction mine = one(
+            "select r from StoryReaction r where r.story.id = :story and r.user = :me",
+            StoryReaction.class,
+            Map.of("story", storyId, "me", me)
+        );
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("summary", storyReactionsSummary(storyId));
+        result.put("my_reaction", mine == null ? null : mine.getReactionType().name().toLowerCase(Locale.ROOT));
+        return result;
+    }
+
+    private List<Map<String, Object>> userReviews(Long targetUserId) {
+        Profile target = support.requireProfile(targetUserId);
+        return em.createQuery(
+            "select r from UserReview r left join fetch r.reviewer where r.reviewedUser = :target order by r.createdAt desc",
+            UserReview.class
+        )
+            .setParameter("target", target)
+            .getResultList()
+            .stream()
+            .map(review -> {
+                Map<String, Object> row = support.toMap(review);
+                row.put("profiles", support.profileEmbed(review.getReviewer()));
+                return row;
+            })
+            .toList();
     }
 
     private boolean markStoryViewed(Profile me, Long storyId) {
@@ -1083,6 +1233,130 @@ public class AppRpcService {
         if (existing != null) {
             existing.setIsActive(false);
         }
+        return true;
+    }
+
+    private List<Map<String, Object>> eventTickets(Long eventId) {
+        return eventTicketRepository.findByEvent_Id(eventId).stream()
+            .filter(t -> t.getStatus() == EventTicketStatus.ACTIVE)
+            .map(ticket -> {
+                Map<String, Object> row = support.toMap(ticket);
+                int sold = ticket.getSoldQuantity() == null ? 0 : ticket.getSoldQuantity();
+                row.put("available_quantity", Math.max(0, ticket.getQuantity() - sold));
+                return row;
+            })
+            .toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> createTicketOrder(Profile me, Map<String, Object> args) {
+        Object rawItems = args.get("target_items");
+        if (!(rawItems instanceof List<?> list)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bilet kalemleri eksik");
+        }
+        List<PaymentService.TicketRequest> items = list.stream()
+            .map(item -> {
+                Map<String, Object> map = (Map<String, Object>) item;
+                return new PaymentService.TicketRequest(
+                    support.parseLong(map.get("ticket_id")),
+                    support.parseLong(map.get("quantity")).intValue()
+                );
+            })
+            .toList();
+        Order order = paymentService.createOrder(me, items);
+        return orderDetail(me, order.getId());
+    }
+
+    private Map<String, Object> initiatePayment(Profile me, Map<String, Object> args) {
+        Long orderId = id(args.get("target_order_id"));
+        String provider = str(args.get("target_provider"));
+        String idempotencyKey = str(args.get("target_idempotency_key"));
+        String callbackUrl = str(args.get("target_callback_url"));
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+        if (!order.getUser().getId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu sipariş sizin değil");
+        }
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Idempotency key gerekli");
+        }
+        PaymentProviderType providerType;
+        try {
+            providerType = PaymentProviderType.valueOf(provider == null ? "IYZICO" : provider.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz ödeme sağlayıcısı");
+        }
+        PaymentInitiationResult result = paymentService.initiatePayment(order, providerType, idempotencyKey,
+            callbackUrl == null ? "/payments/callback" : callbackUrl);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("success", result.success());
+        out.put("checkout_url", result.checkoutUrl());
+        out.put("client_token", result.clientToken());
+        out.put("provider_transaction_id", result.providerTransactionId());
+        out.put("error", result.errorMessage());
+        return out;
+    }
+
+    private Map<String, Object> handlePaymentCallback(Map<String, Object> args) {
+        String transactionId = str(args.get("target_transaction_id"));
+        String payload = str(args.get("target_payload"));
+        String provider = str(args.get("target_provider"));
+        if (transactionId == null || transactionId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction id gerekli");
+        }
+        PaymentProviderType providerType;
+        try {
+            providerType = PaymentProviderType.valueOf(provider == null ? "IYZICO" : provider.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Geçersiz ödeme sağlayıcısı");
+        }
+        Payment payment = paymentService.handleCallback(transactionId, payload, providerType);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("payment_id", support.stringify(payment.getId()));
+        out.put("status", payment.getStatus().name().toLowerCase(Locale.ROOT));
+        out.put("order_id", support.stringify(payment.getOrder().getId()));
+        return out;
+    }
+
+    private List<Map<String, Object>> myTickets(Profile me) {
+        return ticketRepository.findByUser_Id(me.getId()).stream()
+            .map(ticket -> {
+                Map<String, Object> row = support.toMap(ticket);
+                row.put("event", support.toMap(ticket.getEvent()));
+                row.put("ticket_type", support.toMap(ticket.getOrderItem().getTicket()));
+                return row;
+            })
+            .toList();
+    }
+
+    private Map<String, Object> orderDetail(Profile me, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+        if (!order.getUser().getId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu sipariş sizin değil");
+        }
+        Map<String, Object> row = support.toMap(order);
+        List<Map<String, Object>> items = orderItemRepository.findByOrder_Id(orderId).stream().map(item -> {
+            Map<String, Object> itemRow = support.toMap(item);
+            itemRow.put("ticket", support.toMap(item.getTicket()));
+            itemRow.put("event", support.toMap(item.getTicket().getEvent()));
+            return itemRow;
+        }).toList();
+        row.put("items", items);
+        Payment payment = one("select p from Payment p where p.order.id = :id", Payment.class, Map.of("id", orderId));
+        if (payment != null) {
+            row.put("payment", support.toMap(payment));
+        }
+        return row;
+    }
+
+    private boolean cancelTicketOrder(Profile me, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+        if (!order.getUser().getId().equals(me.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu sipariş sizin değil");
+        }
+        paymentService.cancelOrder(order);
         return true;
     }
 

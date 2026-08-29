@@ -45,6 +45,7 @@ export default function AdminLoginPage() {
             <input className={styles.input} type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </label>
           {error ? <p className={styles.error}>{error}</p> : null}
+          <p className={styles.note}>Hem ROLE_ADMIN hem ROLE_SUPER_ADMIN yetkileri giriş yapabilir.</p>
           <button className={styles.button} type="submit" disabled={pending}>
             {pending ? "Doğrulanıyor..." : "Giriş yap"}
           </button>

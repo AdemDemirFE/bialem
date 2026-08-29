@@ -16,7 +16,8 @@ export async function POST(request: Request) {
   const account = await fetch(`${API}/api/account`, {
     headers: { Authorization: `Bearer ${id_token}` }
   }).then((res) => res.json());
-  if (!account?.authorities?.includes("ROLE_ADMIN")) {
+  const authorities = account?.authorities ?? [];
+  if (!authorities.includes("ROLE_ADMIN") && !authorities.includes("ROLE_SUPER_ADMIN")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
   const response = NextResponse.json({ ok: true });

@@ -5,8 +5,8 @@ import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import { router } from "../lib/router";
 import { colors } from "../theme/colors";
 
 export type AgendaPlan = {

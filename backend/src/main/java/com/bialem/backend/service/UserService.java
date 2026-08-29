@@ -2,9 +2,14 @@ package com.bialem.backend.service;
 
 import com.bialem.backend.config.Constants;
 import com.bialem.backend.domain.Authority;
+import com.bialem.backend.domain.Profile;
+import com.bialem.backend.domain.Role;
 import com.bialem.backend.domain.User;
+import com.bialem.backend.domain.UserRole;
 import com.bialem.backend.repository.AuthorityRepository;
+import com.bialem.backend.repository.ProfileRepository;
 import com.bialem.backend.repository.UserRepository;
+import com.bialem.backend.repository.UserRoleRepository;
 import com.bialem.backend.security.AuthoritiesConstants;
 import com.bialem.backend.security.PasswordResetTokenHasher;
 import com.bialem.backend.security.SecurityUtils;
@@ -50,6 +55,8 @@ public class UserService {
 
     private final ProfileProvisioningService profileProvisioningService;
     private final SuperAdminProvisioningService superAdminProvisioningService;
+    private final ProfileRepository profileRepository;
+    private final UserRoleRepository userRoleRepository;
 
     public UserService(
         UserRepository userRepository,
@@ -57,7 +64,9 @@ public class UserService {
         AuthorityRepository authorityRepository,
         CacheManager cacheManager,
         ProfileProvisioningService profileProvisioningService,
-        SuperAdminProvisioningService superAdminProvisioningService
+        SuperAdminProvisioningService superAdminProvisioningService,
+        ProfileRepository profileRepository,
+        UserRoleRepository userRoleRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -65,6 +74,8 @@ public class UserService {
         this.cacheManager = cacheManager;
         this.profileProvisioningService = profileProvisioningService;
         this.superAdminProvisioningService = superAdminProvisioningService;
+        this.profileRepository = profileRepository;
+        this.userRoleRepository = userRoleRepository;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -391,6 +402,24 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Set<String> findAppRoleCodesForUser(User user) {
+        if (user == null || user.getId() == null) {
+            return Set.of();
+        }
+        Optional<Profile> profileOpt = profileRepository.findOneByUser_Id(user.getId());
+        if (profileOpt.isEmpty()) {
+            return Set.of();
+        }
+        return userRoleRepository
+            .findByUser(profileOpt.get())
+            .stream()
+            .map(UserRole::getRole)
+            .filter(Objects::nonNull)
+            .map(Role::getCode)
+            .collect(Collectors.toSet());
     }
 
     private void clearUserCaches(User user) {
