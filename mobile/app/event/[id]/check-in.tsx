@@ -33,7 +33,7 @@ export default function EventCheckInScreen() {
     if (!id) return;
     refresh ? setRefreshing(true) : setLoading(true);
     const [eventResult, rosterResult] = await Promise.all([
-      api.from("events").select("title").eq("id", id).maybeSingle(),
+      api.events.getById(id),
       api.rpc("get_event_participant_roster", { target_event_id: id })
     ]);
     if (eventResult.data?.title) setEventTitle(eventResult.data.title);

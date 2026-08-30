@@ -40,7 +40,7 @@ export default function EventChatScreen() {
       return;
     }
     const [eventResult, messagesResult] = await Promise.all([
-      api.from("events").select("title").eq("id", id).maybeSingle(),
+      api.events.getById(id),
       api.rpc("get_event_chat_messages", { target_event_id: id })
     ]);
 

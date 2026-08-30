@@ -43,7 +43,7 @@ export default function EventTicketSelectionScreen() {
       if (!id) return;
       setLoading(true);
       const [eventResult, ticketsResult] = await Promise.all([
-        api.from("events").select("title").eq("id", id).maybeSingle<{ title: string }>(),
+        api.events.getById(id),
         api.rpc("get_event_tickets", { target_event_id: id })
       ]);
       if (!eventResult.error && eventResult.data) setEventTitle(eventResult.data.title);

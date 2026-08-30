@@ -16,15 +16,15 @@ type GroupRecord = {
 
 type EventRecord = {
   id: string;
-  created_by: string;
+  createdBy?: { id: number } | null;
   title: string;
   description: string | null;
-  starts_at: string;
-  location_name: string | null;
+  startsAt: string;
+  locationName: string | null;
   capacity: number | null;
-  status: string;
-  group_moderation_status: "pending" | "approved" | "rejected";
-  platform_moderation_status: "not_required" | "pending" | "approved" | "rejected";
+  status?: string;
+  groupModerationStatus?: "PENDING" | "APPROVED" | "REJECTED";
+  platformModerationStatus?: "NOT_REQUIRED" | "PENDING" | "APPROVED" | "REJECTED";
 };
 
 type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string; community?: { id: number } | null };
@@ -66,7 +66,7 @@ export default function GroupDetailScreen() {
     const [groupResult, membershipResult, eventsResult, creationGroupsResult, managedMembersResult] = await Promise.all([
       api.communities.getById(id),
       api.communityMembers.listByUser(user.id),
-      api.from("events").select("id, created_by, title, description, starts_at, location_name, capacity, status, group_moderation_status, platform_moderation_status").eq("community_id", id).order("starts_at", { ascending: true }),
+      api.events.list({ communityId: id, sort: "startsAt,asc" }),
       api.rpc("get_my_event_creation_groups"),
       api.rpc("get_managed_community_members", { target_community_id: id })
     ]);
@@ -117,9 +117,9 @@ export default function GroupDetailScreen() {
   const joined = membership?.status === "approved" || isModerator || isAssistant || creationMode !== null;
   const requestPending = membership?.status === "pending";
   const canLeaveGroup = membership?.status === "approved" && membership.role === "member";
-  const pendingEvents = events.filter((event) => event.status === "pending_approval" && event.group_moderation_status === "pending");
-  const platformReviewEvents = events.filter((event) => event.status === "pending_approval" && event.group_moderation_status === "approved" && event.platform_moderation_status === "pending");
-  const publishedEvents = events.filter((event) => event.status === "published");
+  const pendingEvents = events.filter((event) => event.status === "PENDING_APPROVAL" && event.groupModerationStatus === "PENDING");
+  const platformReviewEvents = events.filter((event) => event.status === "PENDING_APPROVAL" && event.groupModerationStatus === "APPROVED" && event.platformModerationStatus === "PENDING");
+  const publishedEvents = events.filter((event) => event.status === "PUBLISHED");
 
   const moderateEvent = async (eventId: string, status: "published" | "rejected") => {
     if (busyId) return;
@@ -280,7 +280,7 @@ export default function GroupDetailScreen() {
               ) : pendingEvents.map((event) => (
                 <View key={event.id} style={styles.pendingCard}>
                   <Text style={styles.eventTitle}>{event.title}</Text>
-                  <Text style={styles.eventMeta}>{formatDate(event.starts_at)}{event.location_name ? ` - ${event.location_name}` : ""}</Text>
+                  <Text style={styles.eventMeta}>{formatDate(event.startsAt)}{event.locationName ? ` - ${event.locationName}` : ""}</Text>
                   <Text style={styles.body}>{event.description || "Açıklama eklenmemiş."}</Text>
                   <TextInput
                     value={rejectReasons[event.id] ?? ""}
@@ -360,10 +360,10 @@ export default function GroupDetailScreen() {
             <View style={styles.stack}>
               {publishedEvents.map((event) => (
                 <Pressable key={event.id} style={styles.eventCard} onPress={() => router.push({ pathname: "/event/[id]", params: { id: event.id } })}>
-                  <View style={styles.dateBox}><Text style={styles.dateDay}>{new Date(event.starts_at).getDate()}</Text><Text style={styles.dateMonth}>{new Date(event.starts_at).toLocaleDateString("tr-TR", { month: "short" }).toLocaleUpperCase("tr-TR")}</Text></View>
+                  <View style={styles.dateBox}><Text style={styles.dateDay}>{new Date(event.startsAt).getDate()}</Text><Text style={styles.dateMonth}>{new Date(event.startsAt).toLocaleDateString("tr-TR", { month: "short" }).toLocaleUpperCase("tr-TR")}</Text></View>
                   <View style={styles.eventCopy}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Text style={styles.eventMeta}>{event.location_name || "Konum daha sonra açıklanacak"}</Text>
+                    <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
+                    <Text style={styles.eventMeta}>{event.locationName || "Konum daha sonra açıklanacak"}</Text>
                     <Text style={styles.eventJoin}>Detayı aç ve katılım isteği gönder</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={21} color={colors.accent} />

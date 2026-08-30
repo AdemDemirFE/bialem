@@ -130,7 +130,7 @@ export default function ProfileScreen() {
       teamIdentityResult
     ] = await Promise.all([
       api.communities.countByCreator(user.id),
-      api.from("events").select("*", { count: "exact", head: true }).eq("created_by", user.id),
+      api.events.countByCreator(user.id),
       api.from("posts").select("*", { count: "exact", head: true }).eq("author_id", user.id),
       api.from("comments").select("*", { count: "exact", head: true }).eq("author_id", user.id),
       api.from("event_ratings").select("id, event_id, user_id, rating, review_text, created_at").eq("user_id", user.id).order("created_at", {
@@ -184,7 +184,7 @@ export default function ProfileScreen() {
     } else {
       setStats({
         communities: communitiesCountResult.data ?? 0,
-        events: eventsCountResult.count ?? 0,
+        events: eventsCountResult.data ?? 0,
         posts: postsCountResult.count ?? 0,
         comments: commentsCountResult.count ?? 0
       });

@@ -45,6 +45,25 @@ type CommunityDto = {
   parent?: { id: number } | null;
 };
 
+type EventDto = {
+  id: number;
+  title: string;
+  description?: string | null;
+  startsAt?: string;
+  endsAt?: string | null;
+  locationName?: string | null;
+  addressText?: string | null;
+  coverImageUrl?: string | null;
+  capacity?: number | null;
+  status?: string;
+  groupModerationStatus?: string;
+  platformModerationStatus?: string;
+  createdAt?: string;
+  community?: { id: number; name?: string; slug?: string } | null;
+  category?: { id: number; name?: string; slug?: string } | null;
+  createdBy?: { id: number } | null;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -314,6 +333,41 @@ export function createSpringClient(options: SpringClientOptions) {
       async countByCreator(userId: string) {
         try {
           const data = await request<number>(`/api/communities/count?createdById.equals=${encodeURIComponent(userId)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    events: {
+      async getById(id: string) {
+        try {
+          const data = await request<EventDto>(`/api/events/${encodeURIComponent(id)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async list(params?: { status?: string | string[]; communityId?: string; createdById?: string; sort?: string; size?: number }) {
+        try {
+          const query = new URLSearchParams();
+          query.set("size", String(params?.size ?? 1000));
+          if (params?.sort) query.set("sort", params.sort);
+          if (params?.communityId) query.set("communityId.equals", params.communityId);
+          if (params?.createdById) query.set("createdById.equals", params.createdById);
+          if (params?.status) {
+            const statuses = Array.isArray(params.status) ? params.status : [params.status];
+            statuses.forEach((s) => query.append("status.in", s.toUpperCase()));
+          }
+          const data = await request<EventDto[]>(`/api/events?${query.toString()}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as EventDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async countByCreator(userId: string) {
+        try {
+          const data = await request<number>(`/api/events/count?createdById.equals=${encodeURIComponent(userId)}`);
           return { data, error: null };
         } catch (error) {
           return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };

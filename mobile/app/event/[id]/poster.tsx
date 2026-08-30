@@ -16,10 +16,10 @@ type PosterEvent = {
   id: string;
   title: string;
   description: string | null;
-  starts_at: string;
-  location_name: string | null;
-  community_id: string;
-  cover_image_url: string | null;
+  startsAt: string;
+  locationName: string | null;
+  community?: { id: number } | null;
+  coverImageUrl: string | null;
 };
 
 type PosterTheme = {
@@ -62,11 +62,7 @@ export default function EventPosterScreen() {
   useEffect(() => {
     const load = async () => {
       if (!id) return;
-      const eventResult = await api
-        .from("events")
-        .select("id, title, description, starts_at, location_name, community_id, cover_image_url")
-        .eq("id", id)
-        .maybeSingle<PosterEvent>();
+      const eventResult = await api.events.getById(id);
 
       if (eventResult.error || !eventResult.data) {
         setError(eventResult.error?.message || "Etkinlik bulunamadı.");
@@ -74,7 +70,7 @@ export default function EventPosterScreen() {
         return;
       }
 
-      setEvent(eventResult.data);
+      setEvent(eventResult.data as PosterEvent | null);
       if (eventResult.data.community_id) {
         const communityResult = await api.communities.getById(eventResult.data.community_id);
         if (communityResult.data) setCommunityName(communityResult.data.name);
@@ -139,13 +135,13 @@ export default function EventPosterScreen() {
             collapsable={false}
             style={[styles.poster, { width: posterWidth, height: posterHeight, backgroundColor: theme.base }]}
           >
-            {event.cover_image_url ? (
-              <Image source={{ uri: event.cover_image_url }} style={styles.coverImage} resizeMode="cover" />
+            {event.coverImageUrl ? (
+              <Image source={{ uri: event.coverImageUrl }} style={styles.coverImage} resizeMode="cover" />
             ) : null}
-            <View style={[styles.coverShade, { backgroundColor: event.cover_image_url ? "rgba(5,14,36,.68)" : "transparent" }]} />
+            <View style={[styles.coverShade, { backgroundColor: event.coverImageUrl ? "rgba(5,14,36,.68)" : "transparent" }]} />
             <View style={[styles.signalOrb, { backgroundColor: theme.signal }]} />
             <View style={[styles.accentOrb, { backgroundColor: theme.accent }]} />
-            <View style={[styles.posterPanel, { backgroundColor: event.cover_image_url ? "rgba(7,18,47,.88)" : theme.panel }]} />
+            <View style={[styles.posterPanel, { backgroundColor: event.coverImageUrl ? "rgba(7,18,47,.88)" : theme.panel }]} />
             <View style={styles.stripeOne} />
             <View style={styles.stripeTwo} />
 
@@ -168,11 +164,11 @@ export default function EventPosterScreen() {
               <View style={styles.detailRule} />
               <View style={styles.detailRow}>
                 <Ionicons name="calendar" size={16} color={theme.accent} />
-                <Text style={styles.date}>{formatPosterDate(event.starts_at)}</Text>
+                <Text style={styles.date}>{formatPosterDate(event.startsAt)}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Ionicons name="location" size={16} color={theme.accent} />
-                <Text style={styles.location} numberOfLines={2}>{event.location_name || "Mekân etkinlik sayfasında"}</Text>
+                <Text style={styles.location} numberOfLines={2}>{event.locationName || "Mekân etkinlik sayfasında"}</Text>
               </View>
               <Text style={styles.community} numberOfLines={1}>{communityName}</Text>
             </View>
@@ -200,7 +196,7 @@ export default function EventPosterScreen() {
 }
 
 function selectPosterTheme(event: PosterEvent, communityName: string) {
-  const source = `${event.title} ${event.description ?? ""} ${event.location_name ?? ""} ${communityName}`.toLocaleLowerCase("tr-TR");
+  const source = `${event.title} ${event.description ?? ""} ${event.locationName ?? ""} ${communityName}`.toLocaleLowerCase("tr-TR");
   return posterThemes.find(({ words }) => words.some((word) => source.includes(word)))?.theme ?? fallbackTheme;
 }
 

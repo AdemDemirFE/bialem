@@ -25,20 +25,20 @@ import { colors } from "../../src/theme/colors";
 
 type EventRecord = {
   id: string;
-  created_by: string;
+  createdBy?: { id: number } | null;
   title: string;
   description: string | null;
-  starts_at: string;
-  ends_at: string | null;
-  location_name: string | null;
-  address_text: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  locationName: string | null;
+  addressText: string | null;
   capacity: number | null;
-  status: string;
-  community_id: string;
-  group_moderation_status: string | null;
-  platform_moderation_status: string | null;
-  cancelled_at: string | null;
-  cancellation_reason: string | null;
+  status?: string;
+  community?: { id: number } | null;
+  groupModerationStatus?: string | null;
+  platformModerationStatus?: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
 };
 
 type EventCreationGroup = {
@@ -127,11 +127,7 @@ export default function EventDetailScreen() {
 
     setError(null);
 
-    const eventResult = await api
-      .from("events")
-      .select("id, created_by, title, description, starts_at, ends_at, location_name, address_text, capacity, status, community_id, group_moderation_status, platform_moderation_status, cancelled_at, cancellation_reason")
-      .eq("id", id)
-      .maybeSingle<EventRecord>();
+    const eventResult = await api.events.getById(id);
 
     if (eventResult.error) {
       setError(eventResult.error.message);
@@ -150,7 +146,7 @@ export default function EventDetailScreen() {
     }
 
     const [communityResult, commentsResult, ratingsResult] = await Promise.all([
-      nextEvent.community_id ? api.communities.getById(nextEvent.community_id) : Promise.resolve({ data: null, error: null }),
+      nextEvent.community?.id ? api.communities.getById(String(nextEvent.community.id)) : Promise.resolve({ data: null, error: null }),
       api
         .from("comments")
         .select("id, author_id, body, created_at")
@@ -199,7 +195,7 @@ export default function EventDetailScreen() {
       const creationGroups = (creationGroupsResult.data ?? []) as EventCreationGroup[];
       setCanReviewEvent(
         !creationGroupsResult.error &&
-        creationGroups.some((group) => group.id === nextEvent.community_id && group.creation_mode === "direct")
+        creationGroups.some((group) => nextEvent.community?.id && String(nextEvent.community.id) === group.id && group.creation_mode === "direct")
       );
       setIsAdmin(!adminResult.error && adminResult.data === true);
     } else {
@@ -293,7 +289,7 @@ export default function EventDetailScreen() {
   const getInvite = () => {
     if (!event) return { url: "", text: "" };
     const url = eventPublicUrl(event.id);
-    return { url, text: `Bialem'da ${event.title} etkinliğine benimle katıl! ${formatDate(event.starts_at)} ${event.location_name || ""}` };
+    return { url, text: `Bialem'da ${event.title} etkinliğine benimle katıl! ${formatDate(event.startsAt)} ${event.locationName || ""}` };
   };
 
   const shareEvent = async () => {
@@ -518,24 +514,24 @@ export default function EventDetailScreen() {
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Bilgiler</Text>
             <InfoRow label="Topluluk" value={community?.name ?? "Topluluk yok"} />
-            <Link href={{ pathname: "/user/[id]", params: { id: event.created_by } }} asChild>
+            <Link href={{ pathname: "/user/[id]", params: { id: String(event.createdBy?.id ?? "") } }} asChild>
               <Pressable style={styles.organizerButton}>
                 <Text style={styles.organizerButtonText}>Organizatör profilini gör ve takip et</Text>
               </Pressable>
             </Link>
-            <InfoRow label="Başlangıç" value={formatDate(event.starts_at)} />
-          <InfoRow label="Bitiş" value={event.ends_at ? formatDate(event.ends_at) : "Belirtilmedi"} />
-            <InfoRow label="Mekân" value={event.location_name || "Belirtilmedi"} />
-            <InfoRow label="Adres" value={event.address_text || "Belirtilmedi"} />
-            <InfoRow label="Katılım limiti" value={event.capacity ? String(event.capacity) : "Sınırsız"} />
+          <InfoRow label="Başlangıç" value={formatDate(event.startsAt)} />
+          <InfoRow label="Bitiş" value={event.endsAt ? formatDate(event.endsAt) : "Belirtilmedi"} />
+          <InfoRow label="Mekân" value={event.locationName || "Belirtilmedi"} />
+          <InfoRow label="Adres" value={event.addressText || "Belirtilmedi"} />
+          <InfoRow label="Katılım limiti" value={event.capacity ? String(event.capacity) : "Sınırsız"} />
             <InfoRow label="Durum" value={eventStatusLabel(event.status)} />
-            {event.status === "cancelled" ? (
-              <View style={styles.cancelledBanner}>
-                <Text style={styles.cancelledTitle}>Bu etkinlik iptal edildi</Text>
-                <Text style={styles.panelText}>{event.cancellation_reason || "Organizatör tarafından iptal edildi."}</Text>
+            {event.status === "CANCELLED" ? (
+              <View style={styles.panel}>
+                <Text style={styles.panelTitle}>Etkinlik iptal edildi</Text>
+                <Text style={styles.panelText}>{event.cancellationReason || "Organizatör tarafından iptal edildi."}</Text>
               </View>
             ) : null}
-            {canReviewEvent && event.status === "pending_approval" && (event.group_moderation_status !== "approved" || isAdmin) ? (
+            {canReviewEvent && event.status === "PENDING_APPROVAL" && (event.groupModerationStatus !== "APPROVED" || isAdmin) ? (
               <View style={styles.moderationBox}>
                 <Text style={styles.moderationTitle}>Etkinlik moderasyonu</Text>
                 <Text style={styles.panelText}>Etkinliği inceleyip yayınlayabilir veya gerekçe belirterek reddedebilirsiniz.</Text>
@@ -565,7 +561,7 @@ export default function EventDetailScreen() {
                 </View>
               </View>
             ) : null}
-            {isEventStaff && ["pending_approval", "published"].includes(event.status) ? (
+            {isEventStaff && ["PENDING_APPROVAL", "PUBLISHED"].includes(event.status ?? "") ? (
               <View style={styles.moderationBox}>
                 <Text style={styles.moderationTitle}>Etkinliği iptal et</Text>
                 <Text style={styles.panelText}>İptal nedeni katılımcılara bildirim olarak gönderilir.</Text>
@@ -596,7 +592,7 @@ export default function EventDetailScreen() {
             </Pressable>
           </View>
 
-          {event.status !== "cancelled" ? <View style={styles.inviteCard}>
+          {event.status !== "CANCELLED" ? <View style={styles.inviteCard}>
             <View style={styles.inviteCopy}>
               <Text style={styles.inviteKicker}>ARKADAŞINI DA GETİR</Text>
               <Text style={styles.inviteTitle}>Bu deneyim birlikte daha güzel.</Text>
@@ -627,7 +623,7 @@ export default function EventDetailScreen() {
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Katılım ve etkileşim</Text>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {event.status === "cancelled" ? (
+            {event.status === "CANCELLED" ? (
               <View style={styles.cancelledBanner}>
                 <Text style={styles.cancelledTitle}>Katılım kapatıldı</Text>
                 <Text style={styles.panelText}>İptal edilen bu etkinlik için yeni katılım alınmıyor.</Text>
@@ -649,12 +645,12 @@ export default function EventDetailScreen() {
                 <Text style={styles.panelText}>Yer açıldığında talebin otomatik olarak değerlendirmeye alınacak.</Text>
               </View>
             ) : null}
-            {event.status === "published" && !isEventStaff ? (
+            {event.status === "PUBLISHED" && !isEventStaff ? (
               <Pressable style={styles.secondaryActionButton} onPress={() => router.push(`/event/tickets/${event.id}` as never)}>
                 <Text style={styles.secondaryActionText}>Bilet al</Text>
               </Pressable>
             ) : null}
-            {event.status === "cancelled" ? null : isEventStaff ? (
+            {event.status === "CANCELLED" ? null : isEventStaff ? (
               <View style={styles.statusBanner}>
                 <Text style={styles.statusBannerText}>Bu etkinliği yönetici yetkisiyle görüntülüyorsunuz.</Text>
               </View>
@@ -685,7 +681,7 @@ export default function EventDetailScreen() {
               </>
             )}
 
-            {event.status !== "cancelled" && !isEventStaff && participant && ["approved", "checked_in"].includes(participant.status) && user ? (
+            {event.status !== "CANCELLED" && !isEventStaff && participant && ["approved", "checked_in"].includes(participant.status) && user ? (
               <View style={styles.memberTools}>
                 <View style={styles.qrWrap}>
                   <QRCode value={`bialem-checkin:${event.id}:${user.id}`} size={150} color="#081a44" backgroundColor="#ffffff" />
@@ -697,7 +693,7 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
 
-            {event.status !== "cancelled" && participationSummary?.can_manage ? (
+            {event.status !== "CANCELLED" && participationSummary?.can_manage ? (
               <View style={styles.managerTools}>
                 <Link href={{ pathname: "/event/[id]/check-in", params: { id: event.id } }} asChild>
                   <Pressable style={styles.managerButton}><Text style={styles.managerButtonText}>Katılımcıları yönet ve QR tara</Text></Pressable>
@@ -828,14 +824,15 @@ function participantStatusLabel(status: string) {
   } as Record<string, string>)[status] ?? status;
 }
 
-function eventStatusLabel(status: string) {
+function eventStatusLabel(status?: string) {
+  if (!status) return status;
   return ({
-    draft: "Taslak",
-    pending_approval: "Onay bekliyor",
-    published: "Yayında",
-    rejected: "Reddedildi",
-    cancelled: "İptal edildi",
-    completed: "Tamamlandı"
+    DRAFT: "Taslak",
+    PENDING_APPROVAL: "Onay bekliyor",
+    PUBLISHED: "Yayında",
+    REJECTED: "Reddedildi",
+    CANCELLED: "İptal edildi",
+    COMPLETED: "Tamamlandı"
   } as Record<string, string>)[status] ?? status;
 }
 

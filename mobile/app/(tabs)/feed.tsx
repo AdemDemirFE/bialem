@@ -11,15 +11,15 @@ import { imageSources } from "../../src/theme/images";
 
 type EventItem = {
   id: string;
-  created_by: string;
+  createdBy?: { id?: number } | null;
   title: string;
   description: string | null;
-  starts_at: string;
-  location_name: string | null;
-  address_text: string | null;
-  cover_image_url: string | null;
+  startsAt: string;
+  locationName: string | null;
+  addressText: string | null;
+  coverImageUrl: string | null;
   status: string;
-  communities: { id?: string; name: string; slug: string } | null;
+  community?: { id?: number; name?: string; slug?: string } | null;
 };
 
 type PostItem = {
@@ -69,12 +69,7 @@ export default function FeedScreen() {
     setError(null);
 
     const [eventsResult, postsResult, followsResult, storiesResult, membershipsResult] = await Promise.all([
-      api
-        .from("events")
-        .select("id, created_by, title, description, starts_at, location_name, address_text, cover_image_url, status, communities!events_community_id_fkey(id, name, slug)")
-        .in("status", ["published", "pending_approval"])
-        .order("starts_at", { ascending: true })
-        .limit(30),
+      api.events.list({ status: ["published", "pending_approval"], sort: "startsAt,asc", size: 30 }),
       api
         .from("posts")
         .select("id, author_id, body, created_at, post_media(id, media_type, storage_path, sort_order), communities(name, slug)")
@@ -95,9 +90,9 @@ export default function FeedScreen() {
     if (eventsResult.error) setError("Etkinlikler şu anda yüklenemedi. Yenilemek için aşağı çekin.");
     else {
       const nextEvents = ((eventsResult.data ?? []) as unknown as EventItem[]).sort((a, b) => {
-        const scoreA = (nextFollowedIds.includes(a.created_by) ? 2 : 0) + (a.communities?.id && nextJoinedIds.includes(a.communities.id) ? 1 : 0);
-        const scoreB = (nextFollowedIds.includes(b.created_by) ? 2 : 0) + (b.communities?.id && nextJoinedIds.includes(b.communities.id) ? 1 : 0);
-        return Number(scoreB) - Number(scoreA) || new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+        const scoreA = (nextFollowedIds.includes(String(a.createdBy?.id ?? "")) ? 2 : 0) + (a.community?.id && nextJoinedIds.includes(String(a.community.id)) ? 1 : 0);
+        const scoreB = (nextFollowedIds.includes(String(b.createdBy?.id ?? "")) ? 2 : 0) + (b.community?.id && nextJoinedIds.includes(String(b.community.id)) ? 1 : 0);
+        return Number(scoreB) - Number(scoreA) || new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
       });
       setEvents(nextEvents);
     }
@@ -126,7 +121,7 @@ export default function FeedScreen() {
   const communityFilters = useMemo(() => {
     const map = new Map<string, string>();
     events.forEach((event) => {
-      if (event.communities?.id) map.set(event.communities.id, event.communities.name);
+      if (event.community?.id) map.set(String(event.community.id), event.community.name ?? "Topluluk");
     });
     return Array.from(map, ([id, name]) => ({ id, name }));
   }, [events]);
@@ -135,8 +130,8 @@ export default function FeedScreen() {
     const now = Date.now();
     const sixHours = now + 6 * 60 * 60 * 1000;
     return events.filter((event) => {
-      const time = new Date(event.starts_at).getTime();
-      const location = `${event.location_name || ""} ${event.address_text || ""}`.toLocaleLowerCase("tr-TR");
+      const time = new Date(event.startsAt).getTime();
+      const location = `${event.locationName || ""} ${event.addressText || ""}`.toLocaleLowerCase("tr-TR");
       return event.status === "published" && time >= now - 60 * 60 * 1000 && time <= sixHours && (!city || location.includes(city.toLocaleLowerCase("tr-TR")));
     }).slice(0, 3);
   }, [city, events]);
@@ -146,13 +141,13 @@ export default function FeedScreen() {
     const dayEnd = new Date(now); dayEnd.setHours(23, 59, 59, 999);
     const weekEnd = new Date(now); weekEnd.setDate(weekEnd.getDate() + 7);
     return events.filter((event) => {
-      if (selectedCommunity && event.communities?.id !== selectedCommunity) return false;
-      const date = new Date(event.starts_at);
+      if (selectedCommunity && String(event.community?.id ?? "") !== selectedCommunity) return false;
+      const date = new Date(event.startsAt);
       if (discoveryMode === "today") return date >= now && date <= dayEnd;
       if (discoveryMode === "week") return date >= now && date <= weekEnd;
       if (discoveryMode === "city") {
         if (!city) return false;
-        return `${event.location_name || ""} ${event.address_text || ""}`.toLocaleLowerCase("tr-TR").includes(city.toLocaleLowerCase("tr-TR"));
+        return `${event.locationName || ""} ${event.addressText || ""}`.toLocaleLowerCase("tr-TR").includes(city.toLocaleLowerCase("tr-TR"));
       }
       return true;
     });
@@ -215,7 +210,7 @@ export default function FeedScreen() {
         </View>
         {loading ? <Loading label="Yakındaki planlar aranıyor..." /> : nowEvents.length === 0 ? (
           <View style={styles.emptyBox}><Text style={styles.emptyTitle}>Şu an için hızlı plan bulunamadı.</Text><Text style={styles.emptyText}>Şehir Radarı ve bu haftanın topluluk etkinliklerine göz atabilirsin.</Text></View>
-        ) : <View style={styles.stack}>{nowEvents.map((event) => <CompactEventCard key={event.id} event={event} followed={followedIds.includes(event.created_by)} />)}</View>}
+        ) : <View style={styles.stack}>{nowEvents.map((event) => <CompactEventCard key={event.id} event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} />)}</View>}
       </View>
 
       <CityDiscovery city={city}>
@@ -245,7 +240,7 @@ export default function FeedScreen() {
           </ScrollView>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {loading ? <Loading label="Topluluk planları yükleniyor..." /> : communityEvents.length === 0 ? <Text style={styles.emptyText}>Bu filtreye uygun etkinlik bulunamadı.</Text> : (
-            <View style={styles.stack}>{communityEvents.map((event) => <EventCard key={event.id} event={event} followed={followedIds.includes(event.created_by)} />)}</View>
+            <View style={styles.stack}>{communityEvents.map((event) => <EventCard key={event.id} event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} />)}</View>
           )}
         </View>
       </CityDiscovery>
@@ -305,11 +300,11 @@ function EventCard({ event, followed }: { event: EventItem; followed: boolean })
   return (
     <Link href={{ pathname: "/event/[id]", params: { id: event.id } }} asChild>
       <Pressable style={styles.eventCard}>
-        {event.cover_image_url ? <Image source={{ uri: event.cover_image_url }} style={styles.eventImage} resizeMode="cover" /> : null}
+        {event.coverImageUrl ? <Image source={{ uri: event.coverImageUrl }} style={styles.eventImage} resizeMode="cover" /> : null}
         <View style={styles.eventBody}>
-          <View style={styles.tagRow}>{followed ? <Text style={styles.followTag}>Takip ettiğin kişiden</Text> : null}<Text style={styles.communityTag}>{event.communities?.name || "Topluluk"}</Text></View>
+          <View style={styles.tagRow}>{followed ? <Text style={styles.followTag}>Takip ettiğin kişiden</Text> : null}<Text style={styles.communityTag}>{event.community?.name || "Topluluk"}</Text></View>
           <Text style={styles.eventTitle}>{event.title}</Text>
-          <Text style={styles.eventMeta}>{formatDate(event.starts_at)}{event.location_name ? ` · ${event.location_name}` : ""}</Text>
+          <Text style={styles.eventMeta}>{formatDate(event.startsAt)}{event.locationName ? ` · ${event.locationName}` : ""}</Text>
           <Text style={styles.eventDescription} numberOfLines={2}>{event.description || "Detayları görmek için etkinliği aç."}</Text>
           <View style={styles.openRow}><Text style={styles.openText}>Planı incele</Text><Ionicons name="arrow-forward" size={18} color={colors.accent} /></View>
         </View>
@@ -322,8 +317,8 @@ function CompactEventCard({ event, followed }: { event: EventItem; followed: boo
   return (
     <Link href={{ pathname: "/event/[id]", params: { id: event.id } }} asChild>
       <Pressable style={styles.compactCard}>
-        <View style={styles.timeBlock}><Text style={styles.timeText}>{new Date(event.starts_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text><Text style={styles.dayText}>BUGÜN</Text></View>
-        <View style={styles.compactCopy}><Text style={styles.compactTitle} numberOfLines={1}>{event.title}</Text><Text style={styles.eventMeta} numberOfLines={1}>{event.location_name || event.communities?.name}{followed ? " · Takipten" : ""}</Text></View>
+        <View style={styles.timeBlock}><Text style={styles.timeText}>{new Date(event.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text><Text style={styles.dayText}>BUGÜN</Text></View>
+        <View style={styles.compactCopy}><Text style={styles.compactTitle} numberOfLines={1}>{event.title}</Text><Text style={styles.eventMeta} numberOfLines={1}>{event.locationName || event.community?.name}{followed ? " · Takipten" : ""}</Text></View>
         <Ionicons name="arrow-forward" size={19} color={colors.accent} />
       </Pressable>
     </Link>
