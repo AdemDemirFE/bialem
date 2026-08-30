@@ -126,15 +126,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
     let mounted = true;
     setLoading(true);
-    void Promise.all([api
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle(), api.rest.get<{ permissions?: AccountPermissions }>("/api/account")])
+    void Promise.all([api.profiles.getById(user.id), api.rest.get<{ permissions?: AccountPermissions }>("/api/account")])
       .then(([{ data, error: profileError }, account]) => {
         if (!mounted) return;
         if (profileError) setError(mapErrorMessage(profileError.message));
-        else setProfile((data as Profile) ?? null);
+        else setProfile(data ?? null);
         setPermissions(account.permissions ?? noPermissions);
         setLoading(false);
       });
@@ -221,34 +217,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!user) return false;
     const normalizedUsername = sanitizeUsername(username);
     const parsedBirthDate = parseTurkishDate(birthDate);
-    const { data, error: profileError } = await api
-      .from("profiles")
-      .update({
-        display_name: displayName.trim(),
-        username: normalizedUsername,
-        city: city.trim() || null,
-        bio: bio.trim() || null,
-        birth_date: parsedBirthDate
-      })
-      .eq("id", user.id)
-      .select("*")
-      .single();
+    const { data, error: profileError } = await api.profiles.update(user.id, {
+      display_name: displayName.trim(),
+      username: normalizedUsername,
+      city: city.trim() || null,
+      bio: bio.trim() || null,
+      birth_date: parsedBirthDate
+    });
     if (profileError) {
       setError(mapErrorMessage(profileError.message));
       return false;
     }
-    setProfile(data as Profile);
+    setProfile(data);
     return true;
   };
 
   const updateAvatar = async (avatarUrl: string) => {
     if (!user) return false;
-    const { data, error: avatarError } = await api.from("profiles").update({ avatar_url: avatarUrl }).eq("id", user.id).select("*").single();
+    const { data, error: avatarError } = await api.profiles.update(user.id, { avatar_url: avatarUrl });
     if (avatarError) {
       setError(mapErrorMessage(avatarError.message));
       return false;
     }
-    setProfile(data as Profile);
+    setProfile(data);
     return true;
   };
 

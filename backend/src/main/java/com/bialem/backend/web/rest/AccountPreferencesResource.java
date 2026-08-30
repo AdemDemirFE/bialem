@@ -146,6 +146,19 @@ public class AccountPreferencesResource {
     }
 
     /**
+     * {@code GET  /account-preferences/by-profile/:profileId} : get accountPreferences by profile id.
+     *
+     * @param profileId the profile id of the accountPreferencesDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the accountPreferencesDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/by-profile/{profileId}")
+    public ResponseEntity<AccountPreferencesDTO> getAccountPreferencesByProfile(@PathVariable("profileId") Long profileId) {
+        LOG.debug("REST request to get AccountPreferences by profileId : {}", profileId);
+        Optional<AccountPreferencesDTO> accountPreferencesDTO = accountPreferencesService.findByProfileId(profileId);
+        return ResponseUtil.wrapOrNotFound(accountPreferencesDTO);
+    }
+
+    /**
      * {@code GET  /account-preferences/:id} : get the "id" accountPreferences.
      *
      * @param id the id of the accountPreferencesDTO to retrieve.

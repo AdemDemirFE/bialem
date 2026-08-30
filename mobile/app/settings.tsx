@@ -42,19 +42,20 @@ export default function SettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [preferenceId, setPreferenceId] = useState<number | null>(null);
+
   useEffect(() => {
     if (!user) return;
 
     const load = async () => {
       setLoading(true);
-      const { data, error: loadError } = await api
-        .from("account_preferences")
-        .select("discoverable, show_city, show_follow_connections, allow_follows, require_follow_approval, allow_messages_from, notify_events, notify_communities, notify_social, notify_advantages, notify_system")
-        .eq("user_id", user.id)
-        .maybeSingle<Preferences>();
+      const { data, error: loadError } = await api.accountPreferences.getByProfileId(user.id);
 
       if (loadError) setError(loadError.message);
-      else if (data) setPreferences(data);
+      else if (data) {
+        setPreferences(data);
+        setPreferenceId(data.id);
+      }
       setLoading(false);
     };
 
@@ -62,16 +63,14 @@ export default function SettingsScreen() {
   }, [user?.id]);
 
   const save = async (patch: Partial<Preferences>) => {
-    if (!user || saving) return;
+    if (!user || saving || preferenceId === null) return;
 
     const next = { ...preferences, ...patch };
     setPreferences(next);
     setSaving(true);
     setError(null);
 
-    const { error: saveError } = await api
-      .from("account_preferences")
-      .upsert({ user_id: user.id, ...next }, { onConflict: "user_id" });
+    const { error: saveError } = await api.accountPreferences.update(preferenceId, patch);
 
     if (saveError) {
       setPreferences(preferences);

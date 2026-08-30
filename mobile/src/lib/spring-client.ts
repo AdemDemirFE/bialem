@@ -84,6 +84,63 @@ type PostDto = {
   media?: PostMediaDto[] | null;
 };
 
+type ProfileDto = {
+  id: number;
+  displayName?: string;
+  username?: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  city?: string | null;
+  birthDate?: string | null;
+  status?: string;
+  isVerified?: boolean;
+  user?: { email?: string } | null;
+};
+
+type ProfileShape = {
+  id: string;
+  email: string;
+  display_name: string;
+  username: string;
+  avatar_url: string | null;
+  bio: string | null;
+  city: string | null;
+  birth_date: string | null;
+  status: string;
+  is_verified: boolean;
+};
+
+type AccountPreferencesDto = {
+  id: number;
+  discoverable?: boolean;
+  showCity?: boolean;
+  showFollowConnections?: boolean;
+  allowFollows?: boolean;
+  requireFollowApproval?: boolean;
+  allowMessagesFrom?: string;
+  notifyEvents?: boolean;
+  notifyCommunities?: boolean;
+  notifySocial?: boolean;
+  notifyAdvantages?: boolean;
+  notifySystem?: boolean;
+  updatedAt?: string;
+};
+
+type AccountPreferencesShape = {
+  id: number;
+  discoverable: boolean;
+  show_city: boolean;
+  show_follow_connections: boolean;
+  allow_follows: boolean;
+  require_follow_approval: boolean;
+  allow_messages_from: "everyone" | "following" | "no_one";
+  notify_events: boolean;
+  notify_communities: boolean;
+  notify_social: boolean;
+  notify_advantages: boolean;
+  notify_system: boolean;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -423,6 +480,113 @@ export function createSpringClient(options: SpringClientOptions) {
           return { data, error: null };
         } catch (error) {
           return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    profiles: {
+      async getById(id: string) {
+        try {
+          const dto = await request<ProfileDto>(`/api/profiles/${encodeURIComponent(id)}`);
+          const data: ProfileShape = {
+            id: String(dto.id),
+            email: dto.user?.email ?? "",
+            display_name: dto.displayName ?? "",
+            username: dto.username ?? "",
+            avatar_url: dto.avatarUrl ?? null,
+            bio: dto.bio ?? null,
+            city: dto.city ?? null,
+            birth_date: dto.birthDate ?? null,
+            status: dto.status ?? "",
+            is_verified: dto.isVerified ?? false
+          };
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async update(id: string, patch: Partial<ProfileShape>) {
+        try {
+          const payload: Partial<ProfileDto> = {};
+          if (patch.display_name !== undefined) payload.displayName = patch.display_name;
+          if (patch.username !== undefined) payload.username = patch.username;
+          if (patch.avatar_url !== undefined) payload.avatarUrl = patch.avatar_url;
+          if (patch.bio !== undefined) payload.bio = patch.bio;
+          if (patch.city !== undefined) payload.city = patch.city;
+          if (patch.birth_date !== undefined) payload.birthDate = patch.birth_date;
+          const dto = await request<ProfileDto>(`/api/profiles/${encodeURIComponent(id)}`, { method: "PUT", json: payload });
+          const data: ProfileShape = {
+            id: String(dto.id),
+            email: dto.user?.email ?? "",
+            display_name: dto.displayName ?? "",
+            username: dto.username ?? "",
+            avatar_url: dto.avatarUrl ?? null,
+            bio: dto.bio ?? null,
+            city: dto.city ?? null,
+            birth_date: dto.birthDate ?? null,
+            status: dto.status ?? "",
+            is_verified: dto.isVerified ?? false
+          };
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    accountPreferences: {
+      async getByProfileId(profileId: string) {
+        try {
+          const dto = await request<AccountPreferencesDto>(`/api/account-preferences/by-profile/${encodeURIComponent(profileId)}`);
+          const data: AccountPreferencesShape = {
+            id: dto.id,
+            discoverable: dto.discoverable ?? true,
+            show_city: dto.showCity ?? true,
+            show_follow_connections: dto.showFollowConnections ?? true,
+            allow_follows: dto.allowFollows ?? true,
+            require_follow_approval: dto.requireFollowApproval ?? false,
+            allow_messages_from: (dto.allowMessagesFrom?.toLowerCase() ?? "following") as AccountPreferencesShape["allow_messages_from"],
+            notify_events: dto.notifyEvents ?? true,
+            notify_communities: dto.notifyCommunities ?? true,
+            notify_social: dto.notifySocial ?? true,
+            notify_advantages: dto.notifyAdvantages ?? true,
+            notify_system: dto.notifySystem ?? true
+          };
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async update(id: number, patch: Partial<AccountPreferencesShape>) {
+        try {
+          const payload: Partial<AccountPreferencesDto> = {};
+          if (patch.discoverable !== undefined) payload.discoverable = patch.discoverable;
+          if (patch.show_city !== undefined) payload.showCity = patch.show_city;
+          if (patch.show_follow_connections !== undefined) payload.showFollowConnections = patch.show_follow_connections;
+          if (patch.allow_follows !== undefined) payload.allowFollows = patch.allow_follows;
+          if (patch.require_follow_approval !== undefined) payload.requireFollowApproval = patch.require_follow_approval;
+          if (patch.allow_messages_from !== undefined) payload.allowMessagesFrom = patch.allow_messages_from.toUpperCase() as AccountPreferencesDto["allowMessagesFrom"];
+          if (patch.notify_events !== undefined) payload.notifyEvents = patch.notify_events;
+          if (patch.notify_communities !== undefined) payload.notifyCommunities = patch.notify_communities;
+          if (patch.notify_social !== undefined) payload.notifySocial = patch.notify_social;
+          if (patch.notify_advantages !== undefined) payload.notifyAdvantages = patch.notify_advantages;
+          if (patch.notify_system !== undefined) payload.notifySystem = patch.notify_system;
+          const dto = await request<AccountPreferencesDto>(`/api/account-preferences/${id}`, { method: "PUT", json: payload });
+          const data: AccountPreferencesShape = {
+            id: dto.id,
+            discoverable: dto.discoverable ?? true,
+            show_city: dto.showCity ?? true,
+            show_follow_connections: dto.showFollowConnections ?? true,
+            allow_follows: dto.allowFollows ?? true,
+            require_follow_approval: dto.requireFollowApproval ?? false,
+            allow_messages_from: (dto.allowMessagesFrom?.toLowerCase() ?? "following") as AccountPreferencesShape["allow_messages_from"],
+            notify_events: dto.notifyEvents ?? true,
+            notify_communities: dto.notifyCommunities ?? true,
+            notify_social: dto.notifySocial ?? true,
+            notify_advantages: dto.notifyAdvantages ?? true,
+            notify_system: dto.notifySystem ?? true
+          };
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
         }
       }
     },

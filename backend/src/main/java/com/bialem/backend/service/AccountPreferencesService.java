@@ -108,6 +108,18 @@ public class AccountPreferencesService {
     }
 
     /**
+     * Get accountPreferences by profile id.
+     *
+     * @param profileId the profile id.
+     * @return the entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<AccountPreferencesDTO> findByProfileId(Long profileId) {
+        LOG.debug("Request to get AccountPreferences by profileId : {}", profileId);
+        return accountPreferencesRepository.findOneByProfile_Id(profileId).map(accountPreferencesMapper::toDto);
+    }
+
+    /**
      * Delete the accountPreferences by id.
      *
      * @param id the id of the entity.
