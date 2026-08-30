@@ -134,12 +134,19 @@ public class CommunityMemberResource {
     /**
      * {@code GET  /community-members} : get all the communityMembers.
      *
+     * @param userId optional filter by user profile id.
+     * @param communityId optional filter by community id.
+     * @param status optional filter by membership status.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of communityMembers in body.
      */
     @GetMapping("")
-    public List<CommunityMemberDTO> getAllCommunityMembers() {
-        LOG.debug("REST request to get all CommunityMembers");
-        return communityMemberService.findAll();
+    public List<CommunityMemberDTO> getAllCommunityMembers(
+        @RequestParam(name = "userId", required = false) Long userId,
+        @RequestParam(name = "communityId", required = false) Long communityId,
+        @RequestParam(name = "status", required = false) CommunityMemberStatus status
+    ) {
+        LOG.debug("REST request to get all CommunityMembers by userId {}, communityId {}, status {}", userId, communityId, status);
+        return communityMemberService.findAll(userId, communityId, status);
     }
 
     /**

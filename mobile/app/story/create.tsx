@@ -65,7 +65,7 @@ export type StoryElement = {
   metadata?: Record<string, any>;
 };
 
-type CommunityOption = { community_id?: string | null; communities?: { id?: string; name?: string; slug?: string } | null };
+type CommunityOption = { community_id?: string | null; community?: { id?: number; name?: string; slug?: string } | null };
 type EventOption = { event_id?: string | null; events?: { id?: string; title?: string; starts_at?: string } | null };
 type HashtagOption = { hashtag_id: string; name: string; normalized_name: string; usage_count: number };
 
@@ -104,7 +104,7 @@ export default function CreateStoryScreen() {
     if (!user) return;
     const load = async () => {
       const [cResult, eResult] = await Promise.all([
-        api.from("community_members").select("community_id, communities(id, name)").eq("user_id", user.id).eq("status", "approved"),
+        api.communityMembers.listByUser(user.id, "approved"),
         api.rpc("get_my_events")
       ]);
       if (!cResult.error) setCommunities((cResult.data ?? []) as unknown as CommunityOption[]);
@@ -777,12 +777,12 @@ function CommunityPickerSheet({
           {loading ? <ActivityIndicator color={colors.accent} /> : (
             <ScrollView style={{ maxHeight: 320 }}>
               {communities.map((c, idx) => {
-                const id = c.community_id || (c.communities as { id?: string } | null)?.id;
+                const id = c.community_id || String(c.community?.id ?? "");
                 if (!id) return null;
                 const selected = selectedIds.includes(id);
                 return (
-                  <Pressable key={id || idx} style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]} onPress={() => onToggle(id, c.communities?.name ?? "Topluluk")}>
-                    <Text style={styles.sheetRowTitle}>{c.communities?.name ?? "Topluluk"}</Text>
+                  <Pressable key={id || idx} style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]} onPress={() => onToggle(id, c.community?.name ?? "Topluluk")}>
+                    <Text style={styles.sheetRowTitle}>{c.community?.name ?? "Topluluk"}</Text>
                     {selected && <Ionicons name="checkmark" size={20} color={colors.accent} />}
                   </Pressable>
                 );
@@ -887,11 +887,11 @@ function ShareSheet({
             {shareWithFollowers && <Ionicons name="checkmark" size={20} color={colors.accent} />}
           </Pressable>
           {communities.map((c) => {
-            const id = c.community_id || (c.communities as { id?: string } | null)?.id;
+            const id = c.community_id || String(c.community?.id ?? "");
             if (!id) return null;
             return (
               <Pressable key={id} style={styles.sheetRowItem} onPress={() => onToggleCommunity(id)}>
-                <Text style={styles.sheetRowTitle}>{c.communities?.name ?? "Topluluk"}</Text>
+                <Text style={styles.sheetRowTitle}>{c.community?.name ?? "Topluluk"}</Text>
                 {selectedCommunityIds.includes(id) && <Ionicons name="checkmark" size={20} color={colors.accent} />}
               </Pressable>
             );

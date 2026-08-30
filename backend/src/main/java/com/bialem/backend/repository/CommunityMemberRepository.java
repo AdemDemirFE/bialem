@@ -60,4 +60,12 @@ public interface CommunityMemberRepository extends JpaRepository<CommunityMember
         @Param("communityId") Long communityId,
         @Param("status") CommunityMemberStatus status
     );
+
+    @EntityGraph(attributePaths = { "user", "community" })
+    @Query("select cm from CommunityMember cm where (:userId is null or cm.user.id = :userId) and (:communityId is null or cm.community.id = :communityId) and (:status is null or cm.status = :status)")
+    List<CommunityMember> findAllByUserIdAndCommunityIdAndStatus(
+        @Param("userId") Long userId,
+        @Param("communityId") Long communityId,
+        @Param("status") CommunityMemberStatus status
+    );
 }

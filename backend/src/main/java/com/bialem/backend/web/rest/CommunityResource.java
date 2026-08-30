@@ -46,14 +46,18 @@ public class CommunityResource {
 
     private final CommunityQueryService communityQueryService;
 
+    private final CommunityMemberService communityMemberService;
+
     public CommunityResource(
         CommunityService communityService,
         CommunityRepository communityRepository,
-        CommunityQueryService communityQueryService
+        CommunityQueryService communityQueryService,
+        CommunityMemberService communityMemberService
     ) {
         this.communityService = communityService;
         this.communityRepository = communityRepository;
         this.communityQueryService = communityQueryService;
+        this.communityMemberService = communityMemberService;
     }
 
     /**
@@ -186,6 +190,19 @@ public class CommunityResource {
         LOG.debug("REST request to get Community : {}", id);
         Optional<CommunityDTO> communityDTO = communityService.findOne(id);
         return ResponseUtil.wrapOrNotFound(communityDTO);
+    }
+
+    /**
+     * {@code GET  /communities/:id/members} : get members of a community.
+     *
+     * @param id the id of the community.
+     * @param status optional filter by membership status.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of members in body.
+     */
+    @GetMapping("/{id}/members")
+    public List<CommunityMemberDTO> getCommunityMembers(@PathVariable("id") Long id, @RequestParam(name = "status", required = false) CommunityMemberStatus status) {
+        LOG.debug("REST request to get Community Members for community {}", id);
+        return communityMemberService.findAll(null, id, status);
     }
 
     /**

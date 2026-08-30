@@ -140,15 +140,25 @@ public class CommunityMemberService {
     }
 
     /**
-     * Get all the communityMembers.
+     * Get all the communityMembers, optionally filtered by user, community, and status.
      *
+     * @param userId optional filter by user profile id.
+     * @param communityId optional filter by community id.
+     * @param status optional filter by membership status.
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public List<CommunityMemberDTO> findAll() {
-        LOG.debug("Request to get all CommunityMembers");
+    public List<CommunityMemberDTO> findAll(Long userId, Long communityId, CommunityMemberStatus status) {
+        LOG.debug("Request to get all CommunityMembers by userId {}, communityId {}, status {}", userId, communityId, status);
+        if (userId == null && communityId == null && status == null) {
+            return communityMemberRepository
+                .findAll()
+                .stream()
+                .map(communityMemberMapper::toDto)
+                .collect(Collectors.toCollection(LinkedList::new));
+        }
         return communityMemberRepository
-            .findAll()
+            .findAllByUserIdAndCommunityIdAndStatus(userId, communityId, status)
             .stream()
             .map(communityMemberMapper::toDto)
             .collect(Collectors.toCollection(LinkedList::new));

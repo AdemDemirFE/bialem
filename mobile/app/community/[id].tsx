@@ -23,7 +23,7 @@ type CommunityRecord = {
 
 type GroupRecord = CommunityRecord & { created_by: string; category_id: string | null };
 type CategoryRecord = { id: string; name: string; slug: string };
-type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string };
+type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string; community?: { id: number } | null };
 type AssistantPermissions = {
   can_manage_groups: boolean;
   can_review_events: boolean;
@@ -78,7 +78,7 @@ export default function CommunityDetailScreen() {
     const [communityResult, groupsResult, membershipsResult, categoriesResult, assistantResult, pendingMembershipsResult] = await Promise.all([
       api.from("communities").select("id, name, slug, description, cover_image_url, community_type, partner_trust_level, is_verified_partner").eq("id", id).is("parent_id", null).maybeSingle(),
       api.from("communities").select("id, name, slug, description, cover_image_url, created_by, category_id, community_type, partner_trust_level, is_verified_partner").eq("parent_id", id).order("created_at", { ascending: false }),
-      api.from("community_members").select("community_id, role, status").eq("user_id", user.id),
+      api.communityMembers.listByUser(user.id),
       api.from("communities").select("id, name, slug").eq("community_type", "category_hub").is("parent_id", null).order("name"),
       api.rpc("get_my_community_assistant_permissions", { target_community_id: id }),
       api.rpc("get_pending_managed_community_memberships", { target_root_community_id: id })
@@ -104,7 +104,8 @@ export default function CommunityDetailScreen() {
       setGroupCategoryId((current) => current || nextCategories[0]?.id || "");
       setMemberships(
         ((membershipsResult.data ?? []) as Membership[]).reduce<Record<string, Membership>>((result, membership) => {
-          result[membership.community_id] = membership;
+          const key = membership.community_id || String(membership.community?.id ?? "");
+          if (key) result[key] = membership;
           return result;
         }, {})
       );

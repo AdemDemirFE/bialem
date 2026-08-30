@@ -58,11 +58,10 @@ type CommunityResponse = Partial<Community> & {
   communities?: CommunityResponse | null;
 };
 
-type MembershipResponse = {
-  community_id?: string | number | null;
-  role?: Membership["role"] | null;
+type CommunityMemberDto = {
+  community?: { id: number; name?: string; slug?: string; coverImageUrl?: string | null } | null;
+  role?: string | null;
   status?: string | null;
-  communities?: CommunityResponse | null;
 };
 
 const PAGE_SIZE = 6;
@@ -145,7 +144,7 @@ export default function CommunitiesScreen() {
         ? api.from("community_moderator_assistants").select("community_id").eq("user_id", user.id)
         : Promise.resolve({ data: [], error: null }),
       user
-        ? api.from("community_members").select("community_id, role, status, communities(*)").eq("user_id", user.id)
+        ? api.communityMembers.listByUser(user.id)
         : Promise.resolve({ data: [], error: null })
     ]);
 
@@ -155,13 +154,13 @@ export default function CommunitiesScreen() {
       const rpcCommunities = ((communitiesResult.data ?? []) as CommunityResponse[])
         .map(normalizeCommunity)
         .filter((community): community is Community => community !== null);
-      const membershipCommunities = ((membershipDetailsResult.data ?? []) as MembershipResponse[])
+      const membershipCommunities = ((membershipDetailsResult.data ?? []) as CommunityMemberDto[])
         .map((membership) => normalizeCommunity({
-          ...(membership.communities ?? {}),
-          id: String(membership.communities?.id ?? membership.community_id),
-          community_id: membership.community_id,
+          ...(membership.community ?? {}),
+          id: String(membership.community?.id ?? ""),
+          community_id: String(membership.community?.id ?? ""),
           membership_status: membership.status ?? null,
-          membership_role: membership.role ?? null,
+          membership_role: membership.role as Membership["role"] | null ?? null,
           is_member: String(membership.status ?? "").toLowerCase() === "approved"
         }))
         .filter((community): community is Community => community !== null && !community.name.startsWith("Topluluk #"));

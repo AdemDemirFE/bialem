@@ -22,6 +22,15 @@ type FollowDto = {
   followed?: { id: number } | null;
 };
 
+type CommunityMemberDto = {
+  id: number;
+  role: string;
+  status: string;
+  createdAt: string;
+  community?: { id: number; name?: string; slug?: string; coverImageUrl?: string | null } | null;
+  user?: { id: number } | null;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -240,6 +249,28 @@ export function createSpringClient(options: SpringClientOptions) {
           return { data, error: null };
         } catch (error) {
           return { data: [] as FollowDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    communityMembers: {
+      async listByUser(userId: string, status?: string) {
+        try {
+          const params = new URLSearchParams({ userId });
+          if (status) params.set("status", status);
+          const data = await request<CommunityMemberDto[]>(`/api/community-members?${params.toString()}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as CommunityMemberDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async listByCommunity(communityId: string, status?: string) {
+        try {
+          const params = new URLSearchParams();
+          if (status) params.set("status", status);
+          const data = await request<CommunityMemberDto[]>(`/api/communities/${encodeURIComponent(communityId)}/members${params.toString() ? "?" + params.toString() : ""}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as CommunityMemberDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
         }
       }
     },

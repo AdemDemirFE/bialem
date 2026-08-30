@@ -27,7 +27,7 @@ type EventRecord = {
   platform_moderation_status: "not_required" | "pending" | "approved" | "rejected";
 };
 
-type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string };
+type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string; community?: { id: number } | null };
 type AssistantPermissions = { can_manage_groups: boolean; can_review_events: boolean; can_manage_participants: boolean };
 type ManagedMember = {
   membership_id: string;
@@ -65,7 +65,7 @@ export default function GroupDetailScreen() {
 
     const [groupResult, membershipResult, eventsResult, creationGroupsResult, managedMembersResult] = await Promise.all([
       api.from("communities").select("id, parent_id, name, description").eq("id", id).not("parent_id", "is", null).maybeSingle(),
-      api.from("community_members").select("community_id, role, status").eq("user_id", user.id),
+      api.communityMembers.listByUser(user.id),
       api.from("events").select("id, created_by, title, description, starts_at, location_name, capacity, status, group_moderation_status, platform_moderation_status").eq("community_id", id).order("starts_at", { ascending: true }),
       api.rpc("get_my_event_creation_groups"),
       api.rpc("get_managed_community_members", { target_community_id: id })
@@ -77,8 +77,8 @@ export default function GroupDetailScreen() {
       const nextGroup = (groupResult.data as GroupRecord | null) ?? null;
       setGroup(nextGroup);
       const nextMemberships = (membershipResult.data ?? []) as Membership[];
-      setMembership(nextMemberships.find((item) => item.community_id === id) ?? null);
-      setParentMembership(nextGroup?.parent_id ? nextMemberships.find((item) => item.community_id === nextGroup.parent_id) ?? null : null);
+      setMembership(nextMemberships.find((item) => (item.community_id || String(item.community?.id ?? "")) === id) ?? null);
+      setParentMembership(nextGroup?.parent_id ? nextMemberships.find((item) => (item.community_id || String(item.community?.id ?? "")) === nextGroup.parent_id) ?? null : null);
       setEvents((eventsResult.data ?? []) as EventRecord[]);
       setManagedMembers(managedMembersResult.error ? [] : (managedMembersResult.data ?? []) as ManagedMember[]);
       const eventCreationGroup = (creationGroupsResult.data ?? []).find(
