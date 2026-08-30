@@ -76,10 +76,10 @@ export default function CommunityDetailScreen() {
     setError(null);
 
     const [communityResult, groupsResult, membershipsResult, categoriesResult, assistantResult, pendingMembershipsResult] = await Promise.all([
-      api.from("communities").select("id, name, slug, description, cover_image_url, community_type, partner_trust_level, is_verified_partner").eq("id", id).is("parent_id", null).maybeSingle(),
-      api.from("communities").select("id, name, slug, description, cover_image_url, created_by, category_id, community_type, partner_trust_level, is_verified_partner").eq("parent_id", id).order("created_at", { ascending: false }),
+      api.communities.getById(id),
+      api.communities.list({ parentId: id, sort: "createdAt,desc" }),
       api.communityMembers.listByUser(user.id),
-      api.from("communities").select("id, name, slug").eq("community_type", "category_hub").is("parent_id", null).order("name"),
+      api.communities.list({ communityType: "category_hub", parentId: null, sort: "name,asc" }),
       api.rpc("get_my_community_assistant_permissions", { target_community_id: id }),
       api.rpc("get_pending_managed_community_memberships", { target_root_community_id: id })
     ]);

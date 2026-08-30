@@ -31,6 +31,20 @@ type CommunityMemberDto = {
   user?: { id: number } | null;
 };
 
+type CommunityDto = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  coverImageUrl?: string | null;
+  communityType?: "category_hub" | "partner_hub";
+  partnerTrustLevel?: "new" | "verified" | "trusted";
+  isVerifiedPartner?: boolean;
+  createdAt?: string;
+  createdBy?: { id: number } | null;
+  parent?: { id: number } | null;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -271,6 +285,38 @@ export function createSpringClient(options: SpringClientOptions) {
           return { data, error: null };
         } catch (error) {
           return { data: [] as CommunityMemberDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    communities: {
+      async getById(id: string) {
+        try {
+          const data = await request<CommunityDto>(`/api/communities/${encodeURIComponent(id)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async list(params?: { parentId?: string | null; communityType?: string; sort?: string; size?: number }) {
+        try {
+          const query = new URLSearchParams();
+          query.set("size", String(params?.size ?? 1000));
+          if (params?.sort) query.set("sort", params.sort);
+          if (params?.communityType) query.set("communityType.equals", params.communityType);
+          if (params?.parentId === null) query.set("parentId.specified", "false");
+          else if (params?.parentId) query.set("parentId.equals", params.parentId);
+          const data = await request<CommunityDto[]>(`/api/communities?${query.toString()}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as CommunityDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async countByCreator(userId: string) {
+        try {
+          const data = await request<number>(`/api/communities/count?createdById.equals=${encodeURIComponent(userId)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
         }
       }
     },

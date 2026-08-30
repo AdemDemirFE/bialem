@@ -135,11 +135,7 @@ export default function CommunitiesScreen() {
     setError(null);
 
     const [communitiesResult, assistantsResult, membershipDetailsResult] = await Promise.all([
-      user ? api.rpc("get_communities_with_my_membership") : api
-        .from("communities")
-        .select("id, name, slug, description, cover_image_url, community_type, partner_trust_level, is_verified_partner, created_at")
-        .is("parent_id", null)
-        .order("created_at", { ascending: false }),
+      user ? api.rpc("get_communities_with_my_membership") : api.communities.list({ parentId: null, sort: "createdAt,desc" }),
       user
         ? api.from("community_moderator_assistants").select("community_id").eq("user_id", user.id)
         : Promise.resolve({ data: [], error: null }),

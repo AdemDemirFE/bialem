@@ -40,7 +40,7 @@ export default function CommunityAssistantsScreen() {
     if (!id) return;
     setError(null);
     const [communityResult, assistantsResult] = await Promise.all([
-      api.from("communities").select("name").eq("id", id).maybeSingle(),
+      api.communities.getById(id),
       api.rpc("get_community_moderator_assistants", { target_community_id: id })
     ]);
 

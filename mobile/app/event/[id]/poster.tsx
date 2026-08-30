@@ -75,12 +75,10 @@ export default function EventPosterScreen() {
       }
 
       setEvent(eventResult.data);
-      const communityResult = await api
-        .from("communities")
-        .select("name")
-        .eq("id", eventResult.data.community_id)
-        .maybeSingle<{ name: string }>();
-      if (communityResult.data) setCommunityName(communityResult.data.name);
+      if (eventResult.data.community_id) {
+        const communityResult = await api.communities.getById(eventResult.data.community_id);
+        if (communityResult.data) setCommunityName(communityResult.data.name);
+      }
       setLoading(false);
     };
 

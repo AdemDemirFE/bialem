@@ -64,7 +64,7 @@ export default function GroupDetailScreen() {
     setError(null);
 
     const [groupResult, membershipResult, eventsResult, creationGroupsResult, managedMembersResult] = await Promise.all([
-      api.from("communities").select("id, parent_id, name, description").eq("id", id).not("parent_id", "is", null).maybeSingle(),
+      api.communities.getById(id),
       api.communityMembers.listByUser(user.id),
       api.from("events").select("id, created_by, title, description, starts_at, location_name, capacity, status, group_moderation_status, platform_moderation_status").eq("community_id", id).order("starts_at", { ascending: true }),
       api.rpc("get_my_event_creation_groups"),

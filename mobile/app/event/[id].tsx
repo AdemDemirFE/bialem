@@ -150,7 +150,7 @@ export default function EventDetailScreen() {
     }
 
     const [communityResult, commentsResult, ratingsResult] = await Promise.all([
-      api.from("communities").select("id, name, slug").eq("id", nextEvent.community_id).maybeSingle<CommunityRecord>(),
+      nextEvent.community_id ? api.communities.getById(nextEvent.community_id) : Promise.resolve({ data: null, error: null }),
       api
         .from("comments")
         .select("id, author_id, body, created_at")
