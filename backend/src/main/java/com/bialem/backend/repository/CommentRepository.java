@@ -1,6 +1,8 @@
 package com.bialem.backend.repository;
 
 import com.bialem.backend.domain.Comment;
+import com.bialem.backend.domain.enumeration.CommentTargetType;
+import java.util.List;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +11,8 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface CommentRepository extends JpaRepository<Comment, Long> {}
+public interface CommentRepository extends JpaRepository<Comment, Long> {
+    List<Comment> findByTargetTypeAndTargetIdOrderByCreatedAtDesc(CommentTargetType targetType, String targetId);
+
+    long countByAuthor_Id(Long authorId);
+}

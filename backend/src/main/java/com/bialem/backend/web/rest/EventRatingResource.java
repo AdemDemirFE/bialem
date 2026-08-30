@@ -133,12 +133,23 @@ public class EventRatingResource {
     /**
      * {@code GET  /event-ratings} : get all the eventRatings.
      *
+     * @param eventId optional filter by event id.
+     * @param userId optional filter by user profile id.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of eventRatings in body.
      */
     @GetMapping("")
-    public List<EventRatingDTO> getAllEventRatings() {
-        LOG.debug("REST request to get all EventRatings");
-        return eventRatingService.findAll();
+    public ResponseEntity<List<EventRatingDTO>> getAllEventRatings(
+        @RequestParam(name = "eventId", required = false) Long eventId,
+        @RequestParam(name = "userId", required = false) Long userId
+    ) {
+        LOG.debug("REST request to get EventRatings by eventId {} userId {}", eventId, userId);
+        if (eventId != null) {
+            return ResponseEntity.ok().body(eventRatingService.findByEventId(eventId));
+        }
+        if (userId != null) {
+            return ResponseEntity.ok().body(eventRatingService.findByUserId(userId));
+        }
+        return ResponseEntity.ok().body(eventRatingService.findAll());
     }
 
     /**

@@ -1,9 +1,11 @@
 package com.bialem.backend.service;
 
 import com.bialem.backend.domain.Comment;
+import com.bialem.backend.domain.enumeration.CommentTargetType;
 import com.bialem.backend.repository.CommentRepository;
 import com.bialem.backend.service.dto.CommentDTO;
 import com.bialem.backend.service.mapper.CommentMapper;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +88,34 @@ public class CommentService {
     public Page<CommentDTO> findAll(Pageable pageable) {
         LOG.debug("Request to get all Comments");
         return commentRepository.findAll(pageable).map(commentMapper::toDto);
+    }
+
+    /**
+     * Get comments by target type and target id.
+     *
+     * @param targetType the target type.
+     * @param targetId the target id.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public List<CommentDTO> findByTarget(CommentTargetType targetType, String targetId) {
+        LOG.debug("Request to get Comments by targetType {} and targetId {}", targetType, targetId);
+        return commentRepository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId)
+            .stream()
+            .map(commentMapper::toDto)
+            .toList();
+    }
+
+    /**
+     * Count comments by author id.
+     *
+     * @param authorId the author id.
+     * @return the count.
+     */
+    @Transactional(readOnly = true)
+    public long countByAuthor(Long authorId) {
+        LOG.debug("Request to count Comments by authorId {}", authorId);
+        return commentRepository.countByAuthor_Id(authorId);
     }
 
     /**

@@ -41,3 +41,10 @@ backend/src/main/resources/config/application-mail-local.yml
 backend/target/
 target/
 **/target/
+
+# Codebase Memory
+.codebase-memory/
+graph.db.zst
+
+# Graphify output
+graphify-out/

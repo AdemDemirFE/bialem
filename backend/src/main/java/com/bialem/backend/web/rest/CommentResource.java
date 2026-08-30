@@ -1,5 +1,6 @@
 package com.bialem.backend.web.rest;
 
+import com.bialem.backend.domain.enumeration.CommentTargetType;
 import com.bialem.backend.repository.CommentRepository;
 import com.bialem.backend.service.CommentService;
 import com.bialem.backend.service.dto.CommentDTO;
@@ -139,14 +140,38 @@ public class CommentResource {
      * {@code GET  /comments} : get all the comments.
      *
      * @param pageable the pagination information.
+     * @param targetType optional filter by target type.
+     * @param targetId optional filter by target id.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of comments in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<CommentDTO>> getAllComments(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        LOG.debug("REST request to get a page of Comments");
+    public ResponseEntity<List<CommentDTO>> getAllComments(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        @RequestParam(name = "targetType", required = false) String targetType,
+        @RequestParam(name = "targetId", required = false) String targetId
+    ) {
+        LOG.debug("REST request to get Comments by targetType {} and targetId {}", targetType, targetId);
+        if (targetType != null && targetId != null) {
+            return ResponseEntity.ok().body(commentService.findByTarget(CommentTargetType.valueOf(targetType.toUpperCase()), targetId));
+        }
         Page<CommentDTO> page = commentService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /comments/count} : count comments.
+     *
+     * @param authorId optional filter by author id.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Long> countComments(@RequestParam(name = "authorId", required = false) Long authorId) {
+        LOG.debug("REST request to count Comments by authorId {}", authorId);
+        if (authorId != null) {
+            return ResponseEntity.ok().body(commentService.countByAuthor(authorId));
+        }
+        return ResponseEntity.ok().body(commentRepository.count());
     }
 
     /**

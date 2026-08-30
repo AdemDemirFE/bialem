@@ -108,12 +108,7 @@ export default function PostDetailScreen() {
       nextPost.community?.id
         ? api.communities.getById(String(nextPost.community.id))
         : Promise.resolve({ data: null, error: null }),
-      api
-        .from("comments")
-        .select("id, author_id, body, created_at")
-        .eq("target_type", "post")
-        .eq("target_id", String(nextPost.id))
-        .order("created_at", { ascending: false })
+      api.comments.listByTarget("post", String(nextPost.id))
     ]);
 
     if (communityResult.error) {
@@ -125,7 +120,7 @@ export default function PostDetailScreen() {
     if (commentsResult.error) {
       setError(commentsResult.error.message);
     } else {
-      const nextComments = (commentsResult.data ?? []) as CommentRecord[];
+      const nextComments = commentsResult.data ?? [];
       setComments(nextComments);
       try {
         setCommentTeamRoles(await getPlatformTeamIdentityMap(nextComments.map((comment) => comment.author_id).filter(Boolean) as string[]));

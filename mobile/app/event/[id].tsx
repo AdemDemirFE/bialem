@@ -147,17 +147,8 @@ export default function EventDetailScreen() {
 
     const [communityResult, commentsResult, ratingsResult] = await Promise.all([
       nextEvent.community?.id ? api.communities.getById(String(nextEvent.community.id)) : Promise.resolve({ data: null, error: null }),
-      api
-        .from("comments")
-        .select("id, author_id, body, created_at")
-        .eq("target_type", "event")
-        .eq("target_id", nextEvent.id)
-        .order("created_at", { ascending: false }),
-      api
-        .from("event_ratings")
-        .select("id, user_id, rating, review_text, created_at")
-        .eq("event_id", nextEvent.id)
-        .order("created_at", { ascending: false })
+      api.comments.listByTarget("event", String(nextEvent.id)),
+      api.eventRatings.listByEvent(String(nextEvent.id))
     ]);
 
     if (communityResult.error) {

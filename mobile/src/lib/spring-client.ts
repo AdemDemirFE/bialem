@@ -141,6 +141,42 @@ type AccountPreferencesShape = {
   notify_system: boolean;
 };
 
+type CommentDto = {
+  id: number;
+  targetType?: string;
+  targetId?: string;
+  body?: string;
+  moderationStatus?: string;
+  createdAt?: string;
+  author?: { id: number; displayName?: string } | null;
+};
+
+type CommentShape = {
+  id: string;
+  author_id: string | null;
+  body: string;
+  created_at: string;
+  profiles?: { display_name?: string | null } | null;
+};
+
+type EventRatingDto = {
+  id: number;
+  rating?: number;
+  reviewText?: string | null;
+  createdAt?: string;
+  user?: { id: number } | null;
+  event?: { id: number; title?: string } | null;
+};
+
+type EventRatingShape = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -529,6 +565,65 @@ export function createSpringClient(options: SpringClientOptions) {
           return { data, error: null };
         } catch (error) {
           return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    comments: {
+      async listByTarget(targetType: string, targetId: string) {
+        try {
+          const dtos = await request<CommentDto[]>(`/api/comments?targetType=${encodeURIComponent(targetType.toUpperCase())}&targetId=${encodeURIComponent(targetId)}`);
+          const data: CommentShape[] = (dtos ?? []).map((dto) => ({
+            id: String(dto.id),
+            author_id: dto.author?.id ? String(dto.author.id) : null,
+            body: dto.body ?? "",
+            created_at: dto.createdAt ?? new Date().toISOString(),
+            profiles: dto.author?.displayName ? { display_name: dto.author.displayName } : null
+          }));
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as CommentShape[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async countByAuthor(userId: string) {
+        try {
+          const data = await request<number>(`/api/comments/count?authorId=${encodeURIComponent(userId)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    eventRatings: {
+      async listByEvent(eventId: string) {
+        try {
+          const dtos = await request<EventRatingDto[]>(`/api/event-ratings?eventId=${encodeURIComponent(eventId)}`);
+          const data: EventRatingShape[] = (dtos ?? []).map((dto) => ({
+            id: String(dto.id),
+            event_id: dto.event?.id ? String(dto.event.id) : "",
+            user_id: dto.user?.id ? String(dto.user.id) : "",
+            rating: dto.rating ?? 0,
+            review_text: dto.reviewText ?? null,
+            created_at: dto.createdAt ?? new Date().toISOString()
+          }));
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as EventRatingShape[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async listByUser(userId: string) {
+        try {
+          const dtos = await request<EventRatingDto[]>(`/api/event-ratings?userId=${encodeURIComponent(userId)}`);
+          const data: EventRatingShape[] = (dtos ?? []).map((dto) => ({
+            id: String(dto.id),
+            event_id: dto.event?.id ? String(dto.event.id) : "",
+            user_id: dto.user?.id ? String(dto.user.id) : "",
+            rating: dto.rating ?? 0,
+            review_text: dto.reviewText ?? null,
+            created_at: dto.createdAt ?? new Date().toISOString()
+          }));
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as EventRatingShape[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
         }
       }
     },

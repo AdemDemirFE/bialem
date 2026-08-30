@@ -89,6 +89,36 @@ public class EventRatingService {
     }
 
     /**
+     * Get event ratings by event id.
+     *
+     * @param eventId the event id.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public List<EventRatingDTO> findByEventId(Long eventId) {
+        LOG.debug("Request to get EventRatings by eventId {}", eventId);
+        return eventRatingRepository.findByEvent_IdOrderByCreatedAtDesc(eventId)
+            .stream()
+            .map(eventRatingMapper::toDto)
+            .toList();
+    }
+
+    /**
+     * Get event ratings by user id.
+     *
+     * @param userId the user profile id.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public List<EventRatingDTO> findByUserId(Long userId) {
+        LOG.debug("Request to get EventRatings by userId {}", userId);
+        return eventRatingRepository.findByUser_IdOrderByCreatedAtDesc(userId)
+            .stream()
+            .map(eventRatingMapper::toDto)
+            .toList();
+    }
+
+    /**
      * Get one eventRating by id.
      *
      * @param id the id of the entity.

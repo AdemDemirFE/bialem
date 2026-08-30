@@ -131,10 +131,8 @@ export default function ProfileScreen() {
       api.communities.countByCreator(user.id),
       api.events.countByCreator(user.id),
       api.posts.countByAuthor(user.id),
-      api.from("comments").select("*", { count: "exact", head: true }).eq("author_id", user.id),
-      api.from("event_ratings").select("id, event_id, user_id, rating, review_text, created_at").eq("user_id", user.id).order("created_at", {
-        ascending: false
-      }),
+      api.comments.countByAuthor(user.id),
+      api.eventRatings.listByUser(user.id),
       api
         .from("user_reviews")
         .select("id, reviewer_id, reviewed_user_id, rating, review_text, created_at")
@@ -180,7 +178,7 @@ export default function ProfileScreen() {
         communities: communitiesCountResult.data ?? 0,
         events: eventsCountResult.data ?? 0,
         posts: postsCountResult.count ?? 0,
-        comments: commentsCountResult.count ?? 0
+        comments: commentsCountResult.data ?? 0
       });
       setRatingsGiven((ratingsGivenResult.data ?? []) as EventRatingRecord[]);
       setReviewsReceived((reviewsReceivedResult.data ?? []) as UserReviewRecord[]);
