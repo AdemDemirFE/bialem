@@ -139,14 +139,40 @@ public class PostResource {
      * {@code GET  /posts} : get all the posts.
      *
      * @param pageable the pagination information.
+     * @param authorId optional filter by author profile id.
+     * @param communityId optional filter by community id.
+     * @param eventId optional filter by event id.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of posts in body.
      */
     @GetMapping("")
-    public ResponseEntity<List<PostDTO>> getAllPosts(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        LOG.debug("REST request to get a page of Posts");
-        Page<PostDTO> page = postService.findAll(pageable);
+    public ResponseEntity<List<PostDTO>> getAllPosts(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable,
+        @RequestParam(name = "authorId", required = false) Long authorId,
+        @RequestParam(name = "communityId", required = false) Long communityId,
+        @RequestParam(name = "eventId", required = false) Long eventId
+    ) {
+        LOG.debug("REST request to get a page of Posts by authorId {}, communityId {}, eventId {}", authorId, communityId, eventId);
+        Page<PostDTO> page = postService.findAll(authorId, communityId, eventId, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /posts/count} : count all the posts.
+     *
+     * @param authorId optional filter by author profile id.
+     * @param communityId optional filter by community id.
+     * @param eventId optional filter by event id.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Long> countPosts(
+        @RequestParam(name = "authorId", required = false) Long authorId,
+        @RequestParam(name = "communityId", required = false) Long communityId,
+        @RequestParam(name = "eventId", required = false) Long eventId
+    ) {
+        LOG.debug("REST request to count Posts by authorId {}, communityId {}, eventId {}", authorId, communityId, eventId);
+        return ResponseEntity.ok().body(postService.count(authorId, communityId, eventId));
     }
 
     /**

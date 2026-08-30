@@ -24,11 +24,11 @@ type EventItem = {
 
 type PostItem = {
   id: string;
-  author_id: string;
+  author?: { id?: number } | null;
   body: string | null;
-  created_at: string;
-  post_media: { id: string; media_type: string; storage_path: string; sort_order: number }[];
-  communities: { name: string; slug: string } | null;
+  createdAt: string;
+  media?: { id: number; mediaType?: string; storagePath?: string; sortOrder?: number }[] | null;
+  community?: { name?: string; slug?: string } | null;
 };
 
 type StoryGroupItem = {
@@ -70,11 +70,7 @@ export default function FeedScreen() {
 
     const [eventsResult, postsResult, followsResult, storiesResult, membershipsResult] = await Promise.all([
       api.events.list({ status: ["published", "pending_approval"], sort: "startsAt,asc", size: 30 }),
-      api
-        .from("posts")
-        .select("id, author_id, body, created_at, post_media(id, media_type, storage_path, sort_order), communities(name, slug)")
-        .order("created_at", { ascending: false })
-        .limit(8),
+      api.posts.list({ sort: "createdAt,desc", size: 8 }),
       user ? api.follows.listByFollower(user.id) : Promise.resolve({ data: [], error: null }),
       user ? api.rpc("get_story_feed") : Promise.resolve({ data: [], error: null }),
       user
@@ -98,7 +94,7 @@ export default function FeedScreen() {
     }
 
     if (postsResult.error) setError(postsResult.error.message);
-    else setPosts((postsResult.data ?? []) as unknown as PostItem[]);
+    else setPosts((postsResult.data ?? []) as PostItem[]);
     if (!storiesResult.error) setStories(Array.isArray(storiesResult.data) ? (storiesResult.data as StoryGroupItem[]) : []);
 
     mode === "initial" ? setLoading(false) : setRefreshing(false);
@@ -132,7 +128,7 @@ export default function FeedScreen() {
     return events.filter((event) => {
       const time = new Date(event.startsAt).getTime();
       const location = `${event.locationName || ""} ${event.addressText || ""}`.toLocaleLowerCase("tr-TR");
-      return event.status === "published" && time >= now - 60 * 60 * 1000 && time <= sixHours && (!city || location.includes(city.toLocaleLowerCase("tr-TR")));
+      return event.status === "PUBLISHED" && time >= now - 60 * 60 * 1000 && time <= sixHours && (!city || location.includes(city.toLocaleLowerCase("tr-TR")));
     }).slice(0, 3);
   }, [city, events]);
 
@@ -329,9 +325,9 @@ function PostCard({ post }: { post: PostItem }) {
   return (
     <Link href={{ pathname: "/post/[id]", params: { id: post.id } }} asChild>
       <Pressable style={styles.postCard}>
-        <Text style={styles.postMeta}>{post.communities?.name || "Topluluk"} · {formatDate(post.created_at)}</Text>
+        <Text style={styles.postMeta}>{post.community?.name || "Topluluk"} · {formatDate(post.createdAt)}</Text>
         <Text style={styles.postBody}>{post.body || "Yeni bir topluluk anı paylaşıldı."}</Text>
-        {post.post_media?.[0] ? <Image source={{ uri: post.post_media[0].storage_path }} style={styles.postImage} resizeMode="cover" /> : null}
+        {post.media?.[0] ? <Image source={{ uri: post.media[0].storagePath }} style={styles.postImage} resizeMode="cover" /> : null}
         <View style={styles.openRow}><Text style={styles.openText}>Yorumları aç</Text><Ionicons name="chatbubble-ellipses-outline" size={17} color={colors.accent} /></View>
       </Pressable>
     </Link>

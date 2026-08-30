@@ -64,6 +64,26 @@ type EventDto = {
   createdBy?: { id: number } | null;
 };
 
+type PostMediaDto = {
+  id: number;
+  mediaType?: string;
+  storagePath?: string;
+  sortOrder?: number;
+};
+
+type PostDto = {
+  id: number;
+  body?: string | null;
+  visibility?: string;
+  moderationStatus?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  author?: { id: number } | null;
+  community?: { id: number; name?: string; slug?: string } | null;
+  event?: { id: number; title?: string } | null;
+  media?: PostMediaDto[] | null;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -368,6 +388,38 @@ export function createSpringClient(options: SpringClientOptions) {
       async countByCreator(userId: string) {
         try {
           const data = await request<number>(`/api/events/count?createdById.equals=${encodeURIComponent(userId)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
+    },
+    posts: {
+      async getById(id: string) {
+        try {
+          const data = await request<PostDto>(`/api/posts/${encodeURIComponent(id)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: null, error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async list(params?: { authorId?: string; communityId?: string; eventId?: string; sort?: string; size?: number }) {
+        try {
+          const query = new URLSearchParams();
+          query.set("size", String(params?.size ?? 1000));
+          if (params?.sort) query.set("sort", params.sort);
+          if (params?.authorId) query.set("authorId", params.authorId);
+          if (params?.communityId) query.set("communityId", params.communityId);
+          if (params?.eventId) query.set("eventId", params.eventId);
+          const data = await request<PostDto[]>(`/api/posts?${query.toString()}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as PostDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      },
+      async countByAuthor(userId: string) {
+        try {
+          const data = await request<number>(`/api/posts/count?authorId=${encodeURIComponent(userId)}`);
           return { data, error: null };
         } catch (error) {
           return { data: 0, error: asError(error instanceof Error ? error.message : "İstek başarısız") };

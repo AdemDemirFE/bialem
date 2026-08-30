@@ -41,16 +41,15 @@ type ActivityStats = {
 
 type MediaPostRecord = {
   id: string;
-  event_id: string | null;
+  event?: { id: number; title?: string } | null;
   body: string | null;
-  created_at: string;
-  events: { title: string }[];
-  post_media: {
-    id: string;
-    media_type: string;
-    storage_path: string;
-    sort_order: number;
-  }[];
+  createdAt: string;
+  media?: {
+    id: number;
+    mediaType?: string;
+    storagePath?: string;
+    sortOrder?: number;
+  }[] | null;
 };
 
 type Reliability = { checked_in_count: number; no_show_count: number; reliability_score: number | null };
@@ -131,7 +130,7 @@ export default function ProfileScreen() {
     ] = await Promise.all([
       api.communities.countByCreator(user.id),
       api.events.countByCreator(user.id),
-      api.from("posts").select("*", { count: "exact", head: true }).eq("author_id", user.id),
+      api.posts.countByAuthor(user.id),
       api.from("comments").select("*", { count: "exact", head: true }).eq("author_id", user.id),
       api.from("event_ratings").select("id, event_id, user_id, rating, review_text, created_at").eq("user_id", user.id).order("created_at", {
         ascending: false
@@ -141,12 +140,7 @@ export default function ProfileScreen() {
         .select("id, reviewer_id, reviewed_user_id, rating, review_text, created_at")
         .eq("reviewed_user_id", user.id)
         .order("created_at", { ascending: false }),
-      api
-        .from("posts")
-        .select("id, event_id, body, created_at, events(title), post_media(id, media_type, storage_path, sort_order)")
-        .eq("author_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(6),
+      api.posts.list({ authorId: user.id, sort: "createdAt,desc", size: 6 }),
       api.rpc("get_user_reliability", { target_user_id: user.id }).maybeSingle(),
       api.rpc("get_user_honor_badges", { target_user_id: user.id }),
       api.rpc("get_public_follow_summary", { target_user_id: user.id }).maybeSingle(),
@@ -504,16 +498,16 @@ export default function ProfileScreen() {
             {mediaPosts.map((post) => (
               <Link key={post.id} href={{ pathname: "/post/[id]", params: { id: post.id } }} asChild>
                 <Pressable style={styles.activityCard}>
-                  {post.post_media?.length ? (
-                    <Image source={{ uri: post.post_media[0].storage_path }} style={styles.mediaImage} resizeMode="cover" />
+                    {post.media?.length ? (
+                    <Image source={{ uri: post.media[0].storagePath }} style={styles.mediaImage} resizeMode="cover" />
                   ) : null}
-                  {post.event_id ? (
+                  {post.event ? (
                     <View style={styles.memoryBadge}>
-                      <Ionicons name="sparkles" size={13} color={colors.accent} />
-                      <Text style={styles.memoryBadgeText} numberOfLines={1}>Etkinlik anısı{post.events?.[0]?.title ? ` · ${post.events[0].title}` : ""}</Text>
+                      <Ionicons name="calendar" size={12} color={colors.onBrand} />
+                      <Text style={styles.memoryBadgeText} numberOfLines={1}>Etkinlik anısı{post.event.title ? ` · ${post.event.title}` : ""}</Text>
                     </View>
                   ) : null}
-                  <Text style={styles.activityMeta}>{formatDate(post.created_at)}</Text>
+                  <Text style={styles.activityMeta}>{formatDate(post.createdAt)}</Text>
                   <Text style={styles.activityText}>{post.body || "Açıklama eklenmedi."}</Text>
                 </Pressable>
               </Link>

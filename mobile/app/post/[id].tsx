@@ -21,18 +21,18 @@ import { colors } from "../../src/theme/colors";
 
 type PostRecord = {
   id: string;
-  community_id: string | null;
-  author_id: string | null;
+  community?: { id: number } | null;
+  author?: { id: number } | null;
   body: string | null;
   visibility: string;
-  moderation_status: string;
-  created_at: string;
-  post_media?: {
-    id: string;
-    media_type: string;
-    storage_path: string;
-    sort_order: number;
-  }[];
+  moderationStatus: string;
+  createdAt: string;
+  media?: {
+    id: number;
+    mediaType?: string;
+    storagePath?: string;
+    sortOrder?: number;
+  }[] | null;
 };
 
 type CommunityRecord = {
@@ -86,7 +86,7 @@ export default function PostDetailScreen() {
 
     setError(null);
 
-    const postResult = await api.from("posts").select("*").eq("id", id).maybeSingle<PostRecord>();
+    const postResult = await api.posts.getById(id);
 
     if (postResult.error) {
       setError(postResult.error.message);
@@ -105,8 +105,8 @@ export default function PostDetailScreen() {
     }
 
     const [communityResult, commentsResult] = await Promise.all([
-      nextPost.community_id
-        ? api.from("communities").select("id, name, slug").eq("id", nextPost.community_id).maybeSingle<CommunityRecord>()
+      nextPost.community?.id
+        ? api.communities.getById(String(nextPost.community.id))
         : Promise.resolve({ data: null, error: null }),
       api
         .from("comments")
@@ -212,7 +212,7 @@ export default function PostDetailScreen() {
     setReportingTarget(null);
   };
 
-  const backHref = post?.community_id ? { pathname: "/community/[id]" as const, params: { id: post.community_id } } : "/(tabs)/feed";
+  const backHref = post?.community?.id ? { pathname: "/community/[id]" as const, params: { id: String(post.community.id) } } : "/(tabs)/feed";
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -250,15 +250,15 @@ export default function PostDetailScreen() {
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Paylaşım</Text>
               <Text style={styles.metaText}>
-                {maskUser(post.author_id)}
+                {maskUser(String(post.author?.id ?? ""))}
                 {community?.name ? ` - ${community.name}` : ""}
-                {` - ${formatDate(post.created_at)}`}
+                {` - ${formatDate(post.createdAt)}`}
               </Text>
               <Text style={styles.postBody}>{post.body || "İçerik eklenmedi."}</Text>
-              {post.post_media?.length ? (
+              {post.media?.length ? (
                 <View style={styles.mediaStack}>
-                  {post.post_media.map((media) => (
-                    <Image key={media.id} source={{ uri: media.storage_path }} style={styles.postImage} resizeMode="cover" />
+                  {post.media.map((media) => (
+                    <Image key={media.id} source={{ uri: media.storagePath }} style={styles.postImage} resizeMode="cover" />
                   ))}
                 </View>
               ) : null}

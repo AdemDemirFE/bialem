@@ -89,6 +89,41 @@ public class PostService {
     }
 
     /**
+     * Get all the posts filtered by author, community, or event.
+     *
+     * @param authorId optional filter by author profile id.
+     * @param communityId optional filter by community id.
+     * @param eventId optional filter by event id.
+     * @param pageable the pagination information.
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public Page<PostDTO> findAll(Long authorId, Long communityId, Long eventId, Pageable pageable) {
+        LOG.debug("Request to get all Posts by authorId {}, communityId {}, eventId {}", authorId, communityId, eventId);
+        if (authorId == null && communityId == null && eventId == null) {
+            return postRepository.findAll(pageable).map(postMapper::toDto);
+        }
+        return postRepository.findAllWithRelationshipsByFilters(authorId, communityId, eventId, pageable).map(postMapper::toDto);
+    }
+
+    /**
+     * Count posts filtered by author, community, or event.
+     *
+     * @param authorId optional filter by author profile id.
+     * @param communityId optional filter by community id.
+     * @param eventId optional filter by event id.
+     * @return the count.
+     */
+    @Transactional(readOnly = true)
+    public long count(Long authorId, Long communityId, Long eventId) {
+        LOG.debug("Request to count Posts by authorId {}, communityId {}, eventId {}", authorId, communityId, eventId);
+        if (authorId == null && communityId == null && eventId == null) {
+            return postRepository.count();
+        }
+        return postRepository.countByFilters(authorId, communityId, eventId);
+    }
+
+    /**
      * Get one post by id.
      *
      * @param id the id of the entity.
