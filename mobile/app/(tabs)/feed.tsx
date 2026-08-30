@@ -80,14 +80,14 @@ export default function FeedScreen() {
         .select("id, author_id, body, created_at, post_media(id, media_type, storage_path, sort_order), communities(name, slug)")
         .order("created_at", { ascending: false })
         .limit(8),
-      user ? api.from("follows").select("followed_id").eq("follower_id", user.id) : Promise.resolve({ data: [], error: null }),
+      user ? api.follows.listByFollower(user.id) : Promise.resolve({ data: [], error: null }),
       user ? api.rpc("get_story_feed") : Promise.resolve({ data: [], error: null }),
       user
         ? api.from("community_members").select("community_id").eq("user_id", user.id).eq("status", "approved")
         : Promise.resolve({ data: [], error: null })
     ]);
 
-    const nextFollowedIds = ((followsResult.data ?? []) as Array<{ followed_id: string }>).map((item) => item.followed_id);
+    const nextFollowedIds = ((followsResult.data ?? []) as Array<{ followed?: { id: string } | null }>).map((item) => item.followed?.id).filter((id): id is string => Boolean(id));
     const nextJoinedIds = ((membershipsResult.data ?? []) as Array<{ community_id: string }>).map((item) => item.community_id);
     setFollowedIds(nextFollowedIds);
     setJoinedCommunityIds(nextJoinedIds);

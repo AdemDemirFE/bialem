@@ -60,6 +60,8 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/api/admin/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
                     .requestMatchers(mvc.pattern("/api/store/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/app/**")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/follows"), mvc.pattern("/api/follows/**")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/community-members"), mvc.pattern("/api/community-members/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/push-device-tokens/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account/**")).authenticated()

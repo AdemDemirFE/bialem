@@ -133,12 +133,14 @@ public class FollowResource {
     /**
      * {@code GET  /follows} : get all the follows.
      *
+     * @param followerId optional filter by follower profile id.
+     * @param followedId optional filter by followed profile id.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of follows in body.
      */
     @GetMapping("")
-    public List<FollowDTO> getAllFollows() {
-        LOG.debug("REST request to get all Follows");
-        return followService.findAll();
+    public List<FollowDTO> getAllFollows(@RequestParam(name = "followerId", required = false) Long followerId, @RequestParam(name = "followedId", required = false) Long followedId) {
+        LOG.debug("REST request to get all Follows by followerId {}, followedId {}", followerId, followedId);
+        return followService.findAll(followerId, followedId);
     }
 
     /**

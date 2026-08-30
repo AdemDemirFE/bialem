@@ -117,14 +117,19 @@ public class FollowService {
     }
 
     /**
-     * Get all the follows.
+     * Get all the follows, optionally filtered by follower or followed profile id.
      *
+     * @param followerId optional filter by follower profile id.
+     * @param followedId optional filter by followed profile id.
      * @return the list of entities.
      */
     @Transactional(readOnly = true)
-    public List<FollowDTO> findAll() {
-        LOG.debug("Request to get all Follows");
-        return followRepository.findAll().stream().map(followMapper::toDto).collect(Collectors.toCollection(LinkedList::new));
+    public List<FollowDTO> findAll(Long followerId, Long followedId) {
+        LOG.debug("Request to get all Follows by followerId {}, followedId {}", followerId, followedId);
+        if (followerId == null && followedId == null) {
+            return followRepository.findAll().stream().map(followMapper::toDto).collect(Collectors.toCollection(LinkedList::new));
+        }
+        return followRepository.findAllByFollowerIdAndFollowedId(followerId, followedId).stream().map(followMapper::toDto).collect(Collectors.toCollection(LinkedList::new));
     }
 
     /**

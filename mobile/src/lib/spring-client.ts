@@ -15,6 +15,13 @@ type Filter = {
 type AuthUser = { id: string; email: string };
 type AuthSession = { access_token: string; user: AuthUser } | null;
 
+type FollowDto = {
+  id: number;
+  createdAt: string;
+  follower?: { id: number } | null;
+  followed?: { id: number } | null;
+};
+
 function asError(message: string) {
   return { message };
 }
@@ -225,6 +232,16 @@ export function createSpringClient(options: SpringClientOptions) {
     },
     from(table: string) {
       return new QueryBuilder(table);
+    },
+    follows: {
+      async listByFollower(followerId: string) {
+        try {
+          const data = await request<FollowDto[]>(`/api/follows?followerId=${encodeURIComponent(followerId)}`);
+          return { data, error: null };
+        } catch (error) {
+          return { data: [] as FollowDto[], error: asError(error instanceof Error ? error.message : "İstek başarısız") };
+        }
+      }
     },
     rpc(name: string, args: Record<string, unknown> = {}) {
       let single = false;

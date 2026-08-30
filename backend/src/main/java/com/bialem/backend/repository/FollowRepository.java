@@ -11,4 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
     boolean existsByFollower_IdAndFollowed_Id(Long followerId, Long followedId);
+
+    @Query("select f from Follow f where (:followerId is null or f.follower.id = :followerId) and (:followedId is null or f.followed.id = :followedId)")
+    List<Follow> findAllByFollowerIdAndFollowedId(@Param("followerId") Long followerId, @Param("followedId") Long followedId);
 }
