@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { BialemMascot } from "../experiences/BialemMascot";
 import { colors } from "../theme/colors";
 import { AppButton } from "./ui/AppButton";
 
@@ -39,6 +40,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
     return (
       <View style={styles.page} accessibilityRole="alert">
         <View style={styles.card}>
+          <BialemMascot size={96} state="error" />
           <Text style={styles.eyebrow}>BİALEM</Text>
           <Text style={styles.title}>Bu ekran açılırken bir sorun oluştu.</Text>
           <Text style={styles.message}>Uygulama kabuğu çalışmaya devam ediyor. Ana sayfaya dönüp tekrar deneyebilirsin.</Text>

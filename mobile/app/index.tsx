@@ -4,6 +4,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { BialemHeroField } from "../src/experiences/BialemHeroField";
 import { colors } from "../src/theme/colors";
 import { imageSources } from "../src/theme/images";
 import { useTheme } from "../src/theme/theme";
@@ -363,6 +364,7 @@ function WelcomeScreen({ onSelectMode }: { onSelectMode: (mode: AuthMode) => Pro
 
       <View style={styles.worldVisualCard}>
         <Image source={imageSources.onboardingWorlds} style={styles.worldVisual} resizeMode="cover" />
+        <BialemHeroField intensity={0.85} />
         <View style={styles.worldLabels}>
           <CategoryPill label="Doğa" tone="orange" />
           <CategoryPill label="Spor" tone="cyan" />

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { CityDiscovery } from "../../src/components/CityDiscovery";
 import { NotificationButton } from "../../src/components/NotificationButton";
+import { BialemMascot } from "../../src/experiences/BialemMascot";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -175,7 +176,10 @@ export default function FeedScreen() {
             </Link>
           </View>
         </View>
-        <Text style={styles.heroTitle} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>Merhaba, {profile?.display_name?.split(" ")[0] || "üye"}.</Text>
+        <View style={styles.heroTitleRow}>
+          <Text style={[styles.heroTitle, styles.heroTitleFlex]} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78}>Merhaba, {profile?.display_name?.split(" ")[0] || "üye"}.</Text>
+          <BialemMascot size={64} state={loading ? "loading" : error ? "error" : nowEvents.length === 0 ? "sleep" : "idle"} />
+        </View>
         <Text style={styles.heroDescription}>Bugünün planını bul, topluluğuna katıl ve deneyimi birlikte yaşa.</Text>
       </View>
 
@@ -347,6 +351,8 @@ const styles = StyleSheet.create({
   brandKicker: { color: colors.action, fontSize: 12, fontWeight: "900", letterSpacing: 2 },
   brandTagline: { color: colors.muted, fontSize: 11, fontWeight: "700" },
   heroActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  heroTitleRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  heroTitleFlex: { flex: 1 },
   kicker: { color: colors.accent, fontSize: 10, fontWeight: "900", letterSpacing: 1.45 },
   heroTitle: { color: colors.ink, fontSize: 25, lineHeight: 30, fontWeight: "900", letterSpacing: -0.4 },
   heroDescription: { color: colors.muted, fontSize: 14, lineHeight: 21 },

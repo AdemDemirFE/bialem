@@ -420,7 +420,7 @@ export function createSpringClient(options: SpringClientOptions) {
       async listByUser(userId: string, status?: string) {
         try {
           const params = new URLSearchParams({ userId });
-          if (status) params.set("status", status);
+          if (status) params.set("status", status.toUpperCase());
           const data = await request<CommunityMemberDto[]>(`/api/community-members?${params.toString()}`);
           return { data, error: null };
         } catch (error) {
@@ -430,7 +430,7 @@ export function createSpringClient(options: SpringClientOptions) {
       async listByCommunity(communityId: string, status?: string) {
         try {
           const params = new URLSearchParams();
-          if (status) params.set("status", status);
+          if (status) params.set("status", status.toUpperCase());
           const data = await request<CommunityMemberDto[]>(`/api/communities/${encodeURIComponent(communityId)}/members${params.toString() ? "?" + params.toString() : ""}`);
           return { data, error: null };
         } catch (error) {
