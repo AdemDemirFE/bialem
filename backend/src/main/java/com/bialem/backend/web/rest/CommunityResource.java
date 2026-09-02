@@ -1,10 +1,13 @@
 package com.bialem.backend.web.rest;
 
+import com.bialem.backend.domain.enumeration.CommunityMemberStatus;
 import com.bialem.backend.repository.CommunityRepository;
+import com.bialem.backend.service.CommunityMemberService;
 import com.bialem.backend.service.CommunityQueryService;
 import com.bialem.backend.service.CommunityService;
 import com.bialem.backend.service.criteria.CommunityCriteria;
 import com.bialem.backend.service.dto.CommunityDTO;
+import com.bialem.backend.service.dto.CommunityMemberDTO;
 import com.bialem.backend.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

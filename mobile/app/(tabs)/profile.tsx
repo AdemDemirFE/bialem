@@ -40,10 +40,10 @@ type ActivityStats = {
 };
 
 type MediaPostRecord = {
-  id: string;
+  id: number;
   event?: { id: number; title?: string } | null;
-  body: string | null;
-  createdAt: string;
+  body?: string | null;
+  createdAt?: string;
   media?: {
     id: number;
     mediaType?: string;
@@ -177,7 +177,7 @@ export default function ProfileScreen() {
       setStats({
         communities: communitiesCountResult.data ?? 0,
         events: eventsCountResult.data ?? 0,
-        posts: postsCountResult.count ?? 0,
+        posts: postsCountResult.data ?? 0,
         comments: commentsCountResult.data ?? 0
       });
       setRatingsGiven((ratingsGivenResult.data ?? []) as EventRatingRecord[]);
@@ -494,7 +494,7 @@ export default function ProfileScreen() {
         ) : (
           <View style={styles.stack}>
             {mediaPosts.map((post) => (
-              <Link key={post.id} href={{ pathname: "/post/[id]", params: { id: post.id } }} asChild>
+              <Link key={post.id} href={{ pathname: "/post/[id]", params: { id: String(post.id) } }} asChild>
                 <Pressable style={styles.activityCard}>
                     {post.media?.length ? (
                     <Image source={{ uri: post.media[0].storagePath }} style={styles.mediaImage} resizeMode="cover" />
@@ -505,7 +505,7 @@ export default function ProfileScreen() {
                       <Text style={styles.memoryBadgeText} numberOfLines={1}>Etkinlik anısı{post.event.title ? ` · ${post.event.title}` : ""}</Text>
                     </View>
                   ) : null}
-                  <Text style={styles.activityMeta}>{formatDate(post.createdAt)}</Text>
+                  <Text style={styles.activityMeta}>{formatDate(post.createdAt ?? "")}</Text>
                   <Text style={styles.activityText}>{post.body || "Açıklama eklenmedi."}</Text>
                 </Pressable>
               </Link>

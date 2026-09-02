@@ -1,7 +1,9 @@
 package com.bialem.backend.repository;
 
 import com.bialem.backend.domain.Follow;
+import java.util.List;
 import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**

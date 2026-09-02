@@ -15,19 +15,19 @@ type GroupRecord = {
 };
 
 type EventRecord = {
-  id: string;
+  id: number;
   createdBy?: { id: number } | null;
   title: string;
-  description: string | null;
-  startsAt: string;
-  locationName: string | null;
-  capacity: number | null;
+  description?: string | null;
+  startsAt?: string;
+  locationName?: string | null;
+  capacity?: number | null;
   status?: string;
   groupModerationStatus?: "PENDING" | "APPROVED" | "REJECTED";
   platformModerationStatus?: "NOT_REQUIRED" | "PENDING" | "APPROVED" | "REJECTED";
 };
 
-type Membership = { community_id: string; role: "member" | "manager" | "owner"; status: string; community?: { id: number } | null };
+type Membership = { community_id?: string; role: "member" | "manager" | "owner"; status: string; community?: { id: number } | null };
 type AssistantPermissions = { can_manage_groups: boolean; can_review_events: boolean; can_manage_participants: boolean };
 type ManagedMember = {
   membership_id: string;
@@ -37,6 +37,39 @@ type ManagedMember = {
   avatar_url: string | null;
   created_at: string;
 };
+
+type CommunityDtoShim = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  parent?: { id: number } | null;
+  createdBy?: { id: number } | null;
+};
+
+type CommunityMemberDtoShim = {
+  role?: string | null;
+  status?: string | null;
+  community?: { id: number } | null;
+};
+
+function toGroupRecord(dto: CommunityDtoShim): GroupRecord {
+  return {
+    id: String(dto.id),
+    parent_id: dto.parent?.id != null ? String(dto.parent.id) : "",
+    name: dto.name,
+    description: dto.description ?? null
+  };
+}
+
+function toMembership(dto: CommunityMemberDtoShim): Membership {
+  return {
+    community_id: dto.community?.id != null ? String(dto.community.id) : "",
+    role: (dto.role ?? "member").toLowerCase() as Membership["role"],
+    status: (dto.status ?? "").toLowerCase(),
+    community: dto.community ?? null
+  };
+}
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -74,11 +107,11 @@ export default function GroupDetailScreen() {
     if (groupResult.error || membershipResult.error || eventsResult.error || creationGroupsResult.error) {
       setError(groupResult.error?.message || membershipResult.error?.message || eventsResult.error?.message || creationGroupsResult.error?.message || "Grup yüklenemedi.");
     } else {
-      const nextGroup = (groupResult.data as GroupRecord | null) ?? null;
+      const nextGroup = groupResult.data ? toGroupRecord(groupResult.data as CommunityDtoShim) : null;
       setGroup(nextGroup);
-      const nextMemberships = (membershipResult.data ?? []) as Membership[];
-      setMembership(nextMemberships.find((item) => (item.community_id || String(item.community?.id ?? "")) === id) ?? null);
-      setParentMembership(nextGroup?.parent_id ? nextMemberships.find((item) => (item.community_id || String(item.community?.id ?? "")) === nextGroup.parent_id) ?? null : null);
+      const nextMemberships = ((membershipResult.data ?? []) as CommunityMemberDtoShim[]).map(toMembership);
+      setMembership(nextMemberships.find((item) => item.community_id === id) ?? null);
+      setParentMembership(nextGroup?.parent_id ? nextMemberships.find((item) => item.community_id === nextGroup.parent_id) ?? null : null);
       setEvents((eventsResult.data ?? []) as EventRecord[]);
       setManagedMembers(managedMembersResult.error ? [] : (managedMembersResult.data ?? []) as ManagedMember[]);
       const eventCreationGroup = (creationGroupsResult.data ?? []).find(
@@ -280,7 +313,7 @@ export default function GroupDetailScreen() {
               ) : pendingEvents.map((event) => (
                 <View key={event.id} style={styles.pendingCard}>
                   <Text style={styles.eventTitle}>{event.title}</Text>
-                  <Text style={styles.eventMeta}>{formatDate(event.startsAt)}{event.locationName ? ` - ${event.locationName}` : ""}</Text>
+                  <Text style={styles.eventMeta}>{formatDate(event.startsAt ?? "")}{event.locationName ? ` - ${event.locationName}` : ""}</Text>
                   <Text style={styles.body}>{event.description || "Açıklama eklenmemiş."}</Text>
                   <TextInput
                     value={rejectReasons[event.id] ?? ""}
@@ -290,10 +323,10 @@ export default function GroupDetailScreen() {
                     style={styles.input}
                   />
                   <View style={styles.moderationRow}>
-                    <Pressable style={styles.approveButton} disabled={busyId === event.id} onPress={() => void moderateEvent(event.id, "published")}>
+                    <Pressable style={styles.approveButton} disabled={busyId === String(event.id)} onPress={() => void moderateEvent(String(event.id), "published")}>
                       <Text style={styles.approveText}>Onayla</Text>
                     </Pressable>
-                    <Pressable style={styles.rejectButton} disabled={busyId === event.id} onPress={() => void moderateEvent(event.id, "rejected")}>
+                    <Pressable style={styles.rejectButton} disabled={busyId === String(event.id)} onPress={() => void moderateEvent(String(event.id), "rejected")}>
                       <Text style={styles.rejectText}>Reddet</Text>
                     </Pressable>
                   </View>
@@ -360,7 +393,7 @@ export default function GroupDetailScreen() {
             <View style={styles.stack}>
               {publishedEvents.map((event) => (
                 <Pressable key={event.id} style={styles.eventCard} onPress={() => router.push({ pathname: "/event/[id]", params: { id: event.id } })}>
-                  <View style={styles.dateBox}><Text style={styles.dateDay}>{new Date(event.startsAt).getDate()}</Text><Text style={styles.dateMonth}>{new Date(event.startsAt).toLocaleDateString("tr-TR", { month: "short" }).toLocaleUpperCase("tr-TR")}</Text></View>
+                  <View style={styles.dateBox}><Text style={styles.dateDay}>{new Date(event.startsAt ?? "").getDate()}</Text><Text style={styles.dateMonth}>{new Date(event.startsAt ?? "").toLocaleDateString("tr-TR", { month: "short" }).toLocaleUpperCase("tr-TR")}</Text></View>
                   <View style={styles.eventCopy}>
                     <Text style={styles.eventTitle} numberOfLines={1}>{event.title}</Text>
                     <Text style={styles.eventMeta}>{event.locationName || "Konum daha sonra açıklanacak"}</Text>

@@ -13,13 +13,13 @@ import { colors } from "../../../src/theme/colors";
 import { imageSources } from "../../../src/theme/images";
 
 type PosterEvent = {
-  id: string;
+  id: number;
   title: string;
-  description: string | null;
-  startsAt: string;
-  locationName: string | null;
+  description?: string | null;
+  startsAt?: string;
+  locationName?: string | null;
   community?: { id: number } | null;
-  coverImageUrl: string | null;
+  coverImageUrl?: string | null;
 };
 
 type PosterTheme = {
@@ -71,8 +71,8 @@ export default function EventPosterScreen() {
       }
 
       setEvent(eventResult.data as PosterEvent | null);
-      if (eventResult.data.community_id) {
-        const communityResult = await api.communities.getById(eventResult.data.community_id);
+      if (eventResult.data.community?.id) {
+        const communityResult = await api.communities.getById(String(eventResult.data.community.id));
         if (communityResult.data) setCommunityName(communityResult.data.name);
       }
       setLoading(false);
@@ -93,7 +93,7 @@ export default function EventPosterScreen() {
           dialogTitle: "Instagram Hikâyeleri veya gönderi olarak paylaş"
         });
       } else {
-        await Share.share({ message: `${event.title}\n${eventPublicUrl(event.id)}` });
+        await Share.share({ message: `${event.title}\n${eventPublicUrl(String(event.id))}` });
       }
     } catch (shareError) {
       setError(shareError instanceof Error ? shareError.message : "Afiş paylaşılamadı.");
@@ -164,7 +164,7 @@ export default function EventPosterScreen() {
               <View style={styles.detailRule} />
               <View style={styles.detailRow}>
                 <Ionicons name="calendar" size={16} color={theme.accent} />
-                <Text style={styles.date}>{formatPosterDate(event.startsAt)}</Text>
+                <Text style={styles.date}>{formatPosterDate(event.startsAt ?? "")}</Text>
               </View>
               <View style={styles.detailRow}>
                 <Ionicons name="location" size={16} color={theme.accent} />
@@ -175,7 +175,7 @@ export default function EventPosterScreen() {
 
             <View style={styles.posterFooter}>
               <View style={styles.qrCard}>
-                <QRCode value={eventPublicUrl(event.id)} size={68} color="#081a44" backgroundColor="#ffffff" />
+                <QRCode value={eventPublicUrl(String(event.id))} size={68} color="#081a44" backgroundColor="#ffffff" />
               </View>
               <View style={styles.footerCopy}>
                 <Text style={styles.scan}>Detayları gör, katılımını tamamla.</Text>

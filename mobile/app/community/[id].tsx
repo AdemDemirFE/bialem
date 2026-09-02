@@ -36,6 +36,60 @@ const emptyAssistantPermissions: AssistantPermissions = {
   can_manage_participants: false
 };
 
+type CommunityDtoShim = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  coverImageUrl?: string | null;
+  communityType?: string | null;
+  partnerTrustLevel?: string | null;
+  isVerifiedPartner?: boolean | null;
+  parent?: { id: number } | null;
+  categoryHub?: { id: number } | null;
+  createdBy?: { id: number } | null;
+};
+
+type CommunityMemberDtoShim = {
+  role?: string | null;
+  status?: string | null;
+  community?: { id: number } | null;
+};
+
+function toCommunityRecord(dto: CommunityDtoShim): CommunityRecord {
+  return {
+    id: String(dto.id),
+    name: dto.name,
+    slug: dto.slug,
+    description: dto.description ?? null,
+    cover_image_url: dto.coverImageUrl ?? null,
+    community_type: (dto.communityType?.toLowerCase() ?? "category_hub") as CommunityRecord["community_type"],
+    partner_trust_level: (dto.partnerTrustLevel?.toLowerCase() ?? "new") as CommunityRecord["partner_trust_level"],
+    is_verified_partner: dto.isVerifiedPartner ?? false
+  };
+}
+
+function toGroupRecord(dto: CommunityDtoShim): GroupRecord {
+  return {
+    ...toCommunityRecord(dto),
+    created_by: dto.createdBy?.id != null ? String(dto.createdBy.id) : "",
+    category_id: dto.categoryHub?.id != null ? String(dto.categoryHub.id) : null
+  };
+}
+
+function toCategoryRecord(dto: CommunityDtoShim): CategoryRecord {
+  return { id: String(dto.id), name: dto.name, slug: dto.slug };
+}
+
+function toMembership(dto: CommunityMemberDtoShim): Membership {
+  return {
+    community_id: dto.community?.id != null ? String(dto.community.id) : "",
+    role: (dto.role ?? "member").toLowerCase() as Membership["role"],
+    status: (dto.status ?? "").toLowerCase(),
+    community: dto.community ?? null
+  };
+}
+
 type PendingMembership = {
   membership_id: string;
   community_id: string;
@@ -87,9 +141,9 @@ export default function CommunityDetailScreen() {
     if (communityResult.error || membershipsResult.error) {
       setError(communityResult.error?.message || membershipsResult.error?.message || "Topluluk yüklenemedi.");
     } else {
-      setCommunity((communityResult.data as CommunityRecord | null) ?? null);
-      setGroups(groupsResult.error ? [] : ((groupsResult.data ?? []) as GroupRecord[]));
-      const nextCategories = categoriesResult.error ? [] : ((categoriesResult.data ?? []) as CategoryRecord[]);
+      setCommunity(communityResult.data ? toCommunityRecord(communityResult.data as CommunityDtoShim) : null);
+      setGroups(groupsResult.error ? [] : ((groupsResult.data ?? []) as CommunityDtoShim[]).map(toGroupRecord));
+      const nextCategories = categoriesResult.error ? [] : ((categoriesResult.data ?? []) as CommunityDtoShim[]).map(toCategoryRecord);
       setCategories(nextCategories);
       setAssistantPermissions(
         assistantResult.error
@@ -103,11 +157,13 @@ export default function CommunityDetailScreen() {
       );
       setGroupCategoryId((current) => current || nextCategories[0]?.id || "");
       setMemberships(
-        ((membershipsResult.data ?? []) as Membership[]).reduce<Record<string, Membership>>((result, membership) => {
-          const key = membership.community_id || String(membership.community?.id ?? "");
-          if (key) result[key] = membership;
-          return result;
-        }, {})
+        ((membershipsResult.data ?? []) as CommunityMemberDtoShim[])
+          .map(toMembership)
+          .reduce<Record<string, Membership>>((result, membership) => {
+            const key = membership.community_id || String(membership.community?.id ?? "");
+            if (key) result[key] = membership;
+            return result;
+          }, {})
       );
     }
 

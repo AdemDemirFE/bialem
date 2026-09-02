@@ -1,5 +1,6 @@
 package com.bialem.backend.web.rest;
 
+import com.bialem.backend.domain.enumeration.CommunityMemberStatus;
 import com.bialem.backend.repository.CommunityMemberRepository;
 import com.bialem.backend.service.CommunityMemberService;
 import com.bialem.backend.service.dto.CommunityMemberDTO;

@@ -24,21 +24,21 @@ import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib
 import { colors } from "../../src/theme/colors";
 
 type EventRecord = {
-  id: string;
+  id: number;
   createdBy?: { id: number } | null;
   title: string;
-  description: string | null;
-  startsAt: string;
-  endsAt: string | null;
-  locationName: string | null;
-  addressText: string | null;
-  capacity: number | null;
+  description?: string | null;
+  startsAt?: string;
+  endsAt?: string | null;
+  locationName?: string | null;
+  addressText?: string | null;
+  capacity?: number | null;
   status?: string;
   community?: { id: number } | null;
   groupModerationStatus?: string | null;
   platformModerationStatus?: string | null;
-  cancelledAt: string | null;
-  cancellationReason: string | null;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
 };
 
 type EventCreationGroup = {
@@ -47,7 +47,7 @@ type EventCreationGroup = {
 };
 
 type CommunityRecord = {
-  id: string;
+  id: number;
   name: string;
   slug: string;
 };
@@ -279,8 +279,8 @@ export default function EventDetailScreen() {
 
   const getInvite = () => {
     if (!event) return { url: "", text: "" };
-    const url = eventPublicUrl(event.id);
-    return { url, text: `Bialem'da ${event.title} etkinliğine benimle katıl! ${formatDate(event.startsAt)} ${event.locationName || ""}` };
+    const url = eventPublicUrl(String(event.id));
+    return { url, text: `Bialem'da ${event.title} etkinliğine benimle katıl! ${formatDate(event.startsAt ?? "")} ${event.locationName || ""}` };
   };
 
   const shareEvent = async () => {
@@ -309,7 +309,16 @@ export default function EventDetailScreen() {
     if (!event) return;
     setError(null);
     try {
-      await addEventToCalendar(event);
+      await addEventToCalendar({
+        id: String(event.id),
+        title: event.title,
+        description: event.description ?? null,
+        starts_at: event.startsAt ?? "",
+        ends_at: event.endsAt ?? null,
+        location_name: event.locationName ?? null,
+        address_text: event.addressText ?? null,
+        public_url: eventPublicUrl(String(event.id))
+      });
       setNotice("Etkinlik takvim ekranına hazırlandı.");
     } catch (calendarError) {
       setError(calendarError instanceof Error ? calendarError.message : "Takvim açılamadı.");
@@ -510,12 +519,12 @@ export default function EventDetailScreen() {
                 <Text style={styles.organizerButtonText}>Organizatör profilini gör ve takip et</Text>
               </Pressable>
             </Link>
-          <InfoRow label="Başlangıç" value={formatDate(event.startsAt)} />
+          <InfoRow label="Başlangıç" value={formatDate(event.startsAt ?? "")} />
           <InfoRow label="Bitiş" value={event.endsAt ? formatDate(event.endsAt) : "Belirtilmedi"} />
           <InfoRow label="Mekân" value={event.locationName || "Belirtilmedi"} />
           <InfoRow label="Adres" value={event.addressText || "Belirtilmedi"} />
           <InfoRow label="Katılım limiti" value={event.capacity ? String(event.capacity) : "Sınırsız"} />
-            <InfoRow label="Durum" value={eventStatusLabel(event.status)} />
+            <InfoRow label="Durum" value={eventStatusLabel(event.status ?? "")} />
             {event.status === "CANCELLED" ? (
               <View style={styles.panel}>
                 <Text style={styles.panelTitle}>Etkinlik iptal edildi</Text>
@@ -574,11 +583,11 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
             <Pressable
-              style={[styles.reportButton, reportingTarget === event.id && styles.buttonDisabled]}
-              onPress={() => void handleReport("event", event.id, `Etkinlik raporu: ${event.title}`)}
+              style={[styles.reportButton, reportingTarget === String(event.id) && styles.buttonDisabled]}
+              onPress={() => void handleReport("event", String(event.id), `Etkinlik raporu: ${event.title}`)}
             >
               <Text style={styles.reportButtonText}>
-                {reportingTarget === event.id ? "Raporlanıyor..." : "Etkinliği rapor et"}
+                {reportingTarget === String(event.id) ? "Raporlanıyor..." : "Etkinliği rapor et"}
               </Text>
             </Pressable>
           </View>
@@ -620,7 +629,7 @@ export default function EventDetailScreen() {
                 <Text style={styles.panelText}>İptal edilen bu etkinlik için yeni katılım alınmıyor.</Text>
               </View>
             ) : requiresGroupMembership && community ? (
-              <Link href={{ pathname: "/group/[id]", params: { id: community.id } }} asChild>
+              <Link href={{ pathname: "/group/[id]", params: { id: String(community.id) } }} asChild>
                 <Pressable style={styles.primaryButton}>
                   <Text style={styles.primaryButtonText}>Etkinlik grubuna git</Text>
                 </Pressable>
@@ -686,7 +695,7 @@ export default function EventDetailScreen() {
 
             {event.status !== "CANCELLED" && participationSummary?.can_manage ? (
               <View style={styles.managerTools}>
-                <Link href={{ pathname: "/event/[id]/check-in", params: { id: event.id } }} asChild>
+                <Link href={{ pathname: "/event/[id]/check-in", params: { id: String(event.id) } }} asChild>
                   <Pressable style={styles.managerButton}><Text style={styles.managerButtonText}>Katılımcıları yönet ve QR tara</Text></Pressable>
                 </Link>
                 <Link href={`/event/${event.id}/chat` as never} asChild>
@@ -816,7 +825,7 @@ function participantStatusLabel(status: string) {
 }
 
 function eventStatusLabel(status?: string) {
-  if (!status) return status;
+  if (!status) return "";
   return ({
     DRAFT: "Taslak",
     PENDING_APPROVAL: "Onay bekliyor",

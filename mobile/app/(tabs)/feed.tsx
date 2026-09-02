@@ -23,10 +23,10 @@ type EventItem = {
 };
 
 type PostItem = {
-  id: string;
+  id: number;
   author?: { id?: number } | null;
-  body: string | null;
-  createdAt: string;
+  body?: string | null;
+  createdAt?: string;
   media?: { id: number; mediaType?: string; storagePath?: string; sortOrder?: number }[] | null;
   community?: { name?: string; slug?: string } | null;
 };
@@ -323,9 +323,9 @@ function CompactEventCard({ event, followed }: { event: EventItem; followed: boo
 
 function PostCard({ post }: { post: PostItem }) {
   return (
-    <Link href={{ pathname: "/post/[id]", params: { id: post.id } }} asChild>
+    <Link href={{ pathname: "/post/[id]", params: { id: String(post.id) } }} asChild>
       <Pressable style={styles.postCard}>
-        <Text style={styles.postMeta}>{post.community?.name || "Topluluk"} · {formatDate(post.createdAt)}</Text>
+        <Text style={styles.postMeta}>{post.community?.name || "Topluluk"} · {formatDate(post.createdAt ?? "")}</Text>
         <Text style={styles.postBody}>{post.body || "Yeni bir topluluk anı paylaşıldı."}</Text>
         {post.media?.[0] ? <Image source={{ uri: post.media[0].storagePath }} style={styles.postImage} resizeMode="cover" /> : null}
         <View style={styles.openRow}><Text style={styles.openText}>Yorumları aç</Text><Ionicons name="chatbubble-ellipses-outline" size={17} color={colors.accent} /></View>

@@ -20,13 +20,13 @@ import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib
 import { colors } from "../../src/theme/colors";
 
 type PostRecord = {
-  id: string;
+  id: number;
   community?: { id: number } | null;
   author?: { id: number } | null;
-  body: string | null;
-  visibility: string;
-  moderationStatus: string;
-  createdAt: string;
+  body?: string | null;
+  visibility?: string;
+  moderationStatus?: string;
+  createdAt?: string;
   media?: {
     id: number;
     mediaType?: string;
@@ -36,7 +36,7 @@ type PostRecord = {
 };
 
 type CommunityRecord = {
-  id: string;
+  id: number;
   name: string;
   slug: string;
 };
@@ -247,7 +247,7 @@ export default function PostDetailScreen() {
               <Text style={styles.metaText}>
                 {maskUser(String(post.author?.id ?? ""))}
                 {community?.name ? ` - ${community.name}` : ""}
-                {` - ${formatDate(post.createdAt)}`}
+                {` - ${formatDate(post.createdAt ?? "")}`}
               </Text>
               <Text style={styles.postBody}>{post.body || "İçerik eklenmedi."}</Text>
               {post.media?.length ? (
@@ -258,10 +258,10 @@ export default function PostDetailScreen() {
                 </View>
               ) : null}
               <Pressable
-                style={[styles.reportButton, reportingTarget === post.id && styles.buttonDisabled]}
-                onPress={() => void handleReport("post", post.id, `Paylaşım raporu: ${(post.body || "").slice(0, 80)}`)}
+                style={[styles.reportButton, reportingTarget === String(post.id) && styles.buttonDisabled]}
+                onPress={() => void handleReport("post", String(post.id), `Paylaşım raporu: ${(post.body || "").slice(0, 80)}`)}
               >
-                <Text style={styles.reportButtonText}>{reportingTarget === post.id ? "Raporlanıyor..." : "Paylaşımı rapor et"}</Text>
+                <Text style={styles.reportButtonText}>{reportingTarget === String(post.id) ? "Raporlanıyor..." : "Paylaşımı rapor et"}</Text>
               </Pressable>
             </View>
 
