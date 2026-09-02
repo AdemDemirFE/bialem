@@ -32,12 +32,44 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
-	<!-- TEST VPS HTTP erişimi için -->
+	<!-- ATS: production API HTTPS üzerinden çalışır (api.bialem.app). -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+			<key>api.bialem.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+			</dict>
+			<key>bialem.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+			</dict>
+		</dict>
 	</dict>
+
+	<key>NSCameraUsageDescription</key>
+	<string>Etkinlik, topluluk ve mağaza görselleri için fotoğraf çekmenize veya QR taramanıza izin verir.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Profil fotoğrafı, kapak görseli ve ilan görselleri ekleyebilmeniz için fotoğraf kütüphanenize erişim ister.</string>
+
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Size yakın etkinlikleri ve mekânları gösterebilmek için konumunuzu kullanır.</string>
+
+	<key>NSUserNotificationUsageDescription</key>
+	<string>Etkinlik, mesaj ve fırsat bildirimlerini alabilmeniz için bildirim izni ister.</string>
 
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

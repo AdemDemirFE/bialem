@@ -1,0 +1,31 @@
+{
+  "name": "BiAlem — Birlikte Daha Fazlası",
+  "short_name": "BiAlem",
+  "description": "Topluluk, etkinlik, şehir radarı, avantaj ve mağaza deneyimini bir arada sunan yerel keşif uygulaması.",
+  "lang": "tr",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#7047d7",
+  "icons": [
+    {
+      "src": "/brand/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
