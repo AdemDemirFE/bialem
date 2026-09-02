@@ -50,6 +50,30 @@ export default function AdvantagesScreen() {
   const [search, setSearch] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
+  const attachOffers = async (venues: Venue[]): Promise<Venue[]> => {
+    if (!venues.length) return venues;
+    const venueIds = venues.map((venue) => venue.id);
+    const { data, error: offersError } = await api
+      .from("partner_offers")
+      .select("id, venue_id, title, discount_percent, minimum_spend, valid_until")
+      .in("venue_id", venueIds)
+      .eq("is_active", true);
+    if (offersError) return venues;
+    const offersByVenue = new Map<string, Offer[]>();
+    for (const offer of (data ?? []) as Array<Offer & { venue_id: string }>) {
+      const list = offersByVenue.get(offer.venue_id) ?? [];
+      list.push({
+        id: offer.id,
+        title: offer.title,
+        discount_percent: Number(offer.discount_percent),
+        minimum_spend: offer.minimum_spend,
+        valid_until: offer.valid_until
+      });
+      offersByVenue.set(offer.venue_id, list);
+    }
+    return venues.map((venue) => ({ ...venue, partner_offers: offersByVenue.get(venue.id) ?? [] }));
+  };
+
   const load = async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
     setError(null);
@@ -57,7 +81,7 @@ export default function AdvantagesScreen() {
     const [venuesResult, staffResult] = await Promise.all([
       api
         .from("partner_venues")
-        .select("id, name, description, category, logo_url, cover_image_url, address, city, is_featured, partner_offers!partner_offers_venue_id_fkey(id, title, discount_percent, minimum_spend, valid_until)")
+        .select("id, name, description, category, logo_url, cover_image_url, address, city, is_featured")
         .eq("is_active", true)
         .order("is_featured", { ascending: false })
         .order("name"),
@@ -67,7 +91,7 @@ export default function AdvantagesScreen() {
     ]);
 
     if (venuesResult.error) setError("Avantajlar şu anda yüklenemedi. Lütfen tekrar deneyin.");
-    else setVenues((venuesResult.data ?? []) as unknown as Venue[]);
+    else setVenues(await attachOffers((venuesResult.data ?? []) as unknown as Venue[]));
     setCanRedeem(Boolean(staffResult.data?.length));
     refresh ? setRefreshing(false) : setLoading(false);
   };

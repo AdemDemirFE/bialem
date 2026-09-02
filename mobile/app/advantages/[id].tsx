@@ -53,16 +53,34 @@ export default function AdvantageDetailScreen() {
   const [coverFailed, setCoverFailed] = useState(false);
 
   useEffect(() => {
+    let active = true;
     void api
       .from("partner_venues")
-      .select("id, name, description, category, logo_url, cover_image_url, address, city, latitude, longitude, phone, partner_offers!partner_offers_venue_id_fkey(id, title, description, discount_percent, minimum_spend, maximum_discount, valid_until, per_user_limit, terms)")
+      .select("id, name, description, category, logo_url, cover_image_url, address, city, latitude, longitude, phone")
       .eq("id", id)
       .single()
-      .then((result) => {
+      .then(async (result) => {
+        if (!active) return;
         if (result.error) setError("Avantaj ayrıntıları yüklenemedi.");
-        else setVenue(result.data as unknown as Venue);
+        else {
+          const venueData = result.data as unknown as Venue;
+          const offersResult = await api
+            .from("partner_offers")
+            .select("id, title, description, discount_percent, minimum_spend, maximum_discount, valid_until, per_user_limit, terms")
+            .eq("venue_id", id)
+            .eq("is_active", true)
+            .order("discount_percent", { ascending: false });
+          if (!active) return;
+          setVenue({
+            ...venueData,
+            partner_offers: (offersResult.data ?? []) as unknown as Offer[]
+          });
+        }
         setLoading(false);
       });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   useEffect(() => {

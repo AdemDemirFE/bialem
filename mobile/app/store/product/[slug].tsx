@@ -38,10 +38,10 @@ export default function ProductDetailScreen() {
       try {
         const p = await storeApi.productBySlug(slug);
         setProduct(p);
-        const [rev, sum] = await Promise.all([storeApi.reviews(p.id), storeApi.reviewSummary(p.id), storeApi.isWishlisted(p.id)]);
+        const [rev, summaryResult, wishlistedResult] = await Promise.all([storeApi.reviews(p.id), storeApi.reviewSummary(p.id), storeApi.isWishlisted(p.id)]);
         setReviews(rev.content);
-        setSummary(sum);
-        setWishlisted(sum as unknown as boolean);
+        setSummary(summaryResult);
+        setWishlisted(Boolean(wishlistedResult));
       } catch (e) {
         showAppError(e instanceof Error ? e.message : "Ürün yüklenemedi");
       } finally {

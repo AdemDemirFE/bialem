@@ -368,7 +368,11 @@ export default async function AdminHomePage() {
       flaggedCommentsResult,
       flaggedPostsResult,
       riskProfilesResult,
-      mainCommunitiesResult
+      mainCommunitiesResult,
+      profileCountResult,
+      publishedEventsCountResult,
+      partnerVenueCountResult,
+      storeOrderCountResult
     ] = await Promise.all([
       admin
         .from("events")
@@ -409,7 +413,11 @@ export default async function AdminHomePage() {
         .from("communities")
         .select("id, name, slug, community_type, partner_trust_level, is_verified_partner")
         .is("parent_id", null)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false }),
+      admin.from("profiles").select("*", { count: "exact", head: true }),
+      admin.from("events").select("*", { count: "exact", head: true }).eq("status", "published"),
+      admin.from("partner_venues").select("*", { count: "exact", head: true }),
+      admin.from("store_order").select("*", { count: "exact", head: true })
     ]);
 
     pendingEvents = (pendingEventsResult.data ?? []) as unknown as EventRecord[];
@@ -424,7 +432,11 @@ export default async function AdminHomePage() {
       { label: "Bekleyen Etkinlik", value: String(pendingEvents.length) },
       { label: "Aktif Topluluk", value: String(communityCountResult.count ?? 0) },
       { label: "Acik Rapor", value: String(openReports.length) },
-      { label: "Riskli Icerik", value: String(flaggedComments.length + flaggedPosts.length) }
+      { label: "Riskli Icerik", value: String(flaggedComments.length + flaggedPosts.length) },
+      { label: "Toplam Uye", value: String(profileCountResult.count ?? 0) },
+      { label: "Yayinda Etkinlik", value: String(publishedEventsCountResult.count ?? 0) },
+      { label: "Partner Mekan", value: String(partnerVenueCountResult.count ?? 0) },
+      { label: "Magaza Siparisi", value: String(storeOrderCountResult.count ?? 0) }
     ];
   } catch (error) {
     envError = error instanceof Error ? error.message : "Admin panel verileri yüklenemedi.";
