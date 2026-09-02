@@ -9,6 +9,8 @@ interface ImportMetaEnv {
   readonly VITE_DEV_API_PROXY?: string;
 }
 
+declare const __DEV__: boolean;
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

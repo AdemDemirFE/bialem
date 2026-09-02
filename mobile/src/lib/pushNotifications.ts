@@ -68,8 +68,10 @@ function registerPushListenersOnce(
   listenersRegistered = true;
 
   void PushNotifications.addListener("registration", async (token) => {
-    const tokenPreview = token.value ? `${token.value.slice(0, 8)}...` : "(empty)";
-    console.log("[PUSH] registration token received", { tokenPreview });
+    if (__DEV__) {
+      const tokenPreview = token.value ? `${token.value.slice(0, 8)}...` : "(empty)";
+      console.log("[PUSH] registration token received", { tokenPreview });
+    }
     try {
       if (typeof localStorage !== "undefined") localStorage.setItem("bialem.push.token", token.value);
       const platform = Capacitor.getPlatform().toUpperCase();

@@ -93,8 +93,10 @@ export async function registerPushToken(
 ) {
   const path = "/api/push-device-tokens";
   try {
-    const tokenPreview = token ? `${token.slice(0, 8)}...` : "(empty)";
-    console.log("[PUSH] sending token to backend", { url: buildUrl(path), tokenPreview });
+    if (__DEV__) {
+      const tokenPreview = token ? `${token.slice(0, 8)}...` : "(empty)";
+      console.log("[PUSH] sending token to backend", { url: buildUrl(path), tokenPreview });
+    }
     await api.rest.post(path, {
       token,
       platform,
