@@ -95,6 +95,11 @@ export default function ProductDetailScreen() {
 
   const hasDiscount = product.discountedPrice && product.discountedPrice > 0 && product.discountedPrice < product.price;
   const discountPercent = hasDiscount ? Math.round(((product.price - product.discountedPrice!) / product.price) * 100) : 0;
+  const summarySource = summary && summary.count > 0
+    ? summary
+    : product.ratingAverage && product.reviewCount
+      ? { average: product.ratingAverage, count: product.reviewCount }
+      : null;
 
   return (
     <View style={s.screen}>
@@ -184,21 +189,25 @@ export default function ProductDetailScreen() {
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>Değerlendirmeler</Text>
-            {summary ? (
+            {summarySource ? (
               <View style={s.summary}>
-                <Text style={s.summaryScore}>{summary.average.toFixed(1)}</Text>
-                <Text style={s.summaryCount}>{summary.count} değerlendirme</Text>
+                <Text style={s.summaryScore}>{summarySource.average.toFixed(1)}</Text>
+                <Text style={s.summaryCount}>{summarySource.count} değerlendirme</Text>
               </View>
             ) : null}
-            {reviews.slice(0, 3).map((r) => (
-              <View key={r.id} style={s.reviewCard}>
-                <View style={s.reviewHeader}>
-                  <Text style={s.reviewUser}>{r.userName}</Text>
-                  <Text style={s.reviewRating}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</Text>
+            {reviews.length === 0 ? (
+              <Text style={s.emptyReviews}>Henüz değerlendirme yok. İlk değerlendirmeyi yapan sen ol.</Text>
+            ) : (
+              reviews.slice(0, 3).map((r) => (
+                <View key={r.id} style={s.reviewCard}>
+                  <View style={s.reviewHeader}>
+                    <Text style={s.reviewUser}>{r.userName}</Text>
+                    <Text style={s.reviewRating}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</Text>
+                  </View>
+                  <Text style={s.reviewComment}>{r.comment}</Text>
                 </View>
-                <Text style={s.reviewComment}>{r.comment}</Text>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         </View>
       </ScrollView>
@@ -232,6 +241,7 @@ const s = StyleSheet.create({
   badgeText: { color: "#fff", fontSize: 12, fontWeight: "900" },
   section: { gap: 8 },
   sectionTitle: { fontSize: 16, fontWeight: "900", color: colors.ink },
+  emptyReviews: { color: colors.muted, fontSize: 13, lineHeight: 19, paddingVertical: 4 },
   desc: { fontSize: 14, color: colors.muted, lineHeight: 20 },
   variantRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   variantChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },

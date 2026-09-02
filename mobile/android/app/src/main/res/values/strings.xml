@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Bi Alem</string>
-    <string name="title_activity_main">Bi Alem</string>
+    <string name="app_name">BiAlem</string>
+    <string name="title_activity_main">BiAlem</string>
     <string name="package_name">com.bialem.mobile</string>
     <string name="custom_url_scheme">com.bialem.mobile</string>
 </resources>

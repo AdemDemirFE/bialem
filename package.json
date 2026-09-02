@@ -53,6 +53,7 @@
     "build:android:test": "npm run 3:android-test",
     "typecheck:mobile": "npm --workspace mobile run typecheck",
     "typecheck:admin": "npm --workspace admin run typecheck",
-    "check": "npm run typecheck:mobile && npm run typecheck:admin && npm --workspace admin run 2:prod"
+    "check": "npm run typecheck:mobile && npm run typecheck:admin && npm --workspace admin run 2:prod",
+    "check:release": "npm run check && npm --workspace mobile run 2:prod && node scripts/release-consistency.mjs"
   }
 }
