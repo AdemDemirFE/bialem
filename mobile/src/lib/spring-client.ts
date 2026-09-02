@@ -194,11 +194,29 @@ export function createSpringClient(options: SpringClientOptions) {
       if (token) headers.set("Authorization", `Bearer ${token}`);
     }
     const resolvedUrl = `${options.getBaseUrl()}${path}`;
-    const response = await fetch(resolvedUrl, {
-      ...init,
-      headers,
-      body: init.json === undefined ? init.body : JSON.stringify(init.json)
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    let response: Response;
+    try {
+      response = await fetch(resolvedUrl, {
+        ...init,
+        headers,
+        signal: controller.signal,
+        body: init.json === undefined ? init.body : JSON.stringify(init.json)
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("İstek zaman aşımına uğradı. Lütfen tekrar dene.");
+      }
+      const message = error instanceof Error ? error.message : "";
+      throw new Error(
+        /failed to fetch|network( error| request)?|load failed|internet|connexion|connection/i.test(message)
+          ? "Bağlantı kurulamadı. İnternet bağlantını kontrol edip tekrar dene."
+          : "Ağ hatası oluştu. Tekrar dene."
+      );
+    }
+    clearTimeout(timeout);
     if (options.diagnostics) {
       console.info(`[Bialem HTTP] ${init.method || "GET"} ${resolvedUrl} status=${response.status}`);
     }

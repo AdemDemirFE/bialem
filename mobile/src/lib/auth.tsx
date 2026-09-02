@@ -75,6 +75,17 @@ function parseTurkishDate(value: string): string | null {
 
 function mapErrorMessage(message: string) {
   const normalized = message.toLowerCase();
+  if (
+    normalized.includes("failed to fetch") ||
+    normalized.includes("network request failed") ||
+    normalized.includes("network error") ||
+    normalized.includes("load failed") ||
+    normalized.includes("connection") ||
+    normalized.includes("time aşımı") ||
+    normalized.includes("bağlantı kurulamadı")
+  ) {
+    return "Bağlantı kurulamadı. İnternet bağlantını kontrol edip tekrar dene.";
+  }
   if (normalized.includes("unauthorized") || normalized.includes("401") || normalized.includes("bad credentials")) {
     return "E-posta veya şifre hatalı.";
   }
