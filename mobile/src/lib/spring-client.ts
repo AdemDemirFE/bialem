@@ -452,7 +452,7 @@ export function createSpringClient(options: SpringClientOptions) {
           const query = new URLSearchParams();
           query.set("size", String(params?.size ?? 1000));
           if (params?.sort) query.set("sort", params.sort);
-          if (params?.communityType) query.set("communityType.equals", params.communityType);
+          if (params?.communityType) query.set("communityType.equals", String(params.communityType).toUpperCase());
           if (params?.parentId === null) query.set("parentId.specified", "false");
           else if (params?.parentId) query.set("parentId.equals", params.parentId);
           const data = await request<CommunityDto[]>(`/api/communities?${query.toString()}`);
