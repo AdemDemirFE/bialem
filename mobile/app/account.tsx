@@ -17,7 +17,7 @@ const legalLinks = [
 ] as const;
 
 export default function AccountScreen() {
-  const { changePassword, clearError, error: authError } = useAuth();
+  const { changePassword, clearError, error: authError, signOut } = useAuth();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
@@ -69,16 +69,15 @@ export default function AccountScreen() {
 
     setBusy(true);
     setError(null);
-    const { data, error: functionError } = await api.functions.invoke("delete-account", { body: {} });
-    const result = data as { deleted?: boolean; error?: string } | null;
-
-    if (functionError || !result?.deleted) {
-      setError(result?.error || functionError?.message || "Hesap silinemedi. Lütfen tekrar deneyin.");
+    try {
+      await api.rest.delete("/api/app/me");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Hesap silinemedi. Lütfen tekrar deneyin.");
       setBusy(false);
       return;
     }
 
-    await api.auth.signOut();
+    await signOut();
     router.replace("/");
   };
 

@@ -139,6 +139,7 @@ export function App() {
                 <Route path="/store" element={<StoreScreen />} />
                 <Route path="/communities" element={<CommunitiesScreen />} />
                 <Route path="/calendar" element={<CalendarScreen />} />
+                <Route path="/assistant" element={<AssistantScreen />} />
                 <Route path="/profile" element={<ProfileScreen />} />
                 <Route path="/management" element={<ManagementScreen />} />
               </Route>

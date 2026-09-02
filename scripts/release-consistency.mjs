@@ -6,9 +6,12 @@
  */
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = process.cwd();
+// Resolve the repo root from this file's location so the script is safe to run
+// from any working directory (e.g. inside mobile/).
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
 const checks = [];
 

@@ -46,25 +46,28 @@ export default function AssistantScreen() {
     setSending(true);
     setError(null);
 
-    const { data, error: functionError } = await api.functions.invoke("bialem-assistant", {
-      body: {
+    try {
+      const payload = await api.rest.post<{ answer?: string; reply?: string; error?: string }>("/api/app/ai/chat", {
         messages: nextMessages.map(({ role, content }) => ({ role, content }))
+      });
+
+      const answer = payload?.answer || payload?.reply;
+      if (!answer) {
+        setError(payload?.error || "Asistan yanıt veremedi.");
+        setSending(false);
+        return;
       }
-    });
 
-    const payload = data as { answer?: string; reply?: string; error?: string } | null;
-    const answer = payload?.answer || payload?.reply;
-    if (functionError || !answer) {
-      setError(payload?.error || functionError?.message || "Asistan yanıt veremedi.");
+      setMessages((current) => [
+        ...current,
+        { id: `${Date.now()}-assistant`, role: "assistant", content: answer }
+      ]);
+    } catch (chatError) {
+      const message = chatError instanceof Error ? chatError.message : "Asistan yanıt veremedi.";
+      setError(/çok fazla|rate.?limit|time aşımı/i.test(message) ? "Çok fazla istek gönderdiniz. Biraz bekleyip tekrar deneyin." : message);
+    } finally {
       setSending(false);
-      return;
     }
-
-    setMessages((current) => [
-      ...current,
-      { id: `${Date.now()}-assistant`, role: "assistant", content: answer }
-    ]);
-    setSending(false);
   };
 
   return (
