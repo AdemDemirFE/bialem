@@ -337,7 +337,8 @@ function formatDate(value: string) {
   });
 }
 
-function maskUser(userId: string) {
+function maskUser(userId: string | null | undefined) {
+  if (!userId) return "Bilinmeyen üye";
   return `Üye ${userId.slice(0, 6)}`;
 }
 
@@ -454,7 +455,7 @@ export default async function AdminHomePage() {
           <h1 style={styles.title}>Etkinlik taleplerini, raporları ve topluluk güven akışlarını tek panelden yönetin.</h1>
           <p style={styles.description}>
             Bu ekran mobil uygulamadan gelen etkinlik onaylari, raporlar, moderasyon sorunlari ve riskli kullanıcı
-            durumlarını yönetmek için canlı Supabase verisini kullanır.
+            durumlarını yönetmek için canlı Spring backend verisini kullanır.
           </p>
           <Link
             href="/admin/team"
@@ -643,7 +644,7 @@ export default async function AdminHomePage() {
                     <span style={styles.reportBadge}>Acik</span>
                   </div>
                   <p style={styles.meta}>Raporlayan: {maskUser(report.reporter_id)}</p>
-                  <p style={styles.meta}>Hedef kayıt: {report.target_id.slice(0, 8)}</p>
+                  <p style={styles.meta}>Hedef kayıt: {report.target_id ? report.target_id.slice(0, 8) : "bilinmiyor"}</p>
                   <p style={styles.eventText}>
                     <strong>Neden:</strong> {report.reason}
                   </p>
