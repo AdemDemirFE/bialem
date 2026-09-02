@@ -708,8 +708,7 @@ export default function EventDetailScreen() {
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Yorumlar</Text>
             <Text style={styles.panelHint}>
-              Mevcut RLS yapısı nedeniyle burada şu an yalnızca güvenli üye etiketi gösteriyoruz. Sonraki adımda public profil
-              kartlari ekleyebiliriz.
+              Yorumlar etkinlik sayfasında herkese açık görünür; nazik ve yapıcı yorumlar topluluk deneyimini güzelleştirir.
             </Text>
             <View style={styles.formGroup}>
               <TextInput
