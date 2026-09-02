@@ -111,7 +111,7 @@ public class PaymentService {
         Optional<Payment> existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
             LOG.info("Re-using existing payment for idempotency key {}", idempotencyKey);
-            Payment payment = existing.get();
+            Payment payment = existing.orElseThrow();
             return PaymentInitiationResult.success(
                 payment.getProviderTransactionId(),
                 callbackUrl + "?transactionId=" + payment.getProviderTransactionId(),

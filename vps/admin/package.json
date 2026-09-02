@@ -1,0 +1,59 @@
+{
+  "name": "bialem",
+  "version": "1.0.2",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "admin"
+  ],
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "bialem": {
+    "versionCode": 10,
+    "environments": {
+      "dev": {
+        "apiBaseUrl": "http://localhost:8080",
+        "publicWebUrl": "http://localhost:5173"
+      },
+      "android-test": {
+        "apiBaseUrl": "http://191.215.36.29:8184",
+        "publicWebUrl": "http://191.215.36.29:8184"
+      },
+      "prod": {
+        "apiBaseUrl": "https://api.bialem.app",
+        "publicWebUrl": "https://bialem.app"
+      }
+    }
+  },
+  "scripts": {
+    "postinstall": "node scripts/bootstrap-local-dev.mjs",
+    "deploy": "bash deploy/scripts/deploy.sh",
+    "update": "bash deploy/scripts/update.sh",
+    "deploy:chmod": "node scripts/mark-deploy-executable.mjs",
+
+    "1:dev": "npm --workspace mobile run 1:dev",
+    "1:dev:proxy": "npm --workspace mobile run 1:dev:proxy",
+    "2:prod": "npm --workspace mobile run 2:prod",
+    "3:test": "npm --workspace mobile run 3:test",
+    "web:3:test": "npm run 3:test",
+    "3:android-test": "npm --workspace mobile run 3:android-test",
+
+    "1:dev:admin": "npm --workspace admin run 1:dev",
+    "2:prod:admin": "npm --workspace admin run 2:prod",
+
+    "android:1:dev": "npm --workspace mobile run android:1:dev",
+    "android:2:prod": "npm --workspace mobile run android:2:prod",
+    "android:3:test": "npm --workspace mobile run android:3:test",
+
+    "dev:mobile": "npm run 1:dev",
+    "dev:admin": "npm run 1:dev:admin",
+    "dev:mobile:web": "npm run 1:dev",
+    "build:android:test": "npm run 3:android-test",
+    "typecheck:mobile": "npm --workspace mobile run typecheck",
+    "typecheck:admin": "npm --workspace admin run typecheck",
+    "check": "npm run typecheck:mobile && npm run typecheck:admin && npm --workspace admin run 2:prod",
+    "check:release": "npm run check && npm --workspace mobile run 2:prod && node scripts/release-consistency.mjs"
+  }
+}

@@ -42,9 +42,16 @@ backend/target/
 target/
 **/target/
 
+# VPS deployment package (config templates tracked, artifacts ignored)
+/vps/**/*.jar
+/vps/backend/target/
+/vps/artifacts/
+
 # Codebase Memory
 .codebase-memory/
 graph.db.zst
 
 # Graphify output
 graphify-out/
+# Accidental Windows PowerShell cache committed previously
+Microsoft/Windows/PowerShell/

@@ -196,9 +196,10 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="20260821120000-5" author="bialem">
+<changeSet id="20260821120000-5" author="bialem">
         <!-- This changeSet was already deployed before optional notification columns were extended. -->
         <validCheckSum>9:b44c985d6f5a87099c30fe06f3249560</validCheckSum>
+        <validCheckSum>9:43e45970869efebfc706996e9369d3aa</validCheckSum>
         <addColumn tableName="app_notification">
             <column name="template_id" type="bigint"/>
             <column name="event_id" type="varchar(120)"/>
@@ -218,11 +219,6 @@
             constraintName="fk_app_notification_template_id"
             referencedColumnNames="id"
             referencedTableName="notification_template"/>
-
-        <createIndex indexName="idx_app_notification_user_created" tableName="app_notification">
-            <column name="user_id"/>
-            <column name="created_at"/>
-        </createIndex>
 
         <createIndex indexName="idx_app_notification_user_read" tableName="app_notification">
             <column name="user_id"/>

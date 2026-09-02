@@ -1,0 +1,27 @@
+# Bialem VPS package - Admin (Next.js standalone) Systemd unit
+# Kurulum:
+#   sudo cp systemd/bialem-admin.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now bialem-admin
+[Unit]
+Description=Bialem Admin Panel (Next.js standalone)
+After=network-online.target bialem-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bialem
+Group=bialem
+WorkingDirectory=/opt/bialem/vps/admin
+Environment=HOSTNAME=0.0.0.0
+Environment=PORT=3000
+Environment=NEXT_PUBLIC_API_BASE_URL=https://api.bialem.app
+Environment=NEXT_PUBLIC_APP_ENV=prod
+ExecStart=/usr/bin/node /opt/bialem/vps/admin/admin/server.js
+Restart=always
+RestartSec=5
+TimeoutStartSec=60
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

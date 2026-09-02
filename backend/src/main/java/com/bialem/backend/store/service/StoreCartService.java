@@ -74,7 +74,7 @@ public class StoreCartService {
         );
         StoreCartItem item;
         if (existing.isPresent()) {
-            item = existing.get();
+            item = existing.orElseThrow();
             int newQty = item.getQuantity() + request.getQuantity();
             if (available < newQty) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Yeterli stok yok");

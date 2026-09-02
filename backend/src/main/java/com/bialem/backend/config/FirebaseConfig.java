@@ -4,7 +4,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -53,7 +52,7 @@ public class FirebaseConfig {
         if (credentialsPath != null && !credentialsPath.isBlank()) {
             Path path = Path.of(credentialsPath);
             if (Files.isRegularFile(path)) {
-                try (InputStream in = new FileInputStream(path.toFile())) {
+                try (InputStream in = Files.newInputStream(path)) {
                     FirebaseOptions options = options(GoogleCredentials.fromStream(in));
                     FirebaseApp.initializeApp(options);
                     available = true;

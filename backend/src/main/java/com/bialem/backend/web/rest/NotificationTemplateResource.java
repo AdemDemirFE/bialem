@@ -89,6 +89,6 @@ public class NotificationTemplateResource {
         if (template.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(notificationTemplateService.render(template.get(), variables));
+        return ResponseEntity.ok(notificationTemplateService.render(template.orElseThrow(), variables));
     }
 }

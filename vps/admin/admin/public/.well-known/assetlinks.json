@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bialem.app",
+      "sha256_cert_fingerprints": [
+        "53:4E:D1:76:E4:E2:84:AB:8D:A1:E3:37:D6:11:DF:DD:9E:F3:74:C7:D9:4D:E0:C9:FC:32:A2:9D:C3:8C:25:E3"
+      ]
+    }
+  }
+]

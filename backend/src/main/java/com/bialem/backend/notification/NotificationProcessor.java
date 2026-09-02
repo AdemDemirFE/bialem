@@ -57,7 +57,7 @@ public class NotificationProcessor {
             return;
         }
 
-        NotificationTemplate template = templateOptional.get();
+        NotificationTemplate template = templateOptional.orElseThrow();
         if (!Boolean.TRUE.equals(template.getEnabled())) {
             LOG.debug("Notification template {} is disabled", template.getCode());
             return;
@@ -89,7 +89,7 @@ public class NotificationProcessor {
             LOG.warn("Recipient user not found: {}", recipientId);
             return;
         }
-        User user = userOptional.get();
+        User user = userOptional.orElseThrow();
 
         Long actorUserId = toLong(event.getVariable("actorUserId"));
         if (actorUserId != null && actorUserId.equals(recipientId)) {

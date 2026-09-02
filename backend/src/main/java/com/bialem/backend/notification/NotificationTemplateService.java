@@ -55,7 +55,7 @@ public class NotificationTemplateService {
             return null;
         }
         Matcher matcher = PLACEHOLDER_PATTERN.matcher(template);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String key = matcher.group(1);
             Object value = variables.get(key);

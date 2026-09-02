@@ -414,7 +414,7 @@ public class UserService {
             return Set.of();
         }
         return userRoleRepository
-            .findByUser(profileOpt.get())
+            .findByUser(profileOpt.orElseThrow())
             .stream()
             .map(UserRole::getRole)
             .filter(Objects::nonNull)

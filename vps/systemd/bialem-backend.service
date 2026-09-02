@@ -1,0 +1,32 @@
+# Bialem VPS package - backend Systemd unit (optional, bare-metal alternatifi)
+# Tercihen docker-compose kullanın (vps/docker-compose.yml). Bu ünite, DB'yi
+# kendiniz (dış postgres veya: docker compose --env-file .env.prod up -d db)
+# başlattıysanız jar'ı doğrudan çalıştırır.
+#
+# Kurulum:
+#   sudo cp systemd/bialem-backend.service /etc/systemd/system/
+#   sudo cp systemd/backend.env.example /opt/bialem/vps/backend/backend.env
+#   sudo nano /opt/bialem/vps/backend/backend.env      # şifreleri doldurun
+#   sudo systemctl daemon-reload && sudo systemctl enable --now bialem-backend
+[Unit]
+Description=Bialem Spring Boot API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bialem
+Group=bialem
+WorkingDirectory=/opt/bialem/vps/backend
+EnvironmentFile=/opt/bialem/vps/backend/backend.env
+ExecStart=/usr/bin/java -Xms256m -Xmx512m -Djava.security.egd=file:/dev/./urandom -jar /opt/bialem/vps/backend/bialem-backend.jar
+Restart=always
+RestartSec=5
+TimeoutStartSec=120
+# hardening
+NoNewPrivileges=true
+PrivateTmp=true
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
