@@ -14,7 +14,7 @@
     "versionCode": 10,
     "environments": {
       "dev": {
-        "apiBaseUrl": "http://191.215.36.29:8184",
+        "apiBaseUrl": "http://localhost:8080",
         "publicWebUrl": "http://localhost:5173"
       },
       "android-test": {

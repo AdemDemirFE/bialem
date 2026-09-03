@@ -1,5 +1,13 @@
 {
   "appId": "com.bialem.mobile",
   "appName": "BiAlem",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
 }

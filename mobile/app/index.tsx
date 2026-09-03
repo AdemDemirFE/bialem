@@ -329,6 +329,9 @@ export default function HomeScreen() {
         <Pressable style={styles.primaryButton} onPress={() => void handleProfileSave()}>
           <Text style={styles.primaryButtonText}>Profili Kaydet</Text>
         </Pressable>
+        <Pressable style={styles.skipButton} onPress={() => router.replace("/(tabs)/feed")}>
+          <Text style={styles.skipButtonText}>Daha sonra</Text>
+        </Pressable>
       </View>
     </ScrollView>
     </KeyboardAvoidingView>
@@ -1054,5 +1057,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "900",
     letterSpacing: 0.2
+  },
+  skipButton: {
+    marginTop: 6,
+    minHeight: 44,
+    paddingVertical: 11,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface
+  },
+  skipButtonText: {
+    color: colors.ink,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "800"
   }
 });

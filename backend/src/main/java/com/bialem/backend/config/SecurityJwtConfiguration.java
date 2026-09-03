@@ -56,7 +56,28 @@ public class SecurityJwtConfiguration {
     }
 
     private SecretKey getSecretKey() {
+        assertValidJwtSecret(jwtKey);
         byte[] keyBytes = Base64.from(jwtKey).decode();
         return new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
+    }
+
+    /**
+     * Fail fast at startup instead of issuing/validating tokens with an empty or
+     * too-short HMAC key. An empty prod secret (missing env var) previously
+     * surfaced only as runtime signature failures.
+     */
+    static void assertValidJwtSecret(String jwtKey) {
+        if (jwtKey == null || jwtKey.isBlank()) {
+            throw new IllegalStateException(
+                "JWT base64-secret is not configured (jhipster.security.authentication.jwt.base64-secret). " +
+                "Set JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET in production."
+            );
+        }
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                "JWT base64-secret must decode to at least 256 bits (32 bytes) for " + JWT_ALGORITHM.getName() + "."
+            );
+        }
     }
 }

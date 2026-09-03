@@ -6,6 +6,7 @@ import com.bialem.backend.store.service.dto.StoreRefundRequest;
 import com.bialem.backend.store.service.dto.StoreOrderDetailDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,16 +19,19 @@ public class StoreAdminPaymentResource {
         this.paymentService = paymentService;
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PostMapping("/refund")
     public ResponseEntity<StoreOrderDetailDTO> refund(@Valid @RequestBody StoreRefundRequest request) {
         return ResponseEntity.ok(paymentService.refund(request));
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PostMapping("/bank-transfer/{transferId}/approve")
     public ResponseEntity<StoreBankTransfer> approveBankTransfer(@PathVariable Long transferId, @RequestParam(required = false) String note) {
         return ResponseEntity.ok(paymentService.approveBankTransfer(transferId, note));
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PostMapping("/bank-transfer/{transferId}/reject")
     public ResponseEntity<StoreBankTransfer> rejectBankTransfer(@PathVariable Long transferId, @RequestParam(required = false) String note) {
         return ResponseEntity.ok(paymentService.rejectBankTransfer(transferId, note));
