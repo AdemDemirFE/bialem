@@ -108,9 +108,11 @@
     <include file="config/liquibase/changelog/20260829120600_added_entity_Ticket.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829120601_added_entity_constraints_Ticket.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829130000_story_system_revamp.xml" relativeToChangelogFile="false"/>
-    <include file="config/liquibase/changelog/20260829160000_store_module_recreate_schema.xml" relativeToChangelogFile="false"/>
+    <!-- NOT: 20260829160000_store_module_recreate_schema.xml (dropTable) bilinçli olarak production chain'inden kaldirildi.
+         Production verisini DROP edebilecegi icin dev disinda calistirilmamalidir. -->
     <include file="config/liquibase/changelog/20260829140000_store_module.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829150000_store_module_missing_columns.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260829170000_store_seed_data.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260830000000_payment_system.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260903000000_schema_align_prod.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

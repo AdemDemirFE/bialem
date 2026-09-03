@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Production schema alignment.
+
+        Bu changelog, entity/JPA modeli ile mevcut migration zincirinin ortaya
+        cikardigi schema arasindaki kucuk farklari idempotent ve veri-kaybi
+        olmadan hizalar:
+          - @JdbcTypeCode(SqlTypes.LONG32VARCHAR) ile isaretlenmis kolonlarin
+            PostgreSQL'de 'text' tipinde olmasi gerekir (bazi changelog'lar
+            varchar(4000) olusturmustur).
+          - Eksik indeks / unique constraint / kolon eklemeleri.
+
+        Guvenlik kurallari:
+          - DROP TABLE / TRUNCATE / DELETE kullanilmaz.
+          - Kolon tipi degisimleri uyumlu yonludur (varchar -> text) ve mevcut
+            veriyi korur.
+          - Tum degisiklikler onKosul (preCondition) ile idempotenttir.
+    -->
+
+    <!-- Entity StoryElement.metadata_json @JdbcTypeCode(LONG32VARCHAR) -> text -->
+    <changeSet id="20260903000000-1" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="story_element"/>
+            <columnExists tableName="story_element" columnName="metadata_json"/>
+        </preConditions>
+        <modifyDataType tableName="story_element" columnName="metadata_json" newDataType="${clobType}"/>
+    </changeSet>
+
+</databaseChangeLog>
