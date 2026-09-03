@@ -266,6 +266,7 @@ public class AppSupport {
         map.put("city", profile.getCity());
         map.put("status", profile.getStatus() == null ? null : profile.getStatus().name().toLowerCase(Locale.ROOT));
         map.put("is_verified", profile.getIsVerified());
+        map.put("created_at", profile.getCreatedAt() == null ? null : profile.getCreatedAt().toString());
         map.put("email", profile.getUser() != null ? profile.getUser().getEmail() : null);
         map.put("user_id", stringify(profile.getId()));
         return map;

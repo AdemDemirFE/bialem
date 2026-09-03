@@ -300,8 +300,8 @@ export default function UserProfileDetailScreen() {
 
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Profil özeti</Text>
-            <ProfileRow label="Doğrulama" value={profileCard.is_verified ? "Doğrulanmış" : "Beklemede"} />
-            <ProfileRow label="Durum" value={profileStatusLabel(profileCard.status)} />
+            <ProfileRow label="Doğrulama" value={profileCard.is_verified ? "Doğrulanmış" : "Doğrulama bekliyor"} />
+            <ProfileRow label="Durum" value={statusLabel(profileCard.status, profileCard.is_verified)} />
             <ProfileRow label="Kayıt tarihi" value={formatDate(profileCard.created_at)} />
             <Text style={styles.bioText}>{profileCard.bio || "Bu kullanıcı henüz kısa biyografi eklememiş."}</Text>
           </View>
@@ -446,18 +446,24 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatDate(dateString: string) {
-  try {
-    return new Date(dateString).toLocaleString("tr-TR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  } catch {
-    return dateString;
+function statusLabel(status: string | undefined | null, isVerified: boolean) {
+  if (status === "pending_verification") {
+    return isVerified ? "Doğrulanmış" : "Doğrulama bekliyor";
   }
+  return profileStatusLabel(status);
+}
+
+function formatDate(dateString: string | null | undefined) {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function maskUser(userId: string | null | undefined) {

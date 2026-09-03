@@ -21,8 +21,8 @@ export default async function StoreOrdersPage({ searchParams }: { searchParams: 
   const { status } = await searchParams;
   const api = await getAdminApi();
   const qs = status ? `&status=${encodeURIComponent(status)}` : "";
-  const { data } = await api.rest.get<any>(`/api/store/orders/admin/all?page=0&size=50${qs}`);
-  const orders = data?.content ?? [];
+  const page = await api.rest.get<any>(`/api/store/orders/admin/all?page=0&size=50${qs}`);
+  const orders = page?.content ?? [];
 
   return (
     <div className="p-6 space-y-4">

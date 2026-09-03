@@ -119,12 +119,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (!mounted) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      setLoading(false);
+      // Keep loading true when user exists so the profile effect can finish;
+      // only mark ready here when there is definitely no authenticated user.
+      if (!data.session?.user) {
+        setLoading(false);
+      }
     });
     const { data } = api.auth.onAuthStateChange((_event, next) => {
       if (!mounted) return;
       setSession(next);
       setUser(next?.user ?? null);
+      // Re-enter loading state when a session appears mid-render so we wait
+      // for the profile/permissions fetch before rendering protected routes.
+      if (next?.user) {
+        setLoading(true);
+      } else {
+        setLoading(false);
+      }
     });
     return () => {
       mounted = false;

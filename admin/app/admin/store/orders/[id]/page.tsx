@@ -48,7 +48,7 @@ async function shipOrder(formData: FormData) {
 export default async function StoreOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const api = await getAdminApi();
-  const { data: order } = await api.rest.get<any>(`/api/store/orders/admin/${id}`);
+  const order = await api.rest.get<any>(`/api/store/orders/admin/${id}`);
   if (!order) notFound();
 
   return (

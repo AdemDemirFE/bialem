@@ -20,11 +20,12 @@ function TabIcon({ name, focused, color, size }: { name: string; focused: boolea
 
 export default function TabsLayout() {
   const { user, profile, permissions, loading } = useAuth();
+  console.log("[TabsLayout] loading=", loading, "user=", user, "profile=", profile);
   const management = canSeeManagement(permissions);
   const insets = useSafeAreaInsets();
   const { resolvedTheme } = useTheme();
 
-  if (loading) {
+  if (loading || (user && !profile)) {
     return (
       <View style={styles.loadingPage} accessibilityRole="progressbar">
         <View style={styles.loadingMark}><Text style={styles.loadingMarkText}>B</Text></View>
@@ -34,7 +35,7 @@ export default function TabsLayout() {
     );
   }
 
-  if (!user || !profile?.display_name || !profile?.username) {
+  if (!user) {
     return <Redirect href="/" />;
   }
 

@@ -19,11 +19,14 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import tech.jhipster.web.util.HeaderUtil;
 import tech.jhipster.web.util.PaginationUtil;
@@ -217,7 +220,15 @@ public class CommunityResource {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCommunity(@PathVariable("id") Long id) {
         LOG.debug("REST request to delete Community : {}", id);
-        communityService.delete(id);
+        try {
+            communityService.delete(id);
+        } catch (DataIntegrityViolationException e) {
+            LOG.warn("Community {} has dependent records and cannot be deleted: {}", id, e.getMessage());
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Bu topluluğa bağlı üyelik ve içerikler olduğu için silinemiyor."
+            );
+        }
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, false, ENTITY_NAME, id.toString()))
             .build();
