@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @IntegrationTest
 @ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(authorities = { "ROLE_ADMIN" })
 class ProfileResourceIT {
 
     private static final String DEFAULT_DISPLAY_NAME = "AAAAAAAAAA";
@@ -843,6 +843,8 @@ class ProfileResourceIT {
     @Transactional
     void putExistingProfile() throws Exception {
         // Initialize the database
+        profile.getUser().setLogin("user");
+        userRepository.saveAndFlush(profile.getUser());
         insertedProfile = profileRepository.saveAndFlush(profile);
 
         long databaseSizeBeforeUpdate = getRepositoryCount();
@@ -872,6 +874,28 @@ class ProfileResourceIT {
         // Validate the Profile in the database
         assertSameRepositoryCount(databaseSizeBeforeUpdate);
         assertPersistedProfileToMatchAllProperties(updatedProfile);
+    }
+
+    @Test
+    @Transactional
+    void putExistingProfileAsOtherUser() throws Exception {
+        // Initialize the database with a different owner
+        profile.getUser().setLogin("otheruser");
+        userRepository.saveAndFlush(profile.getUser());
+        insertedProfile = profileRepository.saveAndFlush(profile);
+
+        // Update the profile
+        Profile updatedProfile = profileRepository.findById(profile.getId()).orElseThrow();
+        em.detach(updatedProfile);
+        updatedProfile.displayName(UPDATED_DISPLAY_NAME);
+        ProfileDTO profileDTO = profileMapper.toDto(updatedProfile);
+
+        // Authenticated user is "user" while the profile belongs to "otheruser"
+        restProfileMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, profileDTO.getId()).contentType(MediaType.APPLICATION_JSON).content(om.writeValueAsBytes(profileDTO))
+            )
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -938,6 +962,8 @@ class ProfileResourceIT {
     @Transactional
     void partialUpdateProfileWithPatch() throws Exception {
         // Initialize the database
+        profile.getUser().setLogin("user");
+        userRepository.saveAndFlush(profile.getUser());
         insertedProfile = profileRepository.saveAndFlush(profile);
 
         long databaseSizeBeforeUpdate = getRepositoryCount();
@@ -966,6 +992,8 @@ class ProfileResourceIT {
     @Transactional
     void fullUpdateProfileWithPatch() throws Exception {
         // Initialize the database
+        profile.getUser().setLogin("user");
+        userRepository.saveAndFlush(profile.getUser());
         insertedProfile = profileRepository.saveAndFlush(profile);
 
         long databaseSizeBeforeUpdate = getRepositoryCount();

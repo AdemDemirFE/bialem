@@ -65,6 +65,14 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/api/push-device-tokens/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account/**")).authenticated()
+                    // Profile self-service: read/update own profile; keep admin-only for collection and destructive operations.
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/profiles")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/profiles")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/profiles/count")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.DELETE, "/api/profiles/{id}")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/profiles/{id}")).authenticated()
+                    .requestMatchers(mvc.pattern(HttpMethod.PUT, "/api/profiles/{id}")).authenticated()
+                    .requestMatchers(mvc.pattern(HttpMethod.PATCH, "/api/profiles/{id}")).authenticated()
                     // Generated entity CRUD endpoints are an administrative surface. Mobile/web clients use /api/app/**.
                     .requestMatchers(mvc.pattern("/api/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
                     .requestMatchers(mvc.pattern("/management/health")).permitAll()
@@ -72,7 +80,10 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/management/info")).permitAll()
                     .requestMatchers(mvc.pattern("/management/prometheus")).permitAll()
                     .requestMatchers(mvc.pattern("/management/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
-                    .anyRequest().permitAll()
+                    .requestMatchers(mvc.pattern("/error")).permitAll()
+                    // Ensure any path not explicitly listed above requires authentication
+                    // instead of silently being public.
+                    .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions ->

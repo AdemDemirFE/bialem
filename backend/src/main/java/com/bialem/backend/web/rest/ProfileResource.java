@@ -1,6 +1,8 @@
 package com.bialem.backend.web.rest;
 
+import com.bialem.backend.domain.Profile;
 import com.bialem.backend.repository.ProfileRepository;
+import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.service.ProfileQueryService;
 import com.bialem.backend.service.ProfileService;
 import com.bialem.backend.service.criteria.ProfileCriteria;
@@ -8,6 +10,7 @@ import com.bialem.backend.service.dto.ProfileDTO;
 import com.bialem.backend.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.access.AccessDeniedException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -50,6 +53,16 @@ public class ProfileResource {
         this.profileService = profileService;
         this.profileRepository = profileRepository;
         this.profileQueryService = profileQueryService;
+    }
+
+    private void assertProfileOwnership(Long profileId) {
+        String currentLogin = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new AccessDeniedException("Oturum açık değil"));
+        Profile profile = profileRepository.findOneWithToOneRelationships(profileId)
+            .orElseThrow(() -> new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+        if (profile.getUser() == null || !currentLogin.equalsIgnoreCase(profile.getUser().getLogin())) {
+            throw new AccessDeniedException("Bu profili güncelleme yetkiniz yok");
+        }
     }
 
     /**
@@ -98,6 +111,7 @@ public class ProfileResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
+        assertProfileOwnership(id);
         profileDTO = profileService.update(profileDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, profileDTO.getId().toString()))
@@ -132,6 +146,7 @@ public class ProfileResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
+        assertProfileOwnership(id);
         Optional<ProfileDTO> result = profileService.partialUpdate(profileDTO);
 
         return ResponseUtil.wrapOrNotFound(
