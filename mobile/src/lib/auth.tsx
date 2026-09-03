@@ -89,6 +89,9 @@ function mapErrorMessage(message: string) {
   if (normalized.includes("unauthorized") || normalized.includes("401") || normalized.includes("bad credentials")) {
     return "E-posta veya şifre hatalı.";
   }
+  if (normalized.includes("forbidden") || normalized.includes("403") || normalized.includes("yetki")) {
+    return "Bu işlem için yetkiniz yok.";
+  }
   if (normalized.includes("already used") || normalized.includes("already registered")) {
     return "Bu e-posta veya kullanıcı adı zaten kayıtlı.";
   }
@@ -140,8 +143,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void Promise.all([api.profiles.getById(user.id), api.rest.get<{ permissions?: AccountPermissions }>("/api/account")])
       .then(([{ data, error: profileError }, account]) => {
         if (!mounted) return;
-        if (profileError) setError(mapErrorMessage(profileError.message));
-        else setProfile(data ?? null);
+        if (profileError) {
+          setError("Profil bilgileri alınamadı: " + mapErrorMessage(profileError.message));
+        } else {
+          setProfile(data ?? null);
+        }
         setPermissions(account.permissions ?? noPermissions);
         setLoading(false);
       });
