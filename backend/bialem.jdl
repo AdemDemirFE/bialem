@@ -62,6 +62,15 @@ enum PushPlatform { IOS ANDROID }
 enum AllowMessagesFrom { EVERYONE FOLLOWING NO_ONE }
 enum MediaType { IMAGE VIDEO }
 enum StoryContentType { TEXT IMAGE }
+enum EventTicketStatus { ACTIVE INACTIVE SOLD_OUT EXPIRED }
+enum OrderStatus { PENDING PAID FAILED CANCELLED REFUNDED }
+enum PaymentProviderType { IYZICO STRIPE }
+enum PaymentStatus { PENDING COMPLETED FAILED REFUNDED }
+enum StoryReactionType { HEART LAUGH FIRE CLAP LOVE WOW SAD }
+enum TicketStatus { ACTIVE USED CANCELLED EXPIRED }
+enum NotificationPriority { NORMAL HIGH URGENT }
+enum NotificationOutboxStatus { PENDING SENDING SENT FAILED }
+enum NotificationDeliveryStatus { PENDING SENT FAILED }
 
 entity Profile {
   displayName String required maxlength(120)
@@ -180,7 +189,7 @@ entity PostMedia {
 
 entity Comment {
   targetType CommentTargetType required
-  targetId UUID required
+  targetId String required maxlength(64)
   body String required maxlength(4000)
   moderationStatus ModerationStatus required
   createdAt Instant required
@@ -193,6 +202,9 @@ entity Story {
   mediaUrl String maxlength(2048)
   isPublic Boolean required
   shareWithFollowers Boolean required
+  locationName String maxlength(200)
+  latitude BigDecimal
+  longitude BigDecimal
   createdAt Instant required
   expiresAt Instant required
 }
@@ -226,7 +238,7 @@ entity UserReview {
 
 entity Report {
   targetType ReportTargetType required
-  targetId UUID required
+  targetId String required maxlength(64)
   reason String required maxlength(500)
   details TextBlob
   status ReportStatus required
@@ -398,6 +410,185 @@ entity UserRole {
   createdAt Instant required
 }
 
+entity EventTicket {
+  name String required maxlength(160)
+  description String maxlength(2000)
+  price BigDecimal required
+  currency String required maxlength(8)
+  quantity Integer required min(1)
+  soldQuantity Integer
+  saleStartDate Instant
+  saleEndDate Instant
+  status EventTicketStatus required
+}
+
+entity Order {
+  orderNumber String required
+  totalAmount BigDecimal required
+  currency String required maxlength(8)
+  status OrderStatus required
+  createdAt Instant required
+  paidAt Instant
+}
+
+entity OrderItem {
+  quantity Integer required min(1)
+  unitPrice BigDecimal required
+  totalPrice BigDecimal required
+}
+
+entity Payment {
+  provider PaymentProviderType required
+  providerTransactionId String
+  amount BigDecimal required
+  currency String required maxlength(8)
+  status PaymentStatus required
+  paymentDate Instant
+  failureReason String
+  providerResponse String
+  idempotencyKey String required
+  callbackPayload String
+}
+
+entity StoryReaction {
+  reactionType StoryReactionType required
+  createdAt Instant required
+}
+
+entity Ticket {
+  ticketCode String required
+  qrCode String
+  status TicketStatus required
+  usedAt Instant
+}
+
+entity Hashtag {
+  name String required maxlength(100)
+  normalizedName String required maxlength(100)
+  usageCount Long required
+  createdAt Instant required
+  updatedAt Instant required
+  isActive Boolean required
+}
+
+entity StoryGroup {
+  locationName String maxlength(200)
+  latitude BigDecimal
+  longitude BigDecimal
+  createdAt Instant required
+  expiresAt Instant required
+}
+
+entity StoryElement {
+  elementType String required maxlength(255)
+  content String maxlength(2000)
+  positionX Double
+  positionY Double
+  scale Double
+  rotation Double
+  color String maxlength(50)
+  backgroundColor String maxlength(50)
+  fontSize Integer
+  width Double
+  height Double
+  metadataJson String maxlength(4000)
+  sortOrder Integer required
+  createdAt Instant required
+}
+
+entity StoryHashtag {
+  createdAt Instant required
+}
+
+entity AppNotification {
+  title String required maxlength(200)
+  body String maxlength(2000)
+  notificationType String required maxlength(80)
+  referenceId String maxlength(120)
+  route String maxlength(500)
+  isRead Boolean required
+  referenceType String maxlength(80)
+  createdAt Instant required
+  readAt Instant
+  scheduledAt Instant
+  pushStatus String maxlength(40)
+  pushSentAt Instant
+  correlationId String maxlength(120)
+  idempotencyKey String maxlength(500)
+}
+
+entity NotificationTemplate {
+  code String required unique maxlength(80)
+  eventType String required maxlength(80)
+  name String required maxlength(120)
+  titleTemplate String required maxlength(200)
+  bodyTemplate String maxlength(2000)
+  routeTemplate String maxlength(500)
+  enabled Boolean required
+  inAppEnabled Boolean required
+  pushEnabled Boolean required
+  priority NotificationPriority required
+  targetStrategy String maxlength(80)
+  scheduleType String required maxlength(40)
+  delayMinutes Integer
+  preferredSendTime String maxlength(10)
+  timezone String maxlength(80)
+  createdAt Instant required
+  updatedAt Instant
+  createdBy String maxlength(80)
+  updatedBy String maxlength(80)
+}
+
+entity NotificationOutbox {
+  status NotificationOutboxStatus required
+  scheduledAt Instant
+  attemptCount Integer required
+  maxAttempts Integer required
+  nextAttemptAt Instant
+  lastError String maxlength(2000)
+  idempotencyKey String maxlength(500)
+  createdAt Instant required
+  sentAt Instant
+  processedAt Instant
+}
+
+entity NotificationDeliveryLog {
+  provider String required maxlength(50)
+  status NotificationDeliveryStatus required
+  providerMessageId String maxlength(200)
+  errorCode String maxlength(120)
+  errorMessage String maxlength(2000)
+  attemptNumber Integer
+  sentAt Instant
+  createdAt Instant required
+}
+
+entity PushDeviceToken {
+  token String required maxlength(512)
+  platform PushPlatform required
+  active Boolean
+  notificationsEnabled Boolean
+  lastSeenAt Instant
+  lastSuccessAt Instant
+  lastFailureAt Instant
+  firebaseInstallationId String maxlength(255)
+  deviceUuid String maxlength(255)
+  appVersion String maxlength(80)
+  createdAt Instant required
+  updatedAt Instant required
+}
+
+entity UserNotificationPreference {
+  notificationType String required maxlength(80)
+  inAppEnabled Boolean required
+  pushEnabled Boolean required
+  emailEnabled Boolean
+  mutedUntil Instant
+  mandatory Boolean
+  createdAt Instant required
+  updatedAt Instant
+}
+
 entity DirectConversation {
   createdAt Instant required
   updatedAt Instant required
@@ -412,6 +603,7 @@ entity DirectMessage {
 relationship OneToOne {
   Profile{user(login) required} to User with builtInEntity
   AccountPreferences{profile required} to Profile{preferences}
+  Payment{order} to Order{payment}
 }
 
 relationship ManyToOne {
@@ -440,10 +632,20 @@ relationship ManyToOne {
   PostMedia{post} to Post{media}
   Comment{author} to Profile
   Story{author} to Profile
+  Story{storyGroup} to StoryGroup{stories}
+  Story{event} to Event
   StoryView{story} to Story{views}
   StoryView{viewer} to Profile
   StoryCommunityTarget{story} to Story{communityTargets}
   StoryCommunityTarget{community} to Community{storyTargets}
+  StoryReaction{story} to Story{reactions}
+  StoryReaction{user} to Profile
+  StoryGroup{author} to Profile
+  StoryGroup{community} to Community
+  StoryGroup{event} to Event
+  StoryElement{story} to Story{elements}
+  StoryHashtag{story} to Story
+  StoryHashtag{hashtag} to Hashtag
   Follow{follower} to Profile
   Follow{followed} to Profile
   FollowRequest{requester} to Profile
@@ -457,6 +659,22 @@ relationship ManyToOne {
   Report{resolvedBy} to Profile
   Notification{user} to Profile
   PushToken{user} to Profile
+  EventTicket{event} to Event{tickets}
+  Order{user} to Profile{orders}
+  OrderItem{order} to Order{items}
+  OrderItem{ticket} to EventTicket
+  Ticket{orderItem} to OrderItem
+  Ticket{user} to Profile
+  Ticket{event} to Event
+  AppNotification{user} to User with builtInEntity
+  AppNotification{actorUser} to User with builtInEntity
+  AppNotification{template} to NotificationTemplate
+  NotificationDeliveryLog{notification} to AppNotification
+  NotificationDeliveryLog{pushDevice} to PushDeviceToken
+  NotificationOutbox{notification} to AppNotification
+  NotificationOutbox{user} to User with builtInEntity
+  PushDeviceToken{user} to User with builtInEntity
+  UserNotificationPreference{user} to User with builtInEntity
   CityEventInterest{cityEvent} to CityEvent{interests}
   CityEventInterest{user} to Profile
   CityEventTicketOffer{cityEvent} to CityEvent{ticketOffers}

@@ -22,7 +22,7 @@ echo "Bialem VPS paketi kuruluyor (${ROOT})"
 echo "Saglik bekleniyor..."
 FAILED=0
 for i in $(seq 1 30); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:8184/management/health" 2>/dev/null || echo "000")
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:8080/management/health" 2>/dev/null || echo "000")
   if [[ "${code}" == "200" ]]; then
     echo "Backend saglikli (HTTP 200) - ${i} denemede"
     FAILED=0
@@ -41,6 +41,6 @@ echo
 "${COMPOSE[@]}" ps
 echo
 echo "Frontend : http://127.0.0.1:${FRONTEND_PORT:-4174}"
-echo "Backend  : http://127.0.0.1:${BACKEND_PORT:-8184}/management/health"
+echo "Backend  : http://127.0.0.1:${BACKEND_PORT:-8080}/management/health"
 echo "Admin    : http://127.0.0.1:${ADMIN_PORT:-3000}"
 echo "Postgres : bialem-db:5432 (host portu yok)"

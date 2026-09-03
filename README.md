@@ -64,7 +64,7 @@ Komut	API
 npm run 1:dev
 localhost:8080
 vite --mode android-test
-191.215.36.29:8184
+191.215.36.29:8080
 npm run 2:prod / production
 api.bialem.app
 

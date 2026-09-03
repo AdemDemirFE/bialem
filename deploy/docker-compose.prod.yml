@@ -57,7 +57,7 @@ services:
     volumes:
       - ${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:ro
     ports:
-      - "191.215.36.29:8184:8080"
+      - "191.215.36.29:8080:8080"
     networks:
       - bialem-network
     healthcheck:

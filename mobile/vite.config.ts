@@ -109,7 +109,7 @@ function bialemBrandAssets(): Plugin {
 export default defineConfig(async ({ mode, command }: ConfigEnv): Promise<UserConfig> => {
   const env = await loadEnvForMode(mode);
   const isProdLike = mode === "production" || mode === "android-test";
-  // Default: browser calls the real API URL (e.g. http://191.215.36.29:8184).
+  // Default: browser calls the real API URL (e.g. http://191.215.36.29:8080).
   // Optional: BIALEM_DEV_PROXY=1 → same-origin /api proxy (avoids CORS until VPS allows localhost:5173).
   const useDevProxy = command === "serve" && process.env.BIALEM_DEV_PROXY === "1";
 

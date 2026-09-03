@@ -52,7 +52,7 @@ bash deploy/scripts/deploy.sh
 Host bindings (loopback only):
 
 - Frontend: `127.0.0.1:4174`
-- Backend: `127.0.0.1:8184` → container `8080`
+- Backend: `127.0.0.1:8080` → container `8080`
 - PostgreSQL: not published
 
 ## Nginx (host)

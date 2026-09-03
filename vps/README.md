@@ -43,7 +43,7 @@ nano .env.prod
 |---|---|
 | `POSTGRES_PASSWORD` / `SPRING_DATASOURCE_PASSWORD` | DB şifresi (aynı olmalı) |
 | `JWT_SECRET` / `JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET` | Aynı değer |
-| `BACKEND_BIND` / `BACKEND_PORT` | API host bağlantısı (varsayılan `127.0.0.1:8184`) |
+| `BACKEND_BIND` / `BACKEND_PORT` | API host bağlantısı (varsayılan `127.0.0.1:8080`) |
 | `NEXT_PUBLIC_API_BASE_URL` | Admin panelin kullandığı API |
 | `FIREBASE_CREDENTIALS` | FCM JSON yolunu sunucuda `secrets/` altına koyun |
 
@@ -60,11 +60,11 @@ Servisler ve adresler:
 | Servis | Görünür adres |
 |---|---|
 | Frontend (web) | `http://127.0.0.1:4174` |
-| Backend (API) | `http://127.0.0.1:8184` (container 8080) |
+| Backend (API) | `http://127.0.0.1:8080` (container 8080) |
 | Admin | `http://127.0.0.1:3000` |
 | PostgreSQL | `bialem-db:5432` (host portu yok) |
 
-> API'yi domain'siz dışa açmak isterseniz `.env.prod` içinde `BACKEND_BIND=0.0.0.0` yapın → `http://<sunucu-ip>:8184`.
+> API'yi domain'siz dışa açmak isterseniz `.env.prod` içinde `BACKEND_BIND=0.0.0.0` yapın → `http://<sunucu-ip>:8080`.
 
 ## 4. Domain + SSL (host nginx)
 

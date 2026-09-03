@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "0bf9eea9045bc07c4eba01ed32c1e369424987c7",
-    "indexed_at": "2026-09-03T12:58:50Z",
+    "commit": "9f385f388ebfe4208b22ff2701786c9be6dfda8e",
+    "indexed_at": "2026-09-03T16:22:41Z",
     "project": "C-ADEM-GITHUB-bialem",
-    "nodes": 33119,
-    "edges": 173586,
-    "original_size": 125632512,
-    "compressed_size": 19352025,
+    "nodes": 32981,
+    "edges": 172552,
+    "original_size": 123863040,
+    "compressed_size": 19080505,
     "compression_level": 3
 }

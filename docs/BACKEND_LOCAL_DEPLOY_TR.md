@@ -206,7 +206,7 @@ Eski imaj tag'ini belirleyin ve `docker-compose.prod.yml`'deki `image` alanını
 
 ### `Connection refused` veya `No route to host`
 
-Sunucu güvenlik grubunda veya firewall'da backend portu (`8184`) açık olmalıdır.
+Sunucu güvenlik grubunda veya firewall'da backend portu (`8080`) açık olmalıdır.
 
 ### `docker compose` komutu bulunamadı
 

@@ -15,7 +15,7 @@ echo "Yeni paket yayinlaniyor (DB volume korunur)..."
 "${COMPOSE[@]}" up -d --force-recreate --no-deps backend frontend admin
 echo "Saglik kontrolu..."
 sleep 20
-code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:8184/management/health" 2>/dev/null || echo "000")
+code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://127.0.0.1:8080/management/health" 2>/dev/null || echo "000")
 echo "Backend health: HTTP ${code}"
 if [[ "${code}" != "200" ]]; then
   echo "Backend 200 degil. Loglar:"

@@ -7,7 +7,7 @@ COMPOSE_FILE="${ROOT}/deploy/docker-compose.prod.yml"
 ENV_FILE="${ROOT}/.env.prod"
 PROJECT_NAME="bialem"
 FRONTEND_PORT="4174"
-BACKEND_PORT="8184"
+BACKEND_PORT="8080"
 
 compose() {
   docker compose -p "${PROJECT_NAME}" --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"

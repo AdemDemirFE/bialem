@@ -68,7 +68,7 @@ services:
       FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-/secrets/firebase-service-account.json}
     command: ["sh", "-c", "exec java -Xms256m -Xmx512m -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar"]
     ports:
-      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8184}:8080"
+      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8080}:8080"
     networks:
       - bialem-network
     healthcheck:

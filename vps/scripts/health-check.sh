@@ -15,5 +15,5 @@ check() {
 }
 
 check "http://127.0.0.1:${FRONTEND_PORT:-4174}"                        "Frontend"
-check "http://127.0.0.1:${BACKEND_PORT:-8184}/management/health"       "Backend health"
+check "http://127.0.0.1:${BACKEND_PORT:-8080}/management/health"       "Backend health"
 check "http://127.0.0.1:${ADMIN_PORT:-3000}"                            "Admin"
