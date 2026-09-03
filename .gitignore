@@ -42,6 +42,10 @@ backend/target/
 target/
 **/target/
 
+/QA_REPORT/
+.playwright-mcp
+
+
 # VPS deployment package (config templates tracked, artifacts ignored)
 /vps/**/*.jar
 /vps/backend/target/
