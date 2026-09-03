@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Entity–schema alignment gaps.
+
+        Idempotent changesets that fix mismatches between JPA entity
+        annotations and the Liquibase migration chain so that a fresh
+        production deployment boots without errors.
+
+        Safety rules:
+          - No DROP TABLE / TRUNCATE / DELETE.
+          - Every changeset has a preCondition so it runs at most once.
+          - No existing data is modified or deleted.
+    -->
+
+    <!-- 1. store_review_image: add missing updated_at column -->
+    <changeSet id="20260903100000-1" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_review_image"/>
+            <not>
+                <columnExists tableName="store_review_image" columnName="updated_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="store_review_image">
+            <column name="updated_at" type="${datetimeType}"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- 2. store_wishlist: add missing unique constraint (user_id, product_id) -->
+    <changeSet id="20260903100000-2" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_wishlist"/>
+            <not>
+                <uniqueConstraintExists tableName="store_wishlist" constraintName="ux_store_wishlist__user_product"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint
+            tableName="store_wishlist"
+            columnNames="user_id, product_id"
+            constraintName="ux_store_wishlist__user_product"/>
+    </changeSet>
+
+    <!-- 3. store_shipping: add missing unique constraint on order_id -->
+    <changeSet id="20260903100000-3" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="store_shipping"/>
+            <not>
+                <uniqueConstraintExists tableName="store_shipping" constraintName="ux_store_shipping__order_id"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint
+            tableName="store_shipping"
+            columnNames="order_id"
+            constraintName="ux_store_shipping__order_id"/>
+    </changeSet>
+
+</databaseChangeLog>

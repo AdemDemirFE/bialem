@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Fix orders with PROCESSING status (not a valid StoreOrderStatus before this migration).
+         Map to WAITING_ADMIN_APPROVAL since payment_status=PAID means the order needs admin review. -->
+    <changeSet id="20260904100000-1" author="codebuff">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM store_order WHERE order_status = 'PROCESSING'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            UPDATE store_order
+            SET order_status = 'WAITING_ADMIN_APPROVAL',
+                updated_at = NOW()
+            WHERE order_status = 'PROCESSING'
+        </sql>
+        <rollback>
+            <sql>
+                UPDATE store_order
+                SET order_status = 'PROCESSING'
+                WHERE order_number = 'ORD-2026-0829-350E6F'
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- Clean up test event created during debugging -->
+    <changeSet id="20260904100000-2" author="codebuff">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM event WHERE title = 'Test Etkinlik'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            DELETE FROM event WHERE title = 'Test Etkinlik'
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -115,4 +115,6 @@
     <include file="config/liquibase/changelog/20260829170000_store_seed_data.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260830000000_payment_system.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260903000000_schema_align_prod.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260903100000_entity_schema_gaps.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260904100000_fix_order_status_processing.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

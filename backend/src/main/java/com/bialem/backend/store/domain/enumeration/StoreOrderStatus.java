@@ -2,6 +2,7 @@ package com.bialem.backend.store.domain.enumeration;
 
 public enum StoreOrderStatus {
     PENDING_PAYMENT,
+    PROCESSING,
     PAID,
     WAITING_ADMIN_APPROVAL,
     APPROVED,
