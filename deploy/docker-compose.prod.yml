@@ -1,97 +1,121 @@
+# ============================================================================
+# BIALEM BACKEND — PRODUCTION DOCKER COMPOSE
+# ============================================================================
+# Usage:
+#   cd deploy
+#   cp config.env.example config.env   # Edit with your values
+#   docker compose -f docker-compose.prod.yml --env-file config.env up -d
+#
+# Mobile apps connect to this backend at https://your-domain.com
+# ============================================================================
+
 name: bialem
 
 services:
-  db:
-    image: postgres:17.4
-    container_name: bialem-db
+  # ─── PostgreSQL ──────────────────────────────────────────────────────
+  postgresql:
+    image: postgres:17.4-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-bialem}
+      POSTGRES_USER: ${POSTGRES_USER:-bialem}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in config.env}
     volumes:
-      - bialem-postgres-data:/var/lib/postgresql/data
-    networks:
-      - bialem-network
+      - postgresql_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bialem} -d ${POSTGRES_DB:-bialem}"]
+      interval: 10s
       timeout: 5s
-      retries: 20
-    # No host ports. Reachable only as bialem-db:5432 on bialem-network.
+      retries: 10
+      start_period: 30s
+    # In production, PostgreSQL is NOT exposed to the host.
+    # The backend connects via Docker internal network.
+    networks:
+      - bialem-net
 
-  backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-    image: bialem-backend:latest
-    container_name: bialem-backend
+  # ─── Bialem Backend ─────────────────────────────────────────────────
+  app:
+    image: bialem:${APP_VERSION:-latest}
     restart: unless-stopped
     depends_on:
-      db:
+      postgresql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_DOCKER_COMPOSE_ENABLED: "false"
-      SPRING_DATASOURCE_URL: jdbc:postgresql://bialem-db:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_LIQUIBASE_URL: jdbc:postgresql://bialem-db:5432/${POSTGRES_DB}
-      SPRING_LIQUIBASE_USER: ${POSTGRES_USER}
-      SPRING_LIQUIBASE_PASSWORD: ${POSTGRES_PASSWORD}
-      JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET: ${JWT_SECRET}
-      JWT_SECRET: ${JWT_SECRET}
-      JHIPSTER_MAIL_BASE_URL: ${JHIPSTER_MAIL_BASE_URL:-https://bialem.app}
-      JHIPSTER_CORS_ALLOWED_ORIGINS: ${JHIPSTER_CORS_ALLOWED_ORIGINS:-https://bialem.app,https://www.bialem.app,https://localhost,http://localhost,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,capacitor://localhost}
-      JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS: ${JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*,https://localhost:*}
-      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-localhost}
-      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-25}
-      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
-      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
-      SPRING_MAIL_FROM: ${SPRING_MAIL_FROM:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      FIREBASE_ENABLED: ${FIREBASE_ENABLED:-false}
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_CREDENTIALS: ${FIREBASE_CREDENTIALS:-}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - JAVA_OPTS=${JAVA_OPTS:--Xms256m -Xmx512m}
+      # Database
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-bialem}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-bialem}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-bialem}
+      - SPRING_LIQUIBASE_USER=${POSTGRES_USER:-bialem}
+      - SPRING_LIQUIBASE_PASSWORD=${POSTGRES_PASSWORD}
+      # JWT (REQUIRED)
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET}
+      # Mail
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_FROM=${MAIL_FROM:-noreply@bialem.app}
+      # Frontend / CORS
+      - FRONTEND_URL=${FRONTEND_URL:-https://bialem.app}
+      - JHIPSTER_CORS_ALLOWED_ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS:-https://bialem.app,https://www.bialem.app,http://localhost,capacitor://localhost}
+      - JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS=${JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*,https://localhost:*}
+      # Firebase
+      - FIREBASE_ENABLED=${FIREBASE_ENABLED:-false}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
+      - FIREBASE_CREDENTIALS=${FIREBASE_CREDENTIALS:-/app/config/firebase-service-account.json}
+      # OpenAI
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      # Payment
+      - PAYMENT_PROVIDER=${PAYMENT_PROVIDER:-MOCK}
+      - PAYMENT_API_KEY=${PAYMENT_API_KEY:-}
+      - PAYMENT_SECRET_KEY=${PAYMENT_SECRET_KEY:-}
+      - PAYMENT_BASE_URL=${PAYMENT_BASE_URL:-https://sandbox-api.iyzipay.com}
+      - PAYMENT_WEBHOOK_SECRET=${PAYMENT_WEBHOOK_SECRET:-}
+      # API Docs
+      - SPRINGDOC_SWAGGER_UI_ENABLED=${SPRINGDOC_SWAGGER_UI_ENABLED:-false}
+      - SPRINGDOC_API_DOCS_ENABLED=${SPRINGDOC_API_DOCS_ENABLED:-false}
+      - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=${MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED:-false}
     volumes:
-      - ${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:${FIREBASE_CREDENTIALS:-/opt/bialem/secrets/firebase-service-account.json}:ro
+      - app_data:/app/data
+      # Mount Firebase credentials file (optional)
+      # - ${FIREBASE_CREDENTIALS_PATH:-./config/firebase-service-account.json}:/app/config/firebase-service-account.json:ro
     ports:
-      - "191.215.36.29:8080:8080"
-    networks:
-      - bialem-network
+      - "${APP_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/management/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-      start_period: 90s
-
-  frontend:
-    build:
-      # Build context MUST include repo root (tsconfig.base.json).
-      # mobile/tsconfig.json extends ../tsconfig.base.json, so root context is required.
-      context: ..
-      dockerfile: mobile/Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.bialem.app}
-        VITE_PUBLIC_WEB_URL: ${VITE_PUBLIC_WEB_URL:-https://bialem.app}
-    image: bialem-frontend:latest
-    container_name: bialem-frontend
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-    ports:
-      - "127.0.0.1:4174:80"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     networks:
-      - bialem-network
+      - bialem-net
 
-networks:
-  bialem-network:
-    name: bialem-network
-    driver: bridge
+  # ─── (Optional) Nginx reverse proxy for TLS termination ──────────────
+  # Uncomment and configure for HTTPS if not using external load balancer
+  # nginx:
+  #   image: nginx:alpine
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - app
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./certs:/etc/nginx/certs:ro
+  #   networks:
+  #     - bialem-net
 
 volumes:
-  bialem-postgres-data:
-    name: bialem-postgres-data
+  postgresql_data:
+    driver: local
+  app_data:
+    driver: local
+
+networks:
+  bialem-net:
+    driver: bridge
