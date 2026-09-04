@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { request, type ReportDTO } from "../api";
+import { TableSkeleton } from "../components/Feedback";
 
 export default function ReportsPage() {
   const [items, setItems] = useState<ReportDTO[]>([]);
@@ -44,7 +45,7 @@ export default function ReportsPage() {
           <option value="PENDING">PENDING</option><option value="RESOLVED">RESOLVED</option><option value="DISMISSED">DISMISSED</option>
         </select>
       </div>
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr><th>ID</th><th>Hedef</th><th>Hedef ID</th><th>Sebep</th><th>Durum</th><th>Tarih</th><th>İşlemler</th></tr></thead>
           <tbody>

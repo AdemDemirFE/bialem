@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { request, type AdminNotificationDTO } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 const STATUS_LABELS: Record<string, string> = {
   SENT: "Gönderildi", SKIPPED: "Atlandı", FAILED: "Başarısız", PENDING: "Beklemede",
@@ -85,9 +86,9 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr>
             <th>ID</th><th>Tür</th><th>Başlık</th><th>Alıcı</th><th>Durum</th><th>Push</th><th>Tarih</th><th>İşlem</th>

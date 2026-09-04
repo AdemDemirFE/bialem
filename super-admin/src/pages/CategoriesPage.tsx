@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { request, type StoreCategoryDTO, ApiError } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 function CategoryTree({ items, depth = 0, onEdit, onDelete, onToggleActive }: {
   items: StoreCategoryDTO[];
@@ -144,10 +145,10 @@ export default function CategoriesPage() {
         <button className="btn btn-primary" onClick={() => { setForm({ isActive: true, sortOrder: 0 }); setModal("create"); }}>+ Yeni Kategori</button>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr><th>Ad</th><th>Slug</th><th>Üst Kategori</th><th>Sıra</th><th>Durum</th><th>İşlem</th></tr></thead>
           <tbody>

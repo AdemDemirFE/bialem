@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { request, type RoleDTO, type AuthorityDTO } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<RoleDTO[]>([]);
@@ -61,10 +62,10 @@ export default function RolesPage() {
         <button className="btn btn-primary" onClick={() => { setForm({}); setModal("createRole"); }}>+ Yeni Rol</button>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <>
           {/* Roles */}
           <h2 style={{ fontSize: 16, marginBottom: 12 }}>Roller ({roles.length})</h2>

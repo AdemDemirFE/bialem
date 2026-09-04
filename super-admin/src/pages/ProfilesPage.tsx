@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { request, type ProfileDTO } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 export default function ProfilesPage() {
   const [profiles, setProfiles] = useState<ProfileDTO[]>([]);
@@ -62,10 +63,10 @@ export default function ProfilesPage() {
         <input className="form-input" style={{ width: 250 }} placeholder="Kullanıcı adı, görünen ad veya şehir ara..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr>
             <th>ID</th><th>Kullanıcı Adı</th><th>Görünen Ad</th><th>Şehir</th><th>Durum</th><th>Doğrulanmış</th><th>Oluşturulma</th><th>İşlem</th>

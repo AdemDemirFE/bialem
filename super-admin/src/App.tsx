@@ -17,6 +17,8 @@ import NotificationsPage from "./pages/NotificationsPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import RolesPage from "./pages/RolesPage";
 import CommentsPage from "./pages/CommentsPage";
+import RadioContentPage from "./pages/RadioContentPage";
+import RadioConfigPage from "./pages/RadioConfigPage";
 
 function ProtectedRoute({ children, requireSuperAdmin = false }: {
   children: React.ReactNode;
@@ -54,6 +56,8 @@ export default function App() {
       <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
       <Route path="/roles" element={<ProtectedRoute><RolesPage /></ProtectedRoute>} />
       <Route path="/comments" element={<ProtectedRoute><CommentsPage /></ProtectedRoute>} />
+      <Route path="/radio-contents" element={<ProtectedRoute><RadioContentPage /></ProtectedRoute>} />
+      <Route path="/radio-config" element={<ProtectedRoute><RadioConfigPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

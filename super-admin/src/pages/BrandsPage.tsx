@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback, type FormEvent } from "react";
+import { useEffect, useState, useCallback, useMemo, type FormEvent } from "react";
 import { request, type StoreBrandDTO } from "../api";
+import { Alert, EmptyState, TableSkeleton } from "../components/Feedback";
 
 export default function BrandsPage() {
   const [items, setItems] = useState<StoreBrandDTO[]>([]);
@@ -9,6 +10,15 @@ export default function BrandsPage() {
   const [modal, setModal] = useState<"create" | "edit" | null>(null);
   const [form, setForm] = useState<Partial<StoreBrandDTO>>({});
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase("tr-TR");
+    if (!q) return items;
+    return items.filter((b) =>
+      [b.name, b.slug, b.description ?? ""].some((v) => v.toLocaleLowerCase("tr-TR").includes(q))
+    );
+  }, [items, query]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,20 +80,33 @@ export default function BrandsPage() {
   };
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="page-header">
-        <h1>Markalar ({items.length})</h1>
-        <button className="btn btn-primary" onClick={() => { setForm({ isActive: true }); setModal("create"); }}>+ Yeni Marka</button>
+        <h1 className="t-title t-rise">Markalar ({items.length})</h1>
+        <div className="header-actions">
+          <input
+            className="table-search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ad, slug veya açıklama ara..."
+          />
+          <button className="btn btn-primary" onClick={() => { setForm({ isActive: true }); setModal("create"); }}>+ Yeni Marka</button>
+        </div>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : visible.length === 0 ? (
+        <EmptyState
+          title={query.trim() ? "Aramaya uygun marka yok" : "Henüz marka yok"}
+          hint={query.trim() ? "Farklı bir kelimeyle aramayı deneyin." : "Yeni Marka düğmesiyle ilk markayı oluşturun."}
+        />
+      ) : (
         <table className="data-table">
           <thead><tr><th>Logo</th><th>Ad</th><th>Slug</th><th>Açıklama</th><th>Durum</th><th>İşlem</th></tr></thead>
           <tbody>
-            {items.map(b => (
+            {visible.map(b => (
               <tr key={b.id}>
                 <td>
                   {b.logoUrl ? (
@@ -95,8 +118,8 @@ export default function BrandsPage() {
                 <td style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.description || "—"}</td>
                 <td>
                   <span
-                    className={`badge ${b.isActive ? "badge-success" : "badge-danger"}`}
-                    style={{ cursor: "pointer" }}
+                    className={`badge badge-clickable ${b.isActive ? "badge-success" : "badge-danger"}`}
+                    title="Durumu değiştirmek için tıklayın"
                     onClick={() => toggleActive(b)}
                   >
                     {b.isActive ? "Aktif" : "Pasif"}
@@ -108,7 +131,6 @@ export default function BrandsPage() {
                 </td>
               </tr>
             ))}
-            {items.length === 0 && <tr><td colSpan={6} className="empty">Kayıt bulunamadı</td></tr>}
           </tbody>
         </table>
       )}

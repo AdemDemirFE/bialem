@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { request, type NotificationTemplateDTO } from "../api";
+import { TableSkeleton } from "../components/Feedback";
 
 export default function TemplatesPage() {
   const [items, setItems] = useState<NotificationTemplateDTO[]>([]);
@@ -40,7 +41,7 @@ export default function TemplatesPage() {
         <h1>Bildirim Şablonları ({items.length})</h1>
         <button className="btn btn-primary" onClick={() => { setForm({ enabled: true, inAppEnabled: true, pushEnabled: true, priority: "NORMAL", scheduleType: "IMMEDIATE", timezone: "Europe/Istanbul" }); setModal("create"); }}>+ Yeni Şablon</button>
       </div>
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr><th>ID</th><th>Kod</th><th>Tür</th><th>Ad</th><th>Öncelik</th><th>Aktif</th><th>İşlemler</th></tr></thead>
           <tbody>

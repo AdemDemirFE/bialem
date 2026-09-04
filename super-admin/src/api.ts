@@ -482,6 +482,52 @@ export interface AuthorityDTO {
   name: string;
 }
 
+export interface RadioContentDTO {
+  id: number;
+  title: string;
+  description: string | null;
+  contentType: string;
+  sourceType: string;
+  sourceUrl: string | null;
+  audioFile: string | null;
+  thumbnail: string | null;
+  artist: string | null;
+  album: string | null;
+  duration: number | null;
+  category: string | null;
+  programName: string | null;
+  presenter: string | null;
+  publishDate: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  isActive: boolean;
+  isFeatured: boolean;
+  sortOrder: number | null;
+  playCount: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RadioConfigDTO {
+  id: number;
+  radioName: string;
+  slogan: string | null;
+  logo: string | null;
+  cover: string | null;
+  liveStreamUrl: string | null;
+  isLive: boolean;
+  currentProgram: string | null;
+  currentTrack: string | null;
+  websiteUrl: string | null;
+  facebookUrl: string | null;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
+  metadataJson: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardDTO {
   totalUsers: number;
   totalProfiles: number;

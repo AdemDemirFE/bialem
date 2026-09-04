@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, type FormEvent } from "react";
 import { request, type AdminUserDTO } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<AdminUserDTO[]>([]);
@@ -74,10 +75,10 @@ export default function UsersPage() {
         <button className="btn btn-primary" onClick={() => { setForm({}); setModal("create"); }}>+ Yeni Kullanıcı</button>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <table className="data-table">
           <thead><tr>
             <th>ID</th><th>Login</th><th>Ad Soyad</th><th>E-posta</th><th>Durum</th><th>Roller</th><th>İşlemler</th>

@@ -4,6 +4,7 @@ import {
   type StoreOrderDTO, type StoreOrderDetailDTO,
   type StoreShippingDTO, type StoreShippingRequest,
 } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 const SHIPPING_STATUSES = ["PENDING_PAYMENT", "WAITING_ADMIN_APPROVAL", "APPROVED", "PREPARING", "READY_FOR_SHIPPING", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"];
 const SHIPPING_LABELS: Record<string, string> = {
@@ -159,10 +160,10 @@ export default function ShipmentsPage() {
         </select>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <>
           <table className="data-table">
             <thead><tr>
@@ -207,7 +208,7 @@ export default function ShipmentsPage() {
       {(detail || detailLoading) && (
         <div className="modal-overlay" onClick={() => setDetail(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 680, maxWidth: "95vw" }}>
-            {detailLoading ? <div className="loading">Yükleniyor...</div> : detail && (
+            {detailLoading ? <TableSkeleton rows={5} /> : detail && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 16 }}>
                   <div>

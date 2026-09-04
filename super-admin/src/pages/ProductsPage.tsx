@@ -5,6 +5,7 @@ import {
   type StoreCategoryDTO, type StoreBrandDTO,
   type StoreProductImageDTO, ApiError,
 } from "../api";
+import { Alert, TableSkeleton } from "../components/Feedback";
 
 const STATUSES = ["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"];
 
@@ -208,10 +209,10 @@ export default function ProductsPage() {
         <button className="btn btn-primary" onClick={openCreate}>+ Yeni Ürün</button>
       </div>
 
-      {error && <div className="login-error" style={{ marginBottom: 12 }}>{error}</div>}
-      {success && <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid var(--success)", color: "var(--success)", padding: "8px 12px", borderRadius: "var(--radius)", marginBottom: 12 }}>{success}</div>}
+      {error && <Alert kind="error">{error}</Alert>}
+      {success && <Alert kind="success">{success}</Alert>}
 
-      {loading ? <div className="loading">Yükleniyor...</div> : (
+      {loading ? <TableSkeleton rows={6} /> : (
         <>
           <table className="data-table">
             <thead><tr>
@@ -257,7 +258,7 @@ export default function ProductsPage() {
       {(detail || detailLoading) && (
         <div className="modal-overlay" onClick={() => setDetail(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 640 }}>
-            {detailLoading ? <div className="loading">Yükleniyor...</div> : detail && (
+            {detailLoading ? <TableSkeleton rows={5} /> : detail && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 16 }}>
                   <h2 style={{ margin: 0 }}>{detail.name}</h2>
