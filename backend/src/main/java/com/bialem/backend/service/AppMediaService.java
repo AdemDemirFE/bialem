@@ -29,7 +29,16 @@ public class AppMediaService {
     private static final Logger LOG = LoggerFactory.getLogger(AppMediaService.class);
     private static final int MAX_PROXY_BYTES = 5 * 1024 * 1024;
     private static final int MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
-    private static final Set<String> UPLOAD_BUCKETS = Set.of("community-covers", "event-covers", "profile-avatars", "post-media", "stories");
+    private static final Set<String> UPLOAD_BUCKETS = Set.of(
+        "community-covers",
+        "event-covers",
+        "profile-avatars",
+        "post-media",
+        "stories",
+        "general",
+        "store-products",
+        "partner-venues"
+    );
     private static final Set<String> UPLOAD_IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
     private static final int MAX_REDIRECTS = 5;
     private static final Set<String> PROXY_HOSTS = Set.of(
