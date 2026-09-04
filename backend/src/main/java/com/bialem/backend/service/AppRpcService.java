@@ -10,6 +10,7 @@ import com.bialem.backend.security.SecurityUtils;
 import com.bialem.backend.notification.NotificationEvent;
 import com.bialem.backend.notification.NotificationEventPublisher;
 import com.bialem.backend.web.rest.vm.AppQueryRequest.AppQueryResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.math.BigDecimal;
@@ -39,6 +40,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class AppRpcService {
 
     private static final Logger LOG = LoggerFactory.getLogger(AppRpcService.class);
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @PersistenceContext
     private EntityManager em;
@@ -437,6 +440,16 @@ public class AppRpcService {
             memberships.merge(rootId, membership, (current, candidate) ->
                 membershipPriority(candidate) > membershipPriority(current) ? candidate : current);
         }
+        Map<Long, Long> approvedMemberCounts = new HashMap<>();
+        for (Object[] countRow : em
+            .createQuery(
+                "select m.community.id, count(m) from CommunityMember m where m.status = :status group by m.community.id",
+                Object[].class
+            )
+            .setParameter("status", CommunityMemberStatus.APPROVED)
+            .getResultList()) {
+            approvedMemberCounts.put((Long) countRow[0], (Long) countRow[1]);
+        }
         return em
             .createQuery(
                 "select c from Community c where c.parent is null and c.name is not null and trim(c.name) <> '' " +
@@ -453,6 +466,7 @@ public class AppRpcService {
                 row.put("membership_status", membership == null ? null : membership.getStatus().name().toLowerCase(Locale.ROOT));
                 row.put("membership_role", membership == null ? null : membership.getRole().name().toLowerCase(Locale.ROOT));
                 row.put("is_member", membership != null && membership.getStatus() == CommunityMemberStatus.APPROVED);
+                row.put("member_count", approvedMemberCounts.getOrDefault(community.getId(), 0L));
                 return row;
             })
             .toList();
@@ -965,9 +979,14 @@ public class AppRpcService {
                 .setParameter("id", group.getId())
                 .setParameter("now", now)
                 .getResultList();
-            storiesByGroup.put(group.getId(), groupStories);
+            List<Story> visible = groupStories.stream().filter(story -> canViewStory(me, story)).toList();
+            storiesByGroup.put(group.getId(), visible);
         }
-        return groups.stream().map(group -> groupRow(group, viewed, storiesByGroup.getOrDefault(group.getId(), List.of()))).toList();
+        return groups
+            .stream()
+            .filter(group -> !storiesByGroup.getOrDefault(group.getId(), List.of()).isEmpty())
+            .map(group -> groupRow(group, viewed, storiesByGroup.getOrDefault(group.getId(), List.of())))
+            .toList();
     }
 
     private Object storyDetail(Long storyId) {
@@ -976,6 +995,7 @@ public class AppRpcService {
             return List.of();
         }
         Profile me = support.currentProfile();
+        requireStoryVisible(me, story);
         boolean viewed = one(
             "select v from StoryView v where v.story.id = :id and v.viewer = :me",
             StoryView.class,
@@ -1163,9 +1183,7 @@ public class AppRpcService {
 
     private boolean setStoryReaction(Profile me, Long storyId, String reactionTypeName) {
         Story story = em.find(Story.class, storyId);
-        if (story == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story bulunamadı");
-        }
+        requireStoryVisible(me, story);
         StoryReactionType reactionType;
         try {
             reactionType = StoryReactionType.valueOf(reactionTypeName.toUpperCase(Locale.ROOT));
@@ -1189,6 +1207,10 @@ public class AppRpcService {
     }
 
     private boolean removeStoryReaction(Profile me, Long storyId) {
+        Story story = em.find(Story.class, storyId);
+        if (story != null) {
+            requireStoryVisible(me, story);
+        }
         StoryReaction existing = one(
             "select r from StoryReaction r where r.story.id = :story and r.user = :me",
             StoryReaction.class,
@@ -1202,9 +1224,7 @@ public class AppRpcService {
 
     private Map<String, Object> storyReactions(Profile me, Long storyId) {
         Story story = em.find(Story.class, storyId);
-        if (story == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story bulunamadı");
-        }
+        requireStoryVisible(me, story);
         StoryReaction mine = one(
             "select r from StoryReaction r where r.story.id = :story and r.user = :me",
             StoryReaction.class,
@@ -1234,6 +1254,7 @@ public class AppRpcService {
     }
 
     private boolean markStoryViewed(Profile me, Long storyId) {
+        requireStoryVisible(me, em.find(Story.class, storyId));
         StoryView existing = one(
             "select v from StoryView v where v.story.id = :id and v.viewer = :me",
             StoryView.class,
@@ -1251,13 +1272,37 @@ public class AppRpcService {
 
     private String createStory(Profile me, Map<String, Object> args) {
         Instant now = Instant.now();
+        // Visibility data-model rule:
+        // PUBLIC    -> isPublic=true,  shareWithFollowers=false, communityIds=[]
+        // FOLLOWERS -> isPublic=false, shareWithFollowers=true,  communityIds=[]
+        // COMMUNITY -> isPublic=false, shareWithFollowers=false, communityIds=[real ids]
+        List<Long> communityIds = parseCommunityIds(args.get("target_community_ids"));
+        List<Community> audience = new ArrayList<>();
+        for (Long communityId : communityIds) {
+            Community community = em.find(Community.class, communityId);
+            if (community == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Topluluk bulunamadı: " + communityId);
+            }
+            CommunityMember member = membership(me, communityId);
+            if (member == null || member.getStatus() != CommunityMemberStatus.APPROVED) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu topluluğa story paylaşma yetkiniz yok.");
+            }
+            audience.add(community);
+        }
+        boolean isPublic = bool(args.get("target_is_public"));
+        boolean shareWithFollowers = bool(args.get("target_share_with_followers"), true);
+        if (!audience.isEmpty()) {
+            isPublic = false;
+            shareWithFollowers = false;
+        }
+
         Story story = new Story();
         story.setAuthor(me);
         story.setContentType("image".equalsIgnoreCase(str(args.get("target_content_type"))) ? StoryContentType.IMAGE : StoryContentType.TEXT);
         story.setBody(str(args.get("target_body")));
         story.setMediaUrl(str(args.get("target_media_url")));
-        story.setIsPublic(bool(args.get("target_is_public")));
-        story.setShareWithFollowers(bool(args.get("target_share_with_followers"), true));
+        story.setIsPublic(isPublic);
+        story.setShareWithFollowers(shareWithFollowers);
         story.setCreatedAt(now);
         story.setExpiresAt(now.plus(24, ChronoUnit.HOURS));
 
@@ -1277,18 +1322,13 @@ public class AppRpcService {
         em.persist(story);
 
         Long primaryCommunityId = null;
-        Object communityIds = args.get("target_community_ids");
-        if (communityIds instanceof List<?> ids) {
-            for (Object raw : ids) {
-                Long communityId = support.parseLong(raw);
-                if (communityId == null) continue;
-                if (primaryCommunityId == null) primaryCommunityId = communityId;
-                StoryCommunityTarget target = new StoryCommunityTarget();
-                target.setStory(story);
-                target.setCommunity(em.getReference(Community.class, communityId));
-                target.setCreatedAt(now);
-                em.persist(target);
-            }
+        for (Community community : audience) {
+            if (primaryCommunityId == null) primaryCommunityId = community.getId();
+            StoryCommunityTarget target = new StoryCommunityTarget();
+            target.setStory(story);
+            target.setCommunity(community);
+            target.setCreatedAt(now);
+            em.persist(target);
         }
 
         if (event != null && event.getCommunity() != null && primaryCommunityId == null) {
@@ -1301,7 +1341,61 @@ public class AppRpcService {
         attachHashtags(story, args.get("target_hashtags"), now);
         attachElements(story, args.get("target_elements"), now);
 
+        // Flush inside the RPC transaction so that any data-access failure
+        // (FK, NOT NULL, truncation) is caught by invoke() and returned as a
+        // controlled business error instead of escaping to a masked HTTP 500
+        // at transaction-commit time.
+        em.flush();
+
         return support.stringify(story.getId());
+    }
+
+    private List<Long> parseCommunityIds(Object raw) {
+        if (!(raw instanceof List<?> list)) return List.of();
+        Set<Long> ids = new java.util.LinkedHashSet<>();
+        for (Object item : list) {
+            Long parsed = support.parseLong(item);
+            if (parsed != null) ids.add(parsed);
+        }
+        return List.copyOf(ids);
+    }
+
+    private boolean isApprovedMember(Profile me, Long communityId) {
+        if (me == null || communityId == null) return false;
+        CommunityMember member = membership(me, communityId);
+        return member != null && member.getStatus() == CommunityMemberStatus.APPROVED;
+    }
+
+    private boolean isFollower(Profile viewer, Profile author) {
+        if (viewer == null || author == null || author.getId() == null) return false;
+        if (viewer.getId().equals(author.getId())) return true;
+        return !em
+            .createQuery("select f.id from Follow f where f.follower = :viewer and f.followed = :author", Long.class)
+            .setParameter("viewer", viewer)
+            .setParameter("author", author)
+            .setMaxResults(1)
+            .getResultList()
+            .isEmpty();
+    }
+
+    private boolean canViewStory(Profile me, Story story) {
+        if (story == null || me == null) return false;
+        if (story.getAuthor() != null && me.getId().equals(story.getAuthor().getId())) return true;
+        if (Boolean.TRUE.equals(story.getIsPublic())) return true;
+        if (Boolean.TRUE.equals(story.getShareWithFollowers()) && isFollower(me, story.getAuthor())) return true;
+        for (StoryCommunityTarget target : story.getCommunityTargets()) {
+            if (target.getCommunity() != null && isApprovedMember(me, target.getCommunity().getId())) return true;
+        }
+        return false;
+    }
+
+    private void requireStoryVisible(Profile me, Story story) {
+        if (story == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Story bulunamadı");
+        }
+        if (!canViewStory(me, story)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu story'yi görüntüleme yetkiniz yok.");
+        }
     }
 
     private StoryGroup resolveStoryGroup(Profile me, Event event, Long communityId, String locationName, BigDecimal latitude, BigDecimal longitude, Instant expiresAt) {
@@ -1401,10 +1495,23 @@ public class AppRpcService {
             element.setWidth(parseDouble(map.get("width")));
             element.setHeight(parseDouble(map.get("height")));
             Object metadata = map.get("metadata");
-            element.setMetadataJson(metadata == null ? null : metadata.toString());
+            element.setMetadataJson(toJsonMetadata(metadata));
             element.setSortOrder(order++);
             element.setCreatedAt(now);
             em.persist(element);
+        }
+    }
+
+    private String toJsonMetadata(Object metadata) {
+        if (metadata == null) return null;
+        if (metadata instanceof String text) return text;
+        try {
+            String json = OBJECT_MAPPER.writeValueAsString(metadata);
+            // story_element.metadata_json is varchar(4000) on DBs without the
+            // text-alignment migration; never let an oversized sticker break the insert.
+            return json.length() > 4000 ? json.substring(0, 4000) : json;
+        } catch (Exception ex) {
+            return String.valueOf(metadata);
         }
     }
 

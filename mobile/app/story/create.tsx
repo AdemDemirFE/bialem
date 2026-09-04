@@ -65,8 +65,15 @@ export type StoryElement = {
   metadata?: Record<string, any>;
 };
 
-type CommunityOption = { community_id?: string | null; community?: { id?: number; name?: string; slug?: string } | null };
+type AudienceCommunity = {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  memberCount?: number | null;
+};
 type EventOption = { event_id?: string | null; events?: { id?: string; title?: string; starts_at?: string } | null };
+
+type VisibilityMode = "everyone" | "followers" | "community";
 type HashtagOption = { hashtag_id: string; name: string; normalized_name: string; usage_count: number };
 
 export default function CreateStoryScreen() {
@@ -86,13 +93,12 @@ export default function CreateStoryScreen() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const [shareWithEveryone, setShareWithEveryone] = useState(false);
-  const [shareWithFollowers, setShareWithFollowers] = useState(true);
-  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState<VisibilityMode>("followers");
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ name: string; latitude?: number; longitude?: number } | null>(null);
 
-  const [communities, setCommunities] = useState<CommunityOption[]>([]);
+  const [communities, setCommunities] = useState<AudienceCommunity[]>([]);
   const [events, setEvents] = useState<EventOption[]>([]);
   const [hashtagQuery, setHashtagQuery] = useState("");
   const [hashtags, setHashtags] = useState<HashtagOption[]>([]);
@@ -104,10 +110,27 @@ export default function CreateStoryScreen() {
     if (!user) return;
     const load = async () => {
       const [cResult, eResult] = await Promise.all([
-        api.communityMembers.listByUser(user.id, "approved"),
+        api.rpc("get_communities_with_my_membership"),
         api.rpc("get_my_events")
       ]);
-      if (!cResult.error) setCommunities((cResult.data ?? []) as unknown as CommunityOption[]);
+      if (!cResult.error && Array.isArray(cResult.data)) {
+        // Authoritative audience source: only APPROVED memberships, real names,
+        // deduplicated by community ID (never render the "Topluluk" fallback twice).
+        const byId = new Map<string, AudienceCommunity>();
+        for (const row of cResult.data as Array<Record<string, any>>) {
+          if (row?.is_member !== true) continue;
+          const id = String(row?.id ?? row?.community_id ?? "").trim();
+          const name = String(row?.name ?? "").trim();
+          if (!id || !name || byId.has(id)) continue;
+          byId.set(id, {
+            id,
+            name,
+            avatarUrl: (row?.cover_image_url ?? row?.avatar_url ?? null) as string | null,
+            memberCount: typeof row?.member_count === "number" ? row.member_count : Number(row?.member_count ?? 0) || 0
+          });
+        }
+        setCommunities([...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "tr")));
+      }
       setLoadingCommunities(false);
       if (!eResult.error && Array.isArray(eResult.data)) {
         const eventRows = (eResult.data as Array<{ event_id?: string; event_id_raw?: string; title?: string; starts_at?: string }>)
@@ -221,13 +244,24 @@ export default function CreateStoryScreen() {
         .filter((el) => el.type === "HASHTAG")
         .map((el) => el.content.replace(/^#/, ""));
 
+      if (visibility === "community" && !selectedCommunityId) {
+        setError("Topluluk Story'si için bir topluluk seç.");
+        setUploading(false);
+        return;
+      }
+      const communityIdNumber = selectedCommunityId ? Number(selectedCommunityId) : NaN;
       const payload: Record<string, any> = {
         target_content_type: media ? "image" : "text",
         target_body: caption.trim() || null,
         target_media_url: mediaUrl,
-        target_is_public: shareWithEveryone,
-        target_share_with_followers: shareWithFollowers,
-        target_community_ids: selectedCommunityIds.filter((id) => id && id !== "null"),
+        // Visibility data-model contract:
+        // PUBLIC    -> true,  false, []
+        // FOLLOWERS -> false, true,  []
+        // COMMUNITY -> false, false, [real community ID]
+        target_is_public: visibility === "everyone",
+        target_share_with_followers: visibility === "followers",
+        target_community_ids:
+          visibility === "community" && Number.isFinite(communityIdNumber) ? [communityIdNumber] : [],
         target_event_id: selectedEventId,
         target_location: selectedLocation,
         target_hashtags: hashtagNames,
@@ -381,15 +415,14 @@ export default function CreateStoryScreen() {
       <CommunityPickerSheet
         visible={activeSheet === "community"}
         communities={communities}
-        selectedIds={selectedCommunityIds}
         loading={loadingCommunities}
         onClose={() => setActiveSheet(null)}
         onToggle={(id, name) => {
-          setSelectedCommunityIds((current) =>
-            current.includes(id) ? current.filter((c) => c !== id) : [...current, id]
-          );
-          if (!elements.some((el) => el.type === "COMMUNITY" && el.metadata?.community_id === id)) {
-            addElement({ type: "COMMUNITY", content: `@${name}`, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.4)", fontSize: 18, metadata: { community_id: id } });
+          // Sticker is visual only: it never changes the Story audience.
+          // Real audience selection happens in the ShareSheet (visibility + communityId).
+          const numericId = Number(id);
+          if (!elements.some((el) => el.type === "COMMUNITY" && Number(el.metadata?.community_id) === numericId)) {
+            addElement({ type: "COMMUNITY", content: `@${name}`, color: "#FFFFFF", backgroundColor: "rgba(0,0,0,0.4)", fontSize: 18, metadata: { community_id: Number.isFinite(numericId) ? numericId : id } });
           }
         }}
       />
@@ -414,15 +447,14 @@ export default function CreateStoryScreen() {
         onClose={() => setActiveSheet(null)}
         onShare={() => void shareStory()}
         sharing={uploading}
-        shareWithEveryone={shareWithEveryone}
-        shareWithFollowers={shareWithFollowers}
-        selectedCommunityIds={selectedCommunityIds}
+        visibility={visibility}
+        selectedCommunityId={selectedCommunityId}
         communities={communities}
-        onToggleEveryone={() => setShareWithEveryone((v) => !v)}
-        onToggleFollowers={() => setShareWithFollowers((v) => !v)}
-        onToggleCommunity={(id) =>
-          setSelectedCommunityIds((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]))
-        }
+        loadingCommunities={loadingCommunities}
+        onSelectVisibility={(mode, communityId) => {
+          setVisibility(mode);
+          setSelectedCommunityId(mode === "community" ? (communityId ?? selectedCommunityId) : null);
+        }}
       />
     </View>
   );
@@ -748,17 +780,26 @@ function LocationPickerSheet({
   );
 }
 
+function CommunityAvatar({ name, avatarUrl, size = 40 }: { name: string; avatarUrl?: string | null; size?: number }) {
+  if (avatarUrl) {
+    return <Image source={{ uri: avatarUrl }} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.surfaceStrong }} />;
+  }
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.accentSoft, alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ fontSize: size * 0.45, fontWeight: "900", color: colors.accent }}>{(name || "?").slice(0, 1).toLocaleUpperCase("tr")}</Text>
+    </View>
+  );
+}
+
 function CommunityPickerSheet({
   visible,
   communities,
-  selectedIds,
   loading,
   onClose,
   onToggle
 }: {
   visible: boolean;
-  communities: CommunityOption[];
-  selectedIds: string[];
+  communities: AudienceCommunity[];
   loading: boolean;
   onClose: () => void;
   onToggle: (id: string, name: string) => void;
@@ -774,19 +815,23 @@ function CommunityPickerSheet({
               <Ionicons name="close" size={24} color={colors.ink} />
             </Pressable>
           </View>
-          {loading ? <ActivityIndicator color={colors.accent} /> : (
+          <Text style={styles.sheetHint}>Etiket yalnızca görseldir; Story'nin kimlerin göreceğini Paylaşım seçenekleri belirler.</Text>
+          {loading ? <ActivityIndicator color={colors.accent} /> : communities.length === 0 ? (
+            <Text style={styles.emptyState}>Henüz bir topluluğa katılmadın.</Text>
+          ) : (
             <ScrollView style={{ maxHeight: 320 }}>
-              {communities.map((c, idx) => {
-                const id = c.community_id || String(c.community?.id ?? "");
-                if (!id) return null;
-                const selected = selectedIds.includes(id);
-                return (
-                  <Pressable key={id || idx} style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]} onPress={() => onToggle(id, c.community?.name ?? "Topluluk")}>
-                    <Text style={styles.sheetRowTitle}>{c.community?.name ?? "Topluluk"}</Text>
-                    {selected && <Ionicons name="checkmark" size={20} color={colors.accent} />}
-                  </Pressable>
-                );
-              })}
+              {communities.map((c) => (
+                <Pressable key={c.id} style={styles.sheetRowItem} onPress={() => onToggle(c.id, c.name)}>
+                  <View style={styles.communityRow}>
+                    <CommunityAvatar name={c.name} avatarUrl={c.avatarUrl} />
+                    <View style={styles.communityText}>
+                      <Text style={styles.sheetRowTitle} numberOfLines={1}>{c.name}</Text>
+                      <Text style={styles.sheetRowMeta}>{c.memberCount ?? 0} üye</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="add-circle-outline" size={22} color={colors.accent} />
+                </Pressable>
+              ))}
             </ScrollView>
           )}
         </View>
@@ -847,26 +892,23 @@ function ShareSheet({
   onClose,
   onShare,
   sharing,
-  shareWithEveryone,
-  shareWithFollowers,
-  selectedCommunityIds,
+  visibility,
+  selectedCommunityId,
   communities,
-  onToggleEveryone,
-  onToggleFollowers,
-  onToggleCommunity
+  loadingCommunities,
+  onSelectVisibility
 }: {
   visible: boolean;
   onClose: () => void;
   onShare: () => void;
   sharing: boolean;
-  shareWithEveryone: boolean;
-  shareWithFollowers: boolean;
-  selectedCommunityIds: string[];
-  communities: CommunityOption[];
-  onToggleEveryone: () => void;
-  onToggleFollowers: () => void;
-  onToggleCommunity: (id: string) => void;
+  visibility: VisibilityMode;
+  selectedCommunityId: string | null;
+  communities: AudienceCommunity[];
+  loadingCommunities: boolean;
+  onSelectVisibility: (mode: VisibilityMode, communityId?: string | null) => void;
 }) {
+  const selectedCommunity = communities.find((c) => c.id === selectedCommunityId) ?? null;
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.sheetOverlay}>
@@ -878,24 +920,59 @@ function ShareSheet({
               <Ionicons name="close" size={24} color={colors.ink} />
             </Pressable>
           </View>
-          <Pressable style={styles.sheetRowItem} onPress={onToggleEveryone}>
-            <Text style={styles.sheetRowTitle}>Herkes</Text>
-            {shareWithEveryone && <Ionicons name="checkmark" size={20} color={colors.accent} />}
-          </Pressable>
-          <Pressable style={styles.sheetRowItem} onPress={onToggleFollowers}>
-            <Text style={styles.sheetRowTitle}>Takipçilerim</Text>
-            {shareWithFollowers && <Ionicons name="checkmark" size={20} color={colors.accent} />}
-          </Pressable>
-          {communities.map((c) => {
-            const id = c.community_id || String(c.community?.id ?? "");
-            if (!id) return null;
-            return (
-              <Pressable key={id} style={styles.sheetRowItem} onPress={() => onToggleCommunity(id)}>
-                <Text style={styles.sheetRowTitle}>{c.community?.name ?? "Topluluk"}</Text>
-                {selectedCommunityIds.includes(id) && <Ionicons name="checkmark" size={20} color={colors.accent} />}
-              </Pressable>
-            );
-          })}
+          <ScrollView style={{ maxHeight: 380 }}>
+            <Pressable
+              style={[styles.sheetRowItem, visibility === "everyone" && styles.sheetRowItemActive]}
+              onPress={() => onSelectVisibility("everyone")}
+            >
+              <View style={styles.communityRow}>
+                <Ionicons name="globe-outline" size={22} color={colors.accent} />
+                <Text style={styles.sheetRowTitle}>Herkese</Text>
+              </View>
+              {visibility === "everyone" && <Ionicons name="checkmark-circle" size={22} color={colors.accent} />}
+            </Pressable>
+            <Pressable
+              style={[styles.sheetRowItem, visibility === "followers" && styles.sheetRowItemActive]}
+              onPress={() => onSelectVisibility("followers")}
+            >
+              <View style={styles.communityRow}>
+                <Ionicons name="people-outline" size={22} color={colors.accent} />
+                <Text style={styles.sheetRowTitle}>Takipçilerim</Text>
+              </View>
+              {visibility === "followers" && <Ionicons name="checkmark-circle" size={22} color={colors.accent} />}
+            </Pressable>
+            <Text style={styles.sectionTitle}>Topluluklarım</Text>
+            {loadingCommunities ? <ActivityIndicator color={colors.accent} /> : communities.length === 0 ? (
+              <Text style={styles.emptyState}>Henüz bir topluluğa katılmadın.</Text>
+            ) : (
+              communities.map((c) => {
+                const selected = visibility === "community" && selectedCommunityId === c.id;
+                return (
+                  <Pressable
+                    key={c.id}
+                    style={[styles.sheetRowItem, selected && styles.sheetRowItemActive]}
+                    onPress={() => onSelectVisibility("community", c.id)}
+                  >
+                    <View style={styles.communityRow}>
+                      <CommunityAvatar name={c.name} avatarUrl={c.avatarUrl} />
+                      <View style={styles.communityText}>
+                        <Text style={styles.sheetRowTitle} numberOfLines={1}>{c.name}</Text>
+                        <Text style={styles.sheetRowMeta}>{c.memberCount ?? 0} üye</Text>
+                      </View>
+                    </View>
+                    {selected
+                      ? <Ionicons name="checkmark-circle" size={22} color={colors.accent} />
+                      : <Ionicons name="ellipse-outline" size={22} color={colors.muted} />}
+                  </Pressable>
+                );
+              })
+            )}
+          </ScrollView>
+          {visibility === "community" && selectedCommunity && (
+            <Text style={styles.privacyNote}>
+              Bu Story yalnızca {selectedCommunity.name} üyeleri tarafından görülebilir.
+            </Text>
+          )}
           <Pressable style={[styles.sheetPrimary, sharing && styles.disabled]} disabled={sharing} onPress={onShare}>
             {sharing ? <ActivityIndicator size="small" color={colors.actionText} /> : <Text style={styles.sheetPrimaryText}>Story paylaş</Text>}
           </Pressable>
@@ -989,5 +1066,11 @@ const styles = StyleSheet.create({
   sheetRowItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   sheetRowItemActive: { backgroundColor: colors.accentSoft },
   sheetRowTitle: { fontSize: 15, fontWeight: "800", color: colors.ink },
-  sheetRowMeta: { fontSize: 12, color: colors.muted }
+  sheetRowMeta: { fontSize: 12, color: colors.muted },
+  sheetHint: { fontSize: 12, color: colors.muted, marginBottom: 8 },
+  sectionTitle: { fontSize: 13, fontWeight: "900", color: colors.muted, marginTop: 12, marginBottom: 4, textTransform: "uppercase" as const },
+  communityRow: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+  communityText: { flex: 1 },
+  emptyState: { fontSize: 14, fontWeight: "700", color: colors.muted, textAlign: "center" as const, paddingVertical: 16 },
+  privacyNote: { fontSize: 12, fontWeight: "700", color: colors.muted, backgroundColor: colors.accentSoft, borderRadius: 10, padding: 10, marginTop: 8, textAlign: "center" as const }
 });
