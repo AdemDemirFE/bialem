@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Merkezi görsel kayıt tablosu.
+        Tüm resim alanları dosya ya da URL ile buraya kayıt açar;
+        gösterim her zaman çözümlenen adres üzerinden yapılır.
+        Idempotent: tablo/zorunluluk yoksa MARK_RAN ile geçilir.
+        Veri silen işlem içermez.
+    -->
+
+    <changeSet id="20260905090000-1" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="image"/>
+            </not>
+        </preConditions>
+        <createTable tableName="image">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_type" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bucket" type="varchar(64)"/>
+            <column name="storage_path" type="varchar(512)"/>
+            <column name="original_url" type="varchar(2048)"/>
+            <column name="content_type" type="varchar(100)"/>
+            <column name="file_size" type="bigint"/>
+            <column name="width" type="integer"/>
+            <column name="height" type="integer"/>
+            <column name="checksum" type="varchar(64)"/>
+            <column name="created_by_id" type="bigint"/>
+            <column name="created_at" type="${datetimeType}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="image" columnName="created_at" columnDataType="${datetimeType}"/>
+    </changeSet>
+
+    <changeSet id="20260905090000-2" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="image"/>
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_image_created_by_id"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="image" baseColumnNames="created_by_id"
+                                 constraintName="fk_image_created_by_id"
+                                 referencedTableName="jhi_user" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20260905090000-3" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="image"/>
+            <not>
+                <indexExists tableName="image" indexName="idx_image_checksum"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="image" indexName="idx_image_checksum">
+            <column name="checksum"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260905090000-4" author="bialem">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="image"/>
+            <not>
+                <indexExists tableName="image" indexName="idx_image_created_at"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="image" indexName="idx_image_created_at">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

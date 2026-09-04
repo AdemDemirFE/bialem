@@ -46,7 +46,7 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bialem}
     username: ${SPRING_DATASOURCE_USERNAME:bialem}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    password: ${SPRING_DATASOURCE_PASSWORD:?Set SPRING_DATASOURCE_PASSWORD environment variable}
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -55,7 +55,7 @@ spring:
     contexts: prod
     url: ${SPRING_LIQUIBASE_URL:${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bialem}}
     user: ${SPRING_LIQUIBASE_USER:${SPRING_DATASOURCE_USERNAME:bialem}}
-    password: ${SPRING_LIQUIBASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+    password: ${SPRING_LIQUIBASE_PASSWORD:${SPRING_DATASOURCE_PASSWORD}}
   mail:
     host: ${SPRING_MAIL_HOST:${MAIL_HOST:localhost}}
     port: ${SPRING_MAIL_PORT:${MAIL_PORT:25}}
@@ -122,13 +122,13 @@ jhipster:
         # - In the Consul configserver
         # - In a separate `application-prod.yml` file, in the same folder as your executable JAR file
         # - In the `JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET` environment variable
-        base64-secret: ${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET:${JWT_SECRET:}}
+        base64-secret: ${JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET:${JWT_SECRET:?Set JWT_SECRET environment variable (generate with: openssl rand -base64 64)}}
         # Token is valid 24 hours
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   cors:
-    allowed-origins: ${JHIPSTER_CORS_ALLOWED_ORIGINS:https://bialem.app,https://www.bialem.app,https://localhost,http://localhost,capacitor://localhost}
-    allowed-origin-patterns: ${JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://localhost:*}
+    allowed-origins: ${JHIPSTER_CORS_ALLOWED_ORIGINS:https://bialem.app,https://www.bialem.app,http://localhost,capacitor://localhost,ionic://localhost,http://localhost:8083,http://localhost:8100}
+    allowed-origin-patterns: ${JHIPSTER_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://localhost:*,capacitor://localhost,ionic://localhost}
     allowed-methods: '*'
     allowed-headers: '*'
     exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'

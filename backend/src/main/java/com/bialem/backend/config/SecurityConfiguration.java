@@ -73,6 +73,14 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/profiles/{id}")).authenticated()
                     .requestMatchers(mvc.pattern(HttpMethod.PUT, "/api/profiles/{id}")).authenticated()
                     .requestMatchers(mvc.pattern(HttpMethod.PATCH, "/api/profiles/{id}")).authenticated()
+                    // Radio public endpoints: mobile/web clients read station config and active content without auth.
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-configs/latest")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/active")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/featured")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/categories")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/by-type/**")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/by-category/**")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/radio-contents/{id}")).permitAll()
                     // Generated entity CRUD endpoints are an administrative surface. Mobile/web clients use /api/app/**.
                     .requestMatchers(mvc.pattern("/api/**")).hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SUPER_ADMIN)
                     .requestMatchers(mvc.pattern("/management/health")).permitAll()
