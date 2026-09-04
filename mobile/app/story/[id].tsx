@@ -383,7 +383,11 @@ export default function StoryViewerScreen() {
           ) : null}
         </View>
         <View style={styles.headerActions}>
-          <Pressable style={styles.iconButton} onPress={togglePause} accessibilityLabel={paused ? "Başlat" : "Durdur"}>
+          <Pressable
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.75 }]}
+            onPress={togglePause}
+            accessibilityLabel={paused ? "Başlat" : "Durdur"}
+          >
             <Ionicons name={paused ? "play" : "pause"} size={18} color={colors.onBrand} />
           </Pressable>
           {isOwnStory ? (
@@ -391,7 +395,11 @@ export default function StoryViewerScreen() {
               {deleting ? <ActivityIndicator size="small" color={colors.onBrand} /> : <Ionicons name="trash-outline" size={16} color={colors.onBrand} />}
             </Pressable>
           ) : null}
-          <Pressable style={styles.iconButton} onPress={closeViewer} accessibilityLabel="Kapat">
+          <Pressable
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.75 }]}
+            onPress={closeViewer}
+            accessibilityLabel="Kapat"
+          >
             <Ionicons name="close" size={22} color={colors.onBrand} />
           </Pressable>
         </View>
@@ -417,7 +425,7 @@ export default function StoryViewerScreen() {
             return (
               <Pressable
                 key={key}
-                style={[styles.reactionButton, active && styles.reactionButtonActive]}
+                style={({ pressed }) => [styles.reactionButton, active && styles.reactionButtonActive, pressed && { opacity: 0.8, transform: [{ scale: 1.18 }] }]}
                 onPress={() => void sendReaction(key)}
               >
                 <Text style={styles.reactionEmoji}>{emoji}</Text>

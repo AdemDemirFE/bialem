@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementOrder } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -91,7 +92,11 @@ export default function StoreOrdersManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Sipariş Yönetimi" }} />
       {loading && items.length === 0 ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 10 }}>
+          <Skeleton height={96} borderRadius={18} />
+          <Skeleton height={96} borderRadius={18} />
+          <Skeleton height={96} borderRadius={18} />
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -109,7 +114,11 @@ export default function StoreOrdersManagementScreen() {
           renderItem={(info: any) => {
             const item: StoreManagementOrder = info.item;
             return (
-              <Pressable style={s.card} onPress={() => router.push(`/management/store/orders/${item.id}` as never)}>
+              <Reveal index={Math.min(info.index ?? 0, 6)}>
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && { opacity: 0.94 }]}
+                onPress={() => router.push(`/management/store/orders/${item.id}` as never)}
+              >
                 <View style={s.copy}>
                   <Text style={s.number}>{item.orderNumber}</Text>
                   <Text style={s.meta}>Tutar: {formatPrice(item.totalAmount, item.currency)}</Text>
@@ -140,6 +149,7 @@ export default function StoreOrdersManagementScreen() {
                   </Pressable>
                 </View>
               </Pressable>
+              </Reveal>
             );
           }}
         />

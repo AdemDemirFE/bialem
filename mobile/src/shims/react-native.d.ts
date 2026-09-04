@@ -51,6 +51,7 @@ declare module "react-native" {
     style?: ((state: { pressed: boolean }) => any) | Record<string, any> | Array<Record<string, any> | undefined> | undefined;
     onPress?: () => void;
     onLongPress?: () => void;
+    onPressIn?: () => void;
     onPressOut?: () => void;
     delayLongPress?: number;
     disabled?: boolean;

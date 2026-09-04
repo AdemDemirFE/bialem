@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementBrand } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -30,7 +31,11 @@ export default function StoreBrandsManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Marka Yönetimi" }} />
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 10 }}>
+          <Skeleton height={76} borderRadius={18} />
+          <Skeleton height={76} borderRadius={18} />
+          <Skeleton height={76} borderRadius={18} />
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -46,7 +51,10 @@ export default function StoreBrandsManagementScreen() {
           renderItem={(info: any) => {
             const item: StoreManagementBrand = info.item;
             return (
-              <Pressable style={s.card}>
+              <Reveal index={Math.min(info.index ?? 0, 8)}>
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && { opacity: 0.94 }]}
+              >
                 <View style={s.iconShell}>
                   <Ionicons name="pricetag" size={22} color={colors.accent} />
                 </View>
@@ -55,6 +63,7 @@ export default function StoreBrandsManagementScreen() {
                   <Text style={s.meta}>{item.slug} · {item.isActive ? "Aktif" : "Pasif"}</Text>
                 </View>
               </Pressable>
+              </Reveal>
             );
           }}
         />

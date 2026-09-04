@@ -38,6 +38,10 @@ import HomeScreen from "../app/index";
 import AccountScreen from "../app/account";
 import SettingsScreen from "../app/settings";
 import MyPlansScreen from "../app/my-plans";
+import MyTicketsScreen from "../app/my-tickets";
+import TicketOrderDetailScreen from "../app/order/[id]";
+import TicketDetailScreen from "../app/ticket/[id]";
+import EventTicketSelectionScreen from "../app/event/tickets/[id]";
 import CityRadarScreen from "../app/city-radar";
 import CityEventScreen from "../app/city-event/[id]";
 import CommunityScreen from "../app/community/[id]";
@@ -69,6 +73,7 @@ import StorePaymentScreen from "../app/store/payment";
 import PaymentSuccessScreen from "../app/payment/success";
 import PaymentFailureScreen from "../app/payment/failure";
 import PaymentPendingScreen from "../app/payment/pending";
+import PaymentCallbackScreen from "../app/payment/callback";
 import StoreAddressesScreen from "../app/store/addresses";
 import StoreOrdersScreen from "../app/store/orders";
 import StoreOrderDetailScreen from "../app/store/orders/[id]";
@@ -167,6 +172,10 @@ export function App() {
               <Route path="/management/store/addresses" element={<StoreManagementAddressesScreen />} />
               <Route path="/management/store/reviews" element={<StoreManagementReviewsScreen />} />
               <Route path="/my-plans" element={<MyPlansScreen />} />
+              <Route path="/my-tickets" element={<MyTicketsScreen />} />
+              <Route path="/order/:id" element={<TicketOrderDetailScreen />} />
+              <Route path="/ticket/:id" element={<TicketDetailScreen />} />
+              <Route path="/event/tickets/:id" element={<EventTicketSelectionScreen />} />
               <Route path="/city-radar" element={<CityRadarScreen />} />
               <Route path="/city-event/:id" element={<CityEventScreen />} />
               <Route path="/community/:id" element={<CommunityScreen />} />
@@ -199,6 +208,7 @@ export function App() {
               <Route path="/payment/success" element={<PaymentSuccessScreen />} />
               <Route path="/payment/failure" element={<PaymentFailureScreen />} />
               <Route path="/payment/pending" element={<PaymentPendingScreen />} />
+              <Route path="/payment/callback" element={<PaymentCallbackScreen />} />
               <Route path="/store/addresses" element={<StoreAddressesScreen />} />
               <Route path="/cart" element={<CartScreen />} />
               <Route path="/store/orders" element={<StoreOrdersScreen />} />

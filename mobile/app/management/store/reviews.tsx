@@ -1,19 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../../src/animations";
 import { colors } from "../../../src/theme/colors";
 
 export default function StoreReviewsManagementScreen() {
   return (
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Yorum Yönetimi" }} />
-      <View style={s.state}>
+      <Reveal style={s.state}>
         <Ionicons name="chatbubble-ellipses-outline" size={48} color={colors.muted} />
         <Text style={s.title}>Yorum Yönetimi</Text>
         <Text style={s.muted}>
           Ürün değerlendirmelerini görüntülemek ve moderasyon yapmak için backend admin endpoint'i hazırlanacak. Şu anda bu ekran listede görülebilir ve yakında aktif hale getirilecektir.
         </Text>
-      </View>
+      </Reveal>
     </View>
   );
 }

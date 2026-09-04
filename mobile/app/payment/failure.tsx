@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal } from "../../src/animations";
 import { colors } from "../../src/theme/colors";
 
 export default function PaymentFailureScreen() {
@@ -12,18 +13,30 @@ export default function PaymentFailureScreen() {
   return (
     <View style={[s.screen, { paddingBottom: insets.bottom }]}>
       <Stack.Screen options={{ title: "Ödeme Başarısız" }} />
+      <Reveal>
       <View style={s.iconWrap}>
         <Ionicons name="close-circle" size={72} color={colors.danger} />
       </View>
+      </Reveal>
+      <Reveal index={1}>
       <Text style={s.title}>Ödeme işlemi başarısız oldu</Text>
+      </Reveal>
       {reason ? <Text style={s.reason}>{reason}</Text> : null}
       {orderNumber ? <Text style={s.orderNo}>Sipariş No: {orderNumber}</Text> : null}
-      <Pressable style={s.btn} onPress={() => router.replace(`/store/payment?orderNumber=${orderNumber}` as never)}>
+      <Reveal index={2} style={{ width: "100%", gap: 14 }}>
+      <Pressable
+        style={({ pressed }) => [s.btn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+        onPress={() => router.replace(`/store/payment?orderNumber=${orderNumber}` as never)}
+      >
         <Text style={s.btnText}>Tekrar Dene</Text>
       </Pressable>
-      <Pressable style={s.secondaryBtn} onPress={() => router.replace("/store/orders" as never)}>
+      <Pressable
+        style={({ pressed }) => [s.secondaryBtn, pressed && { opacity: 0.9 }]}
+        onPress={() => router.replace("/store/orders" as never)}
+      >
         <Text style={s.secondaryBtnText}>Siparişlerim</Text>
       </Pressable>
+      </Reveal>
     </View>
   );
 }

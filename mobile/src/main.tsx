@@ -4,6 +4,7 @@ import { App } from "./App";
 import { ErrorBoundary } from "./ErrorBoundary";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./components/AppAlert.css";
+import "./theme/fonts.css";
 import "./theme/global.css";
 
 AppRegistry.registerComponent("bialem", () => App);

@@ -3,7 +3,6 @@ import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import QRCode from "react-native-qrcode-svg";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   Share,
@@ -14,6 +13,8 @@ import {
   View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { showAppAlert, showAppConfirm, showAppError, showEventJoinResult } from "../../src/components/AppAlert";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { useAuth } from "../../src/lib/auth";
@@ -495,22 +496,28 @@ export default function EventDetailScreen() {
 
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.loadingText}>Etkinlik yükleniyor...</Text>
+          <Skeleton height={30} width="45%" />
+          <Skeleton height={150} width="100%" />
+          <Skeleton height={220} width="100%" />
         </View>
       ) : !event ? (
-        <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Etkinlik bulunamadı</Text>
-          <Text style={styles.emptyText}>{error || "Bu etkinlik kaydı şu anda görüntülenemiyor."}</Text>
-        </View>
+        <FeedbackState
+          kind="empty"
+          title="Etkinlik bulunamadı"
+          message={error || "Bu etkinlik kaydı şu anda görüntülenemiyor."}
+          onRetry={() => void loadEvent("refresh")}
+        />
       ) : (
         <>
+          <Reveal>
           <View style={styles.hero}>
             <Text style={styles.kicker}>Etkinlik Detayı</Text>
             <Text style={styles.title}>{event.title}</Text>
           <Text style={styles.description}>{event.description || "Açıklama eklenmemiş."}</Text>
           </View>
+          </Reveal>
 
+          <Reveal index={1}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Bilgiler</Text>
             <InfoRow label="Topluluk" value={community?.name ?? "Topluluk yok"} />
@@ -591,8 +598,9 @@ export default function EventDetailScreen() {
               </Text>
             </Pressable>
           </View>
+          </Reveal>
 
-          {event.status !== "CANCELLED" ? <View style={styles.inviteCard}>
+          {event.status !== "CANCELLED" ? <Reveal index={2}><View style={styles.inviteCard}>
             <View style={styles.inviteCopy}>
               <Text style={styles.inviteKicker}>ARKADAŞINI DA GETİR</Text>
               <Text style={styles.inviteTitle}>Bu deneyim birlikte daha güzel.</Text>
@@ -612,14 +620,17 @@ export default function EventDetailScreen() {
                 <Text style={styles.shareText}>Takvim</Text>
               </Pressable>
             </View>
-          </View> : null}
+          </View></Reveal> : null}
 
+          <Reveal index={3}>
           <View style={styles.statsRow}>
             <StatCard label="Yorum" value={String(comments.length)} />
             <StatCard label="Katılıyor" value={String((participationSummary?.approved_count ?? 0) + (participationSummary?.checked_in_count ?? 0))} />
             <StatCard label="Puan" value={averageRating ? `${averageRating}/5` : "-"} />
           </View>
+          </Reveal>
 
+          <Reveal index={4}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Katılım ve etkileşim</Text>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -704,7 +715,9 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
           </View>
+          </Reveal>
 
+          <Reveal index={5}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Yorumlar</Text>
             <Text style={styles.panelHint}>
@@ -728,8 +741,9 @@ export default function EventDetailScreen() {
               <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen bırakabilirsin.</Text>
             ) : (
               <View style={styles.stack}>
-                {comments.map((comment) => (
-                  <View key={comment.id} style={styles.commentCard}>
+                {comments.map((comment, i) => (
+                  <Reveal key={comment.id} index={Math.min(i, 4)}>
+                  <View style={styles.commentCard}>
                     <View style={styles.commentIdentity}>
                       <Text style={styles.commentAuthor}>{maskUser(comment.author_id)}</Text>
                       <TeamIdentityBadge role={commentTeamRoles.get(comment.author_id)} compact />
@@ -752,11 +766,14 @@ export default function EventDetailScreen() {
                       </Text>
                     </Pressable>
                   </View>
+                  </Reveal>
                 ))}
               </View>
             )}
           </View>
+          </Reveal>
 
+          <Reveal index={6}>
           <View style={styles.panel}>
               <Text style={styles.panelTitle}>Yıldız puanı</Text>
             <Text style={styles.panelText}>
@@ -805,6 +822,7 @@ export default function EventDetailScreen() {
               </View>
             ) : null}
           </View>
+          </Reveal>
         </>
       )}
     </ScrollView>

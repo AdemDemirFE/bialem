@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppAlert, showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { managementApi, type ManagedUser } from "../../../src/lib/management-api";
 import { primaryAuthority, roleLabel } from "../../../src/lib/permissions";
@@ -55,17 +56,19 @@ export default function ManagedUserDetail() {
   return <>
     <Stack.Screen options={{ headerShown: true, title: "Kullanıcı Düzenle" }} />
     <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
-      {loading ? <ActivityIndicator color={colors.accent} /> : user ? <>
+      {loading ? <View style={{ gap: 10 }}><Skeleton height={60} borderRadius={16} /><Skeleton height={54} borderRadius={16} /><Skeleton height={54} borderRadius={16} /></View> : user ? <>
+        <Reveal>
         <Text style={styles.title}>{user.firstName} {user.lastName}</Text>
         <Text style={styles.info}>{user.login} · {user.email}</Text>
+        </Reveal>
         <Pressable disabled={updating} onPress={() => void toggle()} style={[styles.status, updating && styles.disabled]}>
           <Text style={styles.roleText}>{user.activated ? "Pasifleştir" : "Aktifleştir"}</Text>
         </Pressable>
         <Text style={styles.section}>ROL</Text>
-        {roles.map(role => <Pressable disabled={updating} key={role} onPress={() => void change(role)} style={[styles.role, role === primaryAuthority(user.authorities) && styles.selected, updating && styles.disabled]}>
+        {roles.map((role, i) => <Reveal key={role} index={Math.min(i, 5)}><Pressable disabled={updating} onPress={() => void change(role)} style={[styles.role, role === primaryAuthority(user.authorities) && styles.selected, updating && styles.disabled]}>
           <Text style={styles.roleText}>{roleLabel([role])}</Text>
           <Text>{role === primaryAuthority(user.authorities) ? "●" : "○"}</Text>
-        </Pressable>)}
+        </Pressable></Reveal>)}
       </> : null}
     </ScrollView>
   </>;

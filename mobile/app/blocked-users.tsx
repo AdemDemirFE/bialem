@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../src/animations";
+import { FeedbackState } from "../src/components/ui/FeedbackState";
 import { api } from "../src/lib/api";
 import { colors } from "../src/theme/colors";
 
@@ -49,14 +51,28 @@ export default function BlockedUsersScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: "Engellenen kullanıcılar" }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+        <Reveal>
         <View style={styles.hero}>
           <View style={styles.icon}><Ionicons name="shield-outline" size={26} color={colors.actionText} /></View>
           <Text style={styles.title}>Güvenli alanını yönet.</Text>
           <Text style={styles.description}>Engellediğin kişiler profilini göremez, seni takip edemez ve seninle etkileşim kuramaz.</Text>
         </View>
+        </Reveal>
 
-        {loading ? <ActivityIndicator color={colors.accent} /> : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {loading ? (
+          <View style={{ gap: 12 }}>
+            <Skeleton height={80} borderRadius={22} />
+            <Skeleton height={80} borderRadius={22} />
+          </View>
+        ) : null}
+        {error ? (
+          <FeedbackState
+            kind="error"
+            title="Liste yüklenemedi"
+            message={error}
+            onRetry={() => void load()}
+          />
+        ) : null}
 
         {!loading && profiles.length === 0 ? (
           <View style={styles.empty}>
@@ -66,8 +82,9 @@ export default function BlockedUsersScreen() {
           </View>
         ) : (
           <View style={styles.list}>
-            {profiles.map((profile) => (
-              <View key={profile.user_id} style={styles.row}>
+            {profiles.map((profile, i) => (
+              <Reveal key={profile.user_id} index={Math.min(i, 6)}>
+              <View style={styles.row}>
                 {profile.avatar_url ? (
                   <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
                 ) : (
@@ -79,10 +96,15 @@ export default function BlockedUsersScreen() {
                   <Text style={styles.name} numberOfLines={1}>{profile.display_name}</Text>
                   <Text style={styles.username} numberOfLines={1}>@{profile.username}</Text>
                 </View>
-                <Pressable style={styles.button} onPress={() => void unblock(profile.user_id)} disabled={busyId === profile.user_id}>
+                <Pressable
+                  style={({ pressed }) => [styles.button, pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] }]}
+                  onPress={() => void unblock(profile.user_id)}
+                  disabled={busyId === profile.user_id}
+                >
                   {busyId === profile.user_id ? <ActivityIndicator size="small" color={colors.actionText} /> : <Text style={styles.buttonText}>Engeli kaldır</Text>}
                 </Pressable>
               </View>
+              </Reveal>
             ))}
           </View>
         )}

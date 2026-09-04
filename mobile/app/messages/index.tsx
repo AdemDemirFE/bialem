@@ -12,6 +12,8 @@ import {
 import { colors } from "../../src/theme/colors";
 import { SkeletonList } from "../../src/components/SkeletonList";
 import { BackButton, IconButton } from "../../src/components/IconButton";
+import { Reveal } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 
 type Filter = "ALL" | "UNREAD";
 
@@ -54,6 +56,7 @@ export default function MessagesScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <Reveal>
       <View style={styles.header}>
         <BackButton size={44} onPress={() => router.back()} backgroundColor={colors.surface as string} />
         <View style={styles.headerCopy}><Text style={styles.kicker}>BAĞLANTILARIN</Text><Text style={styles.title}>Mesajlarım</Text></View>
@@ -61,41 +64,65 @@ export default function MessagesScreen() {
           size={44} color={colors.actionText as string} backgroundColor={colors.action as string} borderColor="transparent"
           onPress={() => { setComposeMode((value) => !value); setQuery(""); }} />
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.searchBox}>
         <Ionicons name="search" size={20} color={colors.muted} />
         <TextInput value={query} onChangeText={setQuery} placeholder={composeMode ? "Mesaj göndereceğin kişiyi ara" : "Kişi veya mesaj ara"} placeholderTextColor={colors.muted} style={styles.searchInput} autoCapitalize="none" />
         {query ? <IconButton icon="close-circle" accessibilityLabel="Aramayı temizle" size={36} iconSize={20}
           color={colors.muted as string} backgroundColor="transparent" borderColor="transparent" onPress={() => setQuery("")} /> : null}
       </View>
+      </Reveal>
 
       {!composeMode ? (
         <View style={styles.filters}>
           {(["ALL", "UNREAD"] as Filter[]).map((value) => (
-            <Pressable key={value} style={[styles.filter, filter === value && styles.filterActive]} onPress={() => setFilter(value)}>
+            <Pressable
+              key={value}
+              style={({ pressed }) => [styles.filter, filter === value && styles.filterActive, pressed && { opacity: 0.92 }]}
+              onPress={() => setFilter(value)}
+            >
               <Text style={[styles.filterText, filter === value && styles.filterTextActive]}>{value === "ALL" ? "Tümü" : "Okunmamış"}</Text>
             </Pressable>
           ))}
         </View>
       ) : <Text style={styles.sectionTitle}>Yeni konuşma</Text>}
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Mesajlar yüklenemedi"
+          message={error}
+          onRetry={() => void load()}
+        />
+      ) : null}
       {loading ? <SkeletonList rows={5} /> : composeMode ? (
-        people.length ? <View style={styles.list}>{people.map((person) => (
-          <Pressable key={person.profileId} style={styles.personCard} onPress={() => void openPerson(person)}>
+        people.length ? <View style={styles.list}>{people.map((person, i) => (
+          <Reveal key={person.profileId} index={Math.min(i, 6)}>
+          <Pressable
+            style={({ pressed }) => [styles.personCard, pressed && { opacity: 0.94 }]}
+            onPress={() => void openPerson(person)}
+          >
             <Avatar uri={person.avatarUrl} name={person.displayName} />
             <View style={styles.cardCopy}><Text style={styles.name}>{person.displayName}</Text><Text style={styles.username}>@{person.username}</Text></View>
             <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.accent} />
           </Pressable>
+          </Reveal>
         ))}</View> : <Empty icon="person-add-outline" title="Kişi bulunamadı" text="Farklı bir ad veya kullanıcı adı deneyebilirsin." />
-      ) : conversations.length ? <View style={styles.list}>{conversations.map((item) => (
-        <Pressable key={item.id} style={[styles.conversationCard, item.unreadCount > 0 && styles.unreadCard]} onPress={() => router.push(`/messages/${item.id}?name=${encodeURIComponent(item.displayName)}&avatar=${encodeURIComponent(item.avatarUrl ?? "")}` as never)}>
+      ) : conversations.length ? <View style={styles.list}>{conversations.map((item, i) => (
+        <Reveal key={item.id} index={Math.min(i, 7)}>
+        <Pressable
+          style={({ pressed }) => [styles.conversationCard, item.unreadCount > 0 && styles.unreadCard, pressed && { opacity: 0.94, transform: [{ scale: 0.99 }] }]}
+          onPress={() => router.push(`/messages/${item.id}?name=${encodeURIComponent(item.displayName)}&avatar=${encodeURIComponent(item.avatarUrl ?? "")}` as never)}
+        >
           <Avatar uri={item.avatarUrl} name={item.displayName} />
           <View style={styles.cardCopy}>
             <View style={styles.cardTop}><Text style={styles.name} numberOfLines={1}>{item.displayName}</Text><Text style={styles.time}>{relativeTime(item.lastMessageAt)}</Text></View>
             <View style={styles.previewRow}><Text style={[styles.preview, item.unreadCount > 0 && styles.previewUnread]} numberOfLines={1}>{item.lastMessage ?? "Yeni konuşma"}</Text>{item.unreadCount > 0 ? <Text style={styles.badge}>{item.unreadCount}</Text> : null}</View>
           </View>
         </Pressable>
+        </Reveal>
       ))}</View> : <Empty icon="chatbubbles-outline" title="Henüz mesajın yok" text="Sağ üstteki kalem simgesinden bir kişi seçip sohbete başlayabilirsin." />}
     </ScrollView>
   );

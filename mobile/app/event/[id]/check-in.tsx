@@ -3,6 +3,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../../src/animations";
 import { BackButton } from "../../../src/components/IconButton";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
@@ -100,16 +101,23 @@ export default function EventCheckInScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRoster(true)} tintColor={colors.accent} />}>
+      <Reveal>
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
         <View style={{ flex: 1 }}><Text style={styles.kicker}>ORGANİZATÖR MERKEZİ</Text><Text style={styles.title}>{eventTitle}</Text></View>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.hero}>
         <View style={styles.heroIcon}><Ionicons name="qr-code" size={30} color={colors.actionText} /></View>
         <View style={{ flex: 1 }}><Text style={styles.heroTitle}>Hızlı ve güvenli giriş</Text><Text style={styles.body}>Katılımcının etkinlik ekranındaki QR kodunu okut.</Text></View>
-        <Pressable style={styles.scanButton} onPress={() => void openScanner()}><Text style={styles.scanText}>QR Tara</Text></Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.scanButton, pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] }]}
+          onPress={() => void openScanner()}
+        ><Text style={styles.scanText}>QR Tara</Text></Pressable>
       </View>
+      </Reveal>
 
       {scannerOpen ? (
         <View style={styles.scannerCard}>
@@ -122,6 +130,7 @@ export default function EventCheckInScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {loading ? <ActivityIndicator color={colors.accent} /> : (
+        <Reveal index={2}>
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Katılımcılar</Text>
           <View style={styles.statsRow}>
@@ -129,8 +138,9 @@ export default function EventCheckInScreen() {
             <MiniStat label="Sırada" value={roster.filter((item) => item.status === "waitlisted").length} />
             <MiniStat label="Giriş" value={roster.filter((item) => item.status === "checked_in").length} />
           </View>
-          {roster.length === 0 ? <Text style={styles.body}>Henüz katılım talebi yok.</Text> : roster.map((item) => (
-            <View key={item.participant_id} style={styles.personCard}>
+          {roster.length === 0 ? <Text style={styles.body}>Henüz katılım talebi yok.</Text> : roster.map((item, i) => (
+            <Reveal key={item.participant_id} index={Math.min(i, 6)}>
+            <View style={styles.personCard}>
               <View style={styles.avatar}><Text style={styles.avatarText}>{item.display_name.slice(0, 1).toUpperCase()}</Text></View>
               <View style={{ flex: 1 }}><Text style={styles.personName}>{item.display_name}</Text><Text style={styles.status}>{statusLabel(item.status)}</Text></View>
               {item.status === "pending" ? (
@@ -142,8 +152,10 @@ export default function EventCheckInScreen() {
                 <Pressable disabled={busyId === item.user_id} style={styles.noShowButton} onPress={() => void markNoShow(item.user_id)}><Text style={styles.noShowText}>Gelmedi</Text></Pressable>
               ) : null}
             </View>
+            </Reveal>
           ))}
         </View>
+        </Reveal>
       )}
     </ScrollView>
   );

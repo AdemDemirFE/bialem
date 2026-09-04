@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../src/animations";
 import { useAuth } from "../../src/lib/auth";
 import { managementApi, type ManagementContext as Context } from "../../src/lib/management-api";
 import { canSeeManagement } from "../../src/lib/permissions";
@@ -23,11 +24,14 @@ export default function ManagementScreen() {
   if (!allowed) return <Redirect href="/profile" />;
 
   return <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+    <Reveal>
     <View style={styles.hero}><Text style={styles.kicker}>{context?.superAdmin ? "SUPER ADMIN" : "ADMIN"}</Text>
       <Text style={styles.title}>Yönetim Merkezi</Text><Text style={styles.subtitle}>Bialem platformunu yönetin</Text></View>
+    </Reveal>
     {!context && !error ? <View style={styles.state}><ActivityIndicator color={colors.accent}/><Text style={styles.muted}>Yönetim yükleniyor...</Text></View> : null}
     {error ? <View style={styles.state}><Text style={styles.error}>{error}</Text><Pressable onPress={() => void load()} style={styles.retry}><Text style={styles.retryText}>Tekrar dene</Text></Pressable></View> : null}
     <Text style={styles.section}>YÖNETİM</Text>
+    <Reveal index={1}>
     <View style={styles.menu}>
       <Menu href="/management/users" icon="people-outline" title="Kullanıcılar" subtitle="Hesap, durum ve yetkiler" />
       <Menu href="/management/communities" icon="globe-outline" title="Topluluklar" subtitle="Toplulukları düzenleyin ve oluşturun" />
@@ -38,6 +42,7 @@ export default function ManagementScreen() {
       <Menu href="/management/data" icon="analytics-outline" title="Veriler" subtitle="Platform istatistikleri" />
       <Menu href="/management/store" icon="storefront-outline" title="Mağaza" subtitle="Ürün, sipariş, kargo ve müşteri yönetimi" />
     </View>
+    </Reveal>
   </ScrollView>;
 }
 

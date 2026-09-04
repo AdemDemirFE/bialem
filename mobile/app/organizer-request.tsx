@@ -21,6 +21,7 @@ import {
   type MapCoordinate
 } from "../src/components/EventLocationMap";
 import { ImagePickerField } from "../src/components/ImagePickerField";
+import { Reveal } from "../src/animations";
 import { useAuth } from "../src/lib/auth";
 import {
   removeUploadedImage,
@@ -381,6 +382,7 @@ export default function OrganizerRequestScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: createsDirectly ? "Etkinlik Oluştur" : "Etkinlik Öner" }} />
       <ScrollView contentContainerStyle={styles.page}>
+        <Reveal>
         <View style={styles.panel}>
         <Text style={styles.kicker}>{createsDirectly ? "ETKİNLİK OLUŞTUR" : "ETKİNLİK ÖNER"}</Text>
         <Text style={styles.title}>
@@ -392,7 +394,9 @@ export default function OrganizerRequestScreen() {
             : "Öneri önce kaynak grup moderatörüne gider. Onaylandıktan sonra ortak Keşfet havuzunda yayına çıkar."}
         </Text>
       </View>
+        </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.panel}>
         <Text style={styles.sectionTitle}>{createsDirectly ? "Etkinlik formu" : "Öneri formu"}</Text>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -502,7 +506,10 @@ export default function OrganizerRequestScreen() {
               </Text>
             ) : null}
 
-            <Pressable style={[styles.primaryButton, submitting && styles.disabledButton]} onPress={() => void handleSubmit()}>
+            <Pressable
+              style={({ pressed }) => [styles.primaryButton, submitting && styles.disabledButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+              onPress={() => void handleSubmit()}
+            >
               <Text style={styles.primaryButtonText}>
                 {submitting ? "Kaydediliyor..." : createsDirectly ? "Etkinliği oluştur" : "Öneriyi gönder"}
               </Text>
@@ -510,6 +517,7 @@ export default function OrganizerRequestScreen() {
           </>
         )}
         </View>
+        </Reveal>
       </ScrollView>
       <Modal visible={mapVisible} animationType="slide" onRequestClose={() => setMapVisible(false)}>
         <SafeAreaView style={styles.mapModal} edges={["top"]}>

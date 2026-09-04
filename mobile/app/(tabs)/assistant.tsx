@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { api } from "../../src/lib/api";
 import { IconButton } from "../../src/components/IconButton";
+import { Reveal } from "../../src/animations";
 import { colors } from "../../src/theme/colors";
 import { imageSources } from "../../src/theme/images";
 
@@ -73,6 +74,7 @@ export default function AssistantScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+        <Reveal>
         <View style={styles.hero}>
           <View style={styles.logoFrame}>
             <Image source={imageSources.logo} style={styles.logo} resizeMode="cover" />
@@ -83,23 +85,28 @@ export default function AssistantScreen() {
             <Text style={styles.description}>Etkinlikleri bulalım, yeni bir fikir geliştirelim veya sana uygun topluluğu seçelim.</Text>
           </View>
         </View>
+        </Reveal>
 
         {messages.length === 0 ? (
           <View style={styles.suggestions}>
-            {suggestions.map((suggestion) => (
-              <Pressable key={suggestion} style={styles.suggestionCard} onPress={() => void sendMessage(suggestion)}>
+            {suggestions.map((suggestion, i) => (
+              <Reveal key={suggestion} index={i}>
+              <Pressable style={styles.suggestionCard} onPress={() => void sendMessage(suggestion)}>
                 <Text style={styles.suggestionText}>{suggestion}</Text>
                 <View style={styles.suggestionArrow}><Ionicons name="add" size={20} color={colors.actionText} /></View>
               </Pressable>
+              </Reveal>
             ))}
           </View>
         ) : (
           <View style={styles.chat}>
             {messages.map((message) => (
-              <View key={message.id} style={[styles.bubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}>
+              <Reveal key={message.id}>
+              <View style={[styles.bubble, message.role === "user" ? styles.userBubble : styles.assistantBubble]}>
                 <Text style={styles.bubbleLabel}>{message.role === "user" ? "Sen" : "Bialem"}</Text>
                 <Text style={[styles.bubbleText, message.role === "user" && styles.userBubbleText]}>{message.content}</Text>
               </View>
+              </Reveal>
             ))}
             {sending ? (
               <View style={[styles.bubble, styles.assistantBubble, styles.thinkingBubble]}>

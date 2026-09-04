@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../src/animations";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
 
@@ -53,10 +54,17 @@ export default function PaymentCallbackScreen() {
 
   return (
     <View style={styles.center}>
+      <Reveal>
       <Text style={[styles.icon, success ? styles.successIcon : styles.errorIcon]}>{success ? "✓" : "✕"}</Text>
+      </Reveal>
+      <Reveal index={1}>
       <Text style={styles.title}>{success ? "Ödeme başarılı!" : error || "Ödeme tamamlanamadı."}</Text>
+      </Reveal>
       {success ? <Text style={styles.text}>Biletleriniz oluşturuldu. Biletlerim ekranından görüntüleyebilirsiniz.</Text> : null}
-      <Pressable style={styles.button} onPress={() => router.replace(success ? "/my-tickets" : "/(tabs)/feed")}>
+      <Pressable
+        style={({ pressed }) => [styles.button, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+        onPress={() => router.replace(success ? "/my-tickets" : "/(tabs)/feed")}
+      >
         <Text style={styles.buttonText}>{success ? "Biletlerime git" : "Ana sayfaya dön"}</Text>
       </Pressable>
     </View>

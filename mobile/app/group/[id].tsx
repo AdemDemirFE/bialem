@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { showAppConfirm } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
@@ -235,9 +237,17 @@ export default function GroupDetailScreen() {
       <Stack.Screen options={{ headerShown: true, title: group?.name || "Grup" }} />
 
       {loading ? (
-        <View style={styles.loadingBox}><ActivityIndicator color={colors.accent} size="large" /></View>
+        <View style={styles.loadingBox}>
+          <Skeleton height={190} borderRadius={20} />
+          <Skeleton height={120} borderRadius={18} />
+        </View>
       ) : !group ? (
-        <View style={styles.panel}><Text style={styles.panelTitle}>Grup bulunamadı</Text><Text style={styles.body}>{error}</Text></View>
+        <FeedbackState
+          kind="empty"
+          title="Grup bulunamadı"
+          message={error || "Bu grup kaydı şu anda görüntülenemiyor."}
+          onRetry={() => void loadGroup("refresh")}
+        />
       ) : !joined ? (
         <View style={styles.panel}>
           <Ionicons name={requestPending ? "time-outline" : "lock-closed"} size={30} color={colors.accent} />
@@ -259,6 +269,7 @@ export default function GroupDetailScreen() {
         </View>
       ) : (
         <>
+          <Reveal>
           <View style={styles.hero}>
             <Text style={styles.kicker}>{communityName.toLocaleUpperCase("tr-TR")}</Text>
             <Text style={styles.title}>{group.name}</Text>
@@ -276,16 +287,22 @@ export default function GroupDetailScreen() {
               </Text>
             </View>
             {canLeaveGroup ? (
-              <Pressable style={styles.heroOutlineButton} disabled={busyId === "leave-group"} onPress={confirmLeaveGroup}>
+              <Pressable
+                style={({ pressed }) => [styles.heroOutlineButton, pressed && { opacity: 0.85 }]}
+                disabled={busyId === "leave-group"}
+                onPress={confirmLeaveGroup}
+              >
                 <Ionicons name="exit-outline" size={17} color="#ffffff" />
                 <Text style={styles.heroOutlineButtonText}>Gruptan ayrıl</Text>
               </Pressable>
             ) : null}
           </View>
+          </Reveal>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
 
+          <Reveal index={1}>
           <View style={styles.actionPanel}>
             <View style={styles.actionIcon}><Ionicons name="calendar" size={24} color={colors.accent} /></View>
             <View style={styles.actionCopy}>
@@ -296,11 +313,15 @@ export default function GroupDetailScreen() {
                   : "Önerin grup moderatörüne gider; onaylandığında tüm grup üyelerine açılır."}
               </Text>
             </View>
-            <Pressable style={styles.primaryButton} onPress={() => router.push({ pathname: "/organizer-request", params: { groupId: group.id } })}>
+            <Pressable
+              style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+              onPress={() => router.push({ pathname: "/organizer-request", params: { groupId: group.id } })}
+            >
               <Text style={styles.primaryButtonText}>{canCreateDirectly ? "Etkinlik oluştur" : "Etkinlik öner"}</Text>
               <Ionicons name="arrow-forward" size={17} color={colors.actionText} />
             </Pressable>
           </View>
+          </Reveal>
 
           {canReviewEvents ? (
             <View style={styles.panel}>

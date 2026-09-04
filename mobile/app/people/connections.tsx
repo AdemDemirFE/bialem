@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../../src/components/IconButton";
 import { PeopleListItem, type PublicPerson } from "../../src/components/PeopleListItem";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useAuth } from "../../src/lib/auth";
 import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows";
 import { api } from "../../src/lib/api";
@@ -96,36 +98,55 @@ export default function FollowConnectionsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
+      <Reveal>
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
         <Text style={styles.title}>Takip bağlantıları</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.tabs}>
-        <Pressable style={[styles.tab, tab === "followers" && styles.tabActive]} onPress={() => setTab("followers")}>
+        <Pressable
+          style={({ pressed }) => [styles.tab, tab === "followers" && styles.tabActive, pressed && { opacity: 0.92 }]}
+          onPress={() => setTab("followers")}
+        >
           <Text style={[styles.tabText, tab === "followers" && styles.tabTextActive]}>Takipçiler</Text>
         </Pressable>
-        <Pressable style={[styles.tab, tab === "following" && styles.tabActive]} onPress={() => setTab("following")}>
+        <Pressable
+          style={({ pressed }) => [styles.tab, tab === "following" && styles.tabActive, pressed && { opacity: 0.92 }]}
+          onPress={() => setTab("following")}
+        >
           <Text style={[styles.tabText, tab === "following" && styles.tabTextActive]}>Takip edilenler</Text>
         </Pressable>
       </View>
+      </Reveal>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Liste yüklenemedi"
+          message={error}
+          onRetry={() => void loadConnections()}
+        />
+      ) : null}
       {loading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.muted}>Liste yükleniyor...</Text>
+        <View style={{ gap: 10 }}>
+          <Skeleton height={76} borderRadius={16} />
+          <Skeleton height={76} borderRadius={16} />
+          <Skeleton height={76} borderRadius={16} />
         </View>
       ) : people.length ? (
         <View style={styles.list}>
-          {people.map((person) => (
+          {people.map((person, i) => (
+            <Reveal key={person.user_id} index={Math.min(i, 7)}>
             <PeopleListItem
-              key={person.user_id}
               person={person}
               currentUserId={user?.id}
               busy={busyUserId === person.user_id}
               onToggleFollow={(item) => void toggleFollow(item)}
             />
+            </Reveal>
           ))}
         </View>
       ) : (

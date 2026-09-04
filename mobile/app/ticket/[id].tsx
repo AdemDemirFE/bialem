@@ -1,7 +1,9 @@
 import QRCode from "react-native-qrcode-svg";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
 
@@ -49,7 +51,10 @@ export default function TicketDetailScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <View style={{ width: "100%", gap: 12 }}>
+          <Skeleton height={130} borderRadius={24} />
+          <Skeleton height={280} borderRadius={24} />
+        </View>
       </View>
     );
   }
@@ -57,32 +62,43 @@ export default function TicketDetailScreen() {
   if (!ticket) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error || "Bilet bulunamadı."}</Text>
-        <Pressable style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Geri dön</Text>
-        </Pressable>
+        <FeedbackState
+          kind="empty"
+          title="Bilet bulunamadı"
+          message={error || "Bu bilet kaydı şu anda görüntülenemiyor."}
+          onRetry={() => router.back()}
+        />
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
+      <Reveal>
       <Text style={styles.title}>Bilet Detayı</Text>
+      </Reveal>
+      <Reveal index={1}>
       <View style={styles.card}>
         <Text style={styles.eventTitle}>{ticket.event?.title || "Etkinlik"}</Text>
         <Text style={styles.ticketType}>{ticket.ticket_type?.name || "Bilet"}</Text>
         {ticket.event?.starts_at ? <Text style={styles.meta}>{new Date(ticket.event.starts_at).toLocaleString("tr-TR")}</Text> : null}
         {ticket.event?.location_name ? <Text style={styles.meta}>{ticket.event.location_name}</Text> : null}
       </View>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.qrCard}>
         <QRCode value={ticket.qr_code || `bialem://ticket/${ticket.ticket_code}`} size={200} color="#081a44" backgroundColor="#ffffff" />
         <Text style={styles.code}>{ticket.ticket_code}</Text>
         <Text style={[styles.status, (styles as Record<string, any>)[ticket.status]]}>{ticket.status.toUpperCase()}</Text>
         {ticket.used_at ? <Text style={styles.meta}>Kullanıldı: {new Date(ticket.used_at).toLocaleString("tr-TR")}</Text> : null}
       </View>
+      </Reveal>
 
-      <Pressable style={styles.button} onPress={() => router.replace("/my-tickets" as never)}>
+      <Pressable
+        style={({ pressed }) => [styles.button, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+        onPress={() => router.replace("/my-tickets" as never)}
+      >
         <Text style={styles.buttonText}>Tüm biletlerim</Text>
       </Pressable>
     </ScrollView>

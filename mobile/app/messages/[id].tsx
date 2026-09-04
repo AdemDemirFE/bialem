@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BackButton, IconButton } from "../../src/components/IconButton";
+import { Reveal } from "../../src/animations";
 import { useAuth } from "../../src/lib/auth";
 import { getDirectMessages, markConversationRead, sendDirectMessage, type DirectMessage } from "../../src/lib/messagingApi";
 import { colors } from "../../src/theme/colors";
@@ -60,11 +61,13 @@ export default function DirectChatScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <Reveal duration={160}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <BackButton onPress={() => router.back()} />
         {avatar ? <Image source={{ uri: avatar }} style={styles.avatar} /> : <View style={styles.avatarFallback}><Text style={styles.avatarText}>{name.slice(0, 1).toLocaleUpperCase("tr-TR")}</Text></View>}
         <View style={styles.headerCopy}><Text style={styles.name} numberOfLines={1}>{name}</Text><Text style={styles.status}>Bialem mesajları</Text></View>
       </View>
+      </Reveal>
 
       {loading ? <View style={styles.center}><ActivityIndicator color={colors.accent} /><Text style={styles.muted}>Sohbet açılıyor...</Text></View> : (
         <FlatList

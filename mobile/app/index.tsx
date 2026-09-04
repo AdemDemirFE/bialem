@@ -4,6 +4,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { Reveal } from "../src/animations";
 import { BialemHeroField } from "../src/experiences/BialemHeroField";
 import { colors } from "../src/theme/colors";
 import { imageSources } from "../src/theme/images";
@@ -171,6 +172,7 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
       >
+        <Reveal>
         <View style={[styles.hero, { backgroundColor: authPalette.surface, borderColor: authPalette.border, shadowColor: authPalette.ink }]}>
           <View style={styles.authBrandRow}>
             <View style={styles.authLogoFrame}>
@@ -186,7 +188,9 @@ export default function HomeScreen() {
             İlgi alanlarına uygun etkinlikleri keşfet, güvenilir topluluklara katıl ve birlikte güzel anılar biriktir.
           </Text>
         </View>
+        </Reveal>
 
+        <Reveal index={1}>
         <View style={[styles.authSwitch, { backgroundColor: authPalette.accentSoft }]}>
           <Pressable
             style={[
@@ -209,7 +213,9 @@ export default function HomeScreen() {
             <Text style={[styles.switchText, { color: mode === "signup" ? authPalette.ink : authPalette.muted }]}>Kayıt Ol</Text>
           </Pressable>
         </View>
+        </Reveal>
 
+        <Reveal index={2}>
         <View style={[styles.card, { backgroundColor: authPalette.surface, borderColor: authPalette.border, shadowColor: authPalette.ink }]}>
           <Text style={[styles.cardTitle, { color: authPalette.ink }]}>{mode === "signin" ? "Hoş geldiniz" : "Yeni hesap oluştur"}</Text>
 
@@ -280,10 +286,14 @@ export default function HomeScreen() {
             <Text style={styles.warningText}>Kaydı tamamlamak için üç onayı da işaretlemeniz gerekir.</Text>
           ) : null}
 
-          <Pressable style={styles.primaryButton} onPress={() => void handleAuthSubmit()}>
+          <Pressable
+            style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
+            onPress={() => void handleAuthSubmit()}
+          >
             <Text style={styles.primaryButtonText}>{mode === "signin" ? "Giriş Yap" : "Kaydı Tamamla"}</Text>
           </Pressable>
         </View>
+        </Reveal>
       </ScrollView>
       </KeyboardAvoidingView>
     );

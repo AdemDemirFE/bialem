@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../src/animations";
 import { isLegalDocumentKey, legalDocuments } from "../../src/content/legal";
 import { colors } from "../../src/theme/colors";
 
@@ -20,13 +21,16 @@ export default function LegalDocumentScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page}>
       <Stack.Screen options={{ headerShown: true, title: document.title }} />
+      <Reveal>
       <Text style={styles.kicker}>BİALEM GÜVEN MERKEZİ</Text>
       <Text style={styles.title}>{document.title}</Text>
       <Text style={styles.updated}>Son guncelleme: {document.updatedAt}</Text>
       {document.disclaimer ? <Text style={styles.notice}>{document.disclaimer}</Text> : null}
+      </Reveal>
 
-      {document.sections.map((section) => (
-        <View key={section.heading} style={styles.section}>
+      {document.sections.map((section, i) => (
+        <Reveal key={section.heading} index={Math.min(i + 1, 6)}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>{section.heading}</Text>
           {section.paragraphs?.map((paragraph) => <Text key={paragraph} style={styles.body}>{paragraph}</Text>)}
           {section.bullets?.map((bullet) => (
@@ -36,6 +40,7 @@ export default function LegalDocumentScreen() {
             </View>
           ))}
         </View>
+        </Reveal>
       ))}
     </ScrollView>
   );

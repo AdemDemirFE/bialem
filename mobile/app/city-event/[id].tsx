@@ -3,6 +3,8 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import type { CityRadarEvent } from "../../src/components/CityDiscovery";
 import { addEventToCalendar } from "../../src/lib/calendar";
 import { api } from "../../src/lib/api";
@@ -106,14 +108,23 @@ export default function CityEventDetailScreen() {
   };
 
   if (loading) {
-    return <View style={[styles.center, { paddingTop: insets.top, paddingBottom: insets.bottom }]}><ActivityIndicator color={colors.accent} /><Text style={styles.muted}>Şehir etkinliği açılıyor...</Text></View>;
+    return <View style={[styles.center, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <View style={{ width: "100%", gap: 12 }}>
+        <Skeleton height={230} borderRadius={20} />
+        <Skeleton height={90} borderRadius={18} />
+        <Skeleton height={150} borderRadius={18} />
+      </View>
+    </View>;
   }
 
   if (!event) {
     return (
       <View style={[styles.center, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-        <Text style={styles.title}>Etkinlik bulunamadı</Text>
-        <Text style={styles.muted}>{error || "Etkinlik kaldırılmış veya süresi geçmiş olabilir."}</Text>
+        <FeedbackState
+          kind="empty"
+          title="Etkinlik bulunamadı"
+          message={error || "Etkinlik kaldırılmış veya süresi geçmiş olabilir."}
+        />
         <Link href="/(tabs)/feed" asChild><Pressable style={styles.primaryButton}><Text style={styles.primaryText}>Keşfet'e dön</Text></Pressable></Link>
       </View>
     );
@@ -125,6 +136,7 @@ export default function CityEventDetailScreen() {
         <Pressable style={styles.backButton}><Ionicons name="chevron-back" size={18} color={colors.ink} /><Text style={styles.backText}>Şehir Radarı</Text></Pressable>
       </Link>
 
+      <Reveal>
       <View style={styles.hero}>
         <View style={styles.heroFallback}><Ionicons name="images" size={54} color="rgba(255,255,255,0.82)" /></View>
         {event.cover_image_url && !coverFailed ? (
@@ -137,7 +149,9 @@ export default function CityEventDetailScreen() {
           <Text style={styles.heroMeta}>{event.city} · {formatDate(event.starts_at)}</Text>
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.trustCard}>
         <Ionicons name="shield-checkmark" size={25} color={colors.success} />
         <View style={styles.flex}>
@@ -145,7 +159,9 @@ export default function CityEventDetailScreen() {
           <Text style={styles.muted}>Bilgi kaynağı: {event.source_name}. Bilet ve program değişikliklerini resmî sayfadan doğrula.</Text>
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Etkinlik bilgileri</Text>
         <Info icon="calendar" label="Tarih" value={formatDate(event.starts_at)} />
@@ -153,7 +169,9 @@ export default function CityEventDetailScreen() {
         <Info icon="wallet" label="Ücret" value={event.price_label || "Belirtilmedi"} />
         {event.description ? <Text style={styles.description}>{event.description}</Text> : null}
       </View>
+      </Reveal>
 
+      <Reveal index={3}>
       <View style={styles.ticketPanel}>
         <View style={styles.ticketHeadingRow}>
           <View style={styles.flex}>
@@ -177,7 +195,10 @@ export default function CityEventDetailScreen() {
                   {offer.is_cheapest ? <Text style={styles.cheapestBadge}>EN UCUZ</Text> : null}
                 </View>
                 <Text style={styles.offerMeta}>{offer.fees_included === true ? "Hizmet bedeli dahil" : "Son tutarı satıcı sayfasında doğrula"}</Text>
-                <Pressable style={styles.offerButton} onPress={() => void Linking.openURL(offer.purchase_url)}>
+                <Pressable
+                  style={({ pressed }) => [styles.offerButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                  onPress={() => void Linking.openURL(offer.purchase_url)}
+                >
                   <Text style={styles.offerButtonText}>{offer.seller_name}'te incele</Text>
                   <Ionicons name="open-outline" size={18} color={colors.onBrand} />
                 </Pressable>
@@ -189,7 +210,9 @@ export default function CityEventDetailScreen() {
         )}
         <Text style={styles.priceDisclaimer}>Fiyatlar ve kontenjanlar değişebilir. Bialem bilet satmaz; satın alma işlemi resmî satıcının sayfasında tamamlanır.</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={4}>
       <View style={styles.togetherCard}>
         <View style={styles.togetherIcon}><Ionicons name="people" size={29} color={colors.ink} /></View>
         <Text style={styles.togetherKicker}>BİRLİKTE GİT</Text>
@@ -197,7 +220,11 @@ export default function CityEventDetailScreen() {
         <Text style={styles.muted}>{event.companion_count} Bialem üyesi bu etkinlik için eşlikçi arıyor.</Text>
         {notice ? <Text style={styles.notice}>{notice}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable disabled={working} style={[styles.primaryButton, event.is_looking_for_company && styles.activeButton]} onPress={() => void toggleInterest(!event.is_looking_for_company)}>
+        <Pressable
+          disabled={working}
+          style={({ pressed }) => [styles.primaryButton, event.is_looking_for_company && styles.activeButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={() => void toggleInterest(!event.is_looking_for_company)}
+        >
           <Text style={styles.primaryText}>{event.is_looking_for_company ? "Birlikte Git açık" : "Birlikte gitmek istiyorum"}</Text>
         </Pressable>
         {!event.is_looking_for_company ? (
@@ -205,11 +232,20 @@ export default function CityEventDetailScreen() {
         ) : null}
         {event.is_interested ? <Pressable disabled={working} onPress={() => void clearInterest()}><Text style={styles.removeText}>Listemden çıkar</Text></Pressable> : null}
       </View>
+      </Reveal>
 
+      <Reveal index={5}>
       <View style={styles.actionGrid}>
-        <Pressable style={styles.actionButton} onPress={() => void addToCalendar()}><Ionicons name="calendar-outline" size={23} color={colors.accent} /><Text style={styles.actionText}>Takvime ekle</Text></Pressable>
-        <Pressable style={styles.actionButton} onPress={() => void shareEvent()}><Ionicons name="share-social-outline" size={23} color={colors.accent} /><Text style={styles.actionText}>Paylaş</Text></Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.actionButton, pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] }]}
+          onPress={() => void addToCalendar()}
+        ><Ionicons name="calendar-outline" size={23} color={colors.accent} /><Text style={styles.actionText}>Takvime ekle</Text></Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.actionButton, pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] }]}
+          onPress={() => void shareEvent()}
+        ><Ionicons name="share-social-outline" size={23} color={colors.accent} /><Text style={styles.actionText}>Paylaş</Text></Pressable>
       </View>
+      </Reveal>
 
     </ScrollView>
   );

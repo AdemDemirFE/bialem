@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementProduct } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -69,7 +70,11 @@ export default function StoreProductsManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Ürün Yönetimi" }} />
       {loading && items.length === 0 ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 10 }}>
+          <Skeleton height={92} borderRadius={18} />
+          <Skeleton height={92} borderRadius={18} />
+          <Skeleton height={92} borderRadius={18} />
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -87,7 +92,11 @@ export default function StoreProductsManagementScreen() {
           renderItem={(info: any) => {
             const item: StoreManagementProduct = info.item;
             return (
-            <Pressable style={s.card} onPress={() => router.push(`/management/store/products/${item.id}` as never)}>
+            <Reveal index={Math.min(info.index ?? 0, 6)}>
+            <Pressable
+              style={({ pressed }) => [s.card, pressed && { opacity: 0.94 }]}
+              onPress={() => router.push(`/management/store/products/${item.id}` as never)}
+            >
               {item.imageUrl ? (
                 <Image source={{ uri: item.imageUrl }} style={s.thumb} />
               ) : (
@@ -105,6 +114,7 @@ export default function StoreProductsManagementScreen() {
                 <Ionicons name="trash-outline" size={20} color={colors.danger} />
               </Pressable>
             </Pressable>
+            </Reveal>
             );
           }}
         />

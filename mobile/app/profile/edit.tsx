@@ -6,6 +6,7 @@ import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { colors } from "../../src/theme/colors";
 import { ImageViewerModal } from "../../src/components/ImageViewerModal";
+import { Reveal } from "../../src/animations";
 
 export default function EditProfileScreen() {
   const { user, profile, loading, error, clearError, saveProfile, updateAvatar } = useAuth();
@@ -67,6 +68,7 @@ export default function EditProfileScreen() {
       />
 
       <ScrollView style={styles.screen} contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+        <Reveal>
         <View style={styles.hero}>
           <Pressable accessibilityLabel="Profil fotoğrafını görüntüle" style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
             {profile?.avatar_url ? (
@@ -88,7 +90,9 @@ export default function EditProfileScreen() {
             <Text style={styles.subtitle}>E-posta ve doğrulama durumu güvenlik nedeniyle bu ekrandan değiştirilemez.</Text>
           </View>
         </View>
+        </Reveal>
 
+        <Reveal index={1}>
         <View style={styles.panel}>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {saved ? <Text style={styles.success}>Profil bilgilerin güncellendi.</Text> : null}
@@ -118,7 +122,11 @@ export default function EditProfileScreen() {
             hint="Örnek: 15.07.1995"
           />
 
-          <Pressable disabled={loading} style={[styles.saveButton, loading && styles.disabled]} onPress={() => void submit()}>
+          <Pressable
+            disabled={loading}
+            style={({ pressed }) => [styles.saveButton, loading && styles.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            onPress={() => void submit()}
+          >
             {loading ? <ActivityIndicator color={colors.actionText} /> : <Ionicons name="checkmark-circle" size={20} color={colors.actionText} />}
             <Text style={styles.saveText}>{loading ? "Kaydediliyor..." : "Değişiklikleri kaydet"}</Text>
           </Pressable>
@@ -128,6 +136,7 @@ export default function EditProfileScreen() {
             </Pressable>
           ) : null}
         </View>
+        </Reveal>
       </ScrollView>
     </>
   );

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Reveal } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { SkeletonList } from "../../src/components/SkeletonList";
 import { storeApi, type StoreProductListItem } from "../../src/lib/store-api";
@@ -54,6 +55,7 @@ export default function StoreSearchScreen() {
   return (
     <View style={s.screen}>
       <Stack.Screen options={{ title: "Ürün Ara" }} />
+      <Reveal>
       <View style={s.searchBox}>
         <Ionicons name="search" size={18} color={colors.muted} />
         <TextInput
@@ -72,6 +74,7 @@ export default function StoreSearchScreen() {
           </Pressable>
         ) : null}
       </View>
+      </Reveal>
       {loading && items.length === 0 ? (
         <SkeletonList rows={8} />
       ) : (
@@ -94,7 +97,10 @@ export default function StoreSearchScreen() {
           renderItem={(info: any) => {
             const item = info.item as StoreProductListItem;
             return (
-              <Pressable style={s.card} onPress={() => router.push(`/store/product/${item.slug}` as never)}>
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push(`/store/product/${item.slug}` as never)}
+              >
                 <View style={s.imgWrap}>
                   {item.primaryImageUrl ? <Image source={{ uri: item.primaryImageUrl }} style={s.img} /> : null}
                 </View>

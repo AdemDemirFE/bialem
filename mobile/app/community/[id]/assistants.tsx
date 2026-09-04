@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
+import { FeedbackState } from "../../../src/components/ui/FeedbackState";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
 
@@ -105,20 +107,28 @@ export default function CommunityAssistantsScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: "Moderatör Yardımcıları" }} />
       <ScrollView contentContainerStyle={styles.page}>
+        <Reveal>
         <View style={styles.hero}>
           <Text style={styles.kicker}>YETKİ PAYLAŞIMI</Text>
           <Text style={styles.title}>{communityName}</Text>
           <Text style={styles.heroText}>En fazla iki yardımcı ata. Her yardımcı yalnızca açtığın yetkileri kullanabilir; ana moderatör yetkisi devredilmez.</Text>
           <View style={styles.counter}><Text style={styles.counterText}>{assistants.length}/2 yardımcı</Text></View>
         </View>
+        </Reveal>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <FeedbackState kind="error" title="İşlem başarısız" message={error} />
+        ) : null}
         {notice ? <Text style={styles.notice}>{notice}</Text> : null}
 
         {loading ? (
-          <ActivityIndicator color={colors.accent} size="large" />
+          <View style={{ gap: 12 }}>
+            <Skeleton height={220} borderRadius={18} />
+            <Skeleton height={150} borderRadius={18} />
+          </View>
         ) : (
           <>
+            <Reveal index={1}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Yeni yardımcı ata</Text>
               <Text style={styles.body}>Kişinin önce Bialem hesabını oluşturmuş olması gerekir.</Text>
@@ -134,22 +144,24 @@ export default function CommunityAssistantsScreen() {
               <PermissionSwitches value={permissions} onChange={setPermissions} />
               <Pressable
                 disabled={busyId !== null || assistants.length >= 2}
-                style={[styles.primaryButton, (busyId !== null || assistants.length >= 2) && styles.disabled]}
+                style={({ pressed }) => [styles.primaryButton, (busyId !== null || assistants.length >= 2) && styles.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
                 onPress={() => void saveAssistant(email, permissions)}
               >
                 <Text style={styles.primaryButtonText}>{assistants.length >= 2 ? "İki yardımcı sınırına ulaşıldı" : busyId === "new" ? "Atanıyor..." : "Yardımcı ata"}</Text>
               </Pressable>
             </View>
+            </Reveal>
 
             <View style={styles.list}>
-              {assistants.map((assistant) => (
+              {assistants.map((assistant, i) => (
+                <Reveal key={assistant.assignment_id} index={Math.min(i + 2, 5)}>
                 <AssistantCard
-                  key={assistant.assignment_id}
                   assistant={assistant}
                   busy={busyId === assistant.assignment_id}
                   onSave={(nextPermissions) => saveAssistant(assistant.email, nextPermissions, assistant.assignment_id)}
                   onRemove={() => removeAssistant(assistant.assignment_id)}
                 />
+                </Reveal>
               ))}
             </View>
           </>

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppConfirm, showAppError, showAppSelectAlert } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementOrder } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -78,7 +79,11 @@ export default function StoreShipmentsManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Kargo Yönetimi" }} />
       {loading && items.length === 0 ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 10 }}>
+          <Skeleton height={80} borderRadius={18} />
+          <Skeleton height={80} borderRadius={18} />
+          <Skeleton height={80} borderRadius={18} />
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -96,6 +101,7 @@ export default function StoreShipmentsManagementScreen() {
           renderItem={(info: any) => {
             const item: StoreManagementOrder = info.item;
             return (
+              <Reveal index={Math.min(info.index ?? 0, 6)}>
               <View style={s.card}>
                 <View style={s.copy}>
                   <Text style={s.number}>{item.orderNumber}</Text>
@@ -103,16 +109,23 @@ export default function StoreShipmentsManagementScreen() {
                 </View>
                 <View style={s.actions}>
                   {item.shippingStatus === "NOT_SHIPPED" || !item.shippingStatus ? (
-                    <Pressable style={s.actionBtn} onPress={() => createShipping(item.id)}>
+                    <Pressable
+                      style={({ pressed }) => [s.actionBtn, pressed && { opacity: 0.85 }]}
+                      onPress={() => createShipping(item.id)}
+                    >
                       <Ionicons name="add" size={18} color={colors.success} />
                     </Pressable>
                   ) : (
-                    <Pressable style={s.actionBtn} onPress={() => updateStatus(item.id)}>
+                    <Pressable
+                      style={({ pressed }) => [s.actionBtn, pressed && { opacity: 0.85 }]}
+                      onPress={() => updateStatus(item.id)}
+                    >
                       <Ionicons name="refresh" size={18} color={colors.accent} />
                     </Pressable>
                   )}
                 </View>
               </View>
+              </Reveal>
             );
           }}
         />

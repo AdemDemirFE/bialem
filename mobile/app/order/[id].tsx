@@ -2,7 +2,9 @@ import * as ExpoLinking from "expo-linking";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { showAppConfirm } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
@@ -108,7 +110,10 @@ export default function OrderDetailScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <View style={{ width: "100%", gap: 12 }}>
+          <Skeleton height={180} borderRadius={24} />
+          <Skeleton height={110} borderRadius={24} />
+        </View>
       </View>
     );
   }
@@ -116,10 +121,12 @@ export default function OrderDetailScreen() {
   if (!order) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error || "Sipariş bulunamadı."}</Text>
-        <Pressable style={styles.primaryButton} onPress={() => router.back()}>
-          <Text style={styles.primaryButtonText}>Geri dön</Text>
-        </Pressable>
+        <FeedbackState
+          kind="empty"
+          title="Sipariş bulunamadı"
+          message={error || "Bu sipariş kaydı şu anda görüntülenemiyor."}
+          onRetry={() => router.back()}
+        />
       </View>
     );
   }
@@ -129,16 +136,21 @@ export default function OrderDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
+      <Reveal>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={18} color={colors.ink} />
         <Text style={styles.backText}>Geri</Text>
       </Pressable>
+      </Reveal>
 
+      <Reveal index={1}>
       <Text style={styles.title}>Sipariş Özeti</Text>
       <Text style={styles.orderNumber}>#{order.order_number}</Text>
+      </Reveal>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
+      <Reveal index={2}>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Biletler</Text>
         {order.items.map((item) => (
@@ -163,7 +175,9 @@ export default function OrderDetailScreen() {
           </Text>
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={3}>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Durum</Text>
         <View style={styles.statusRow}>
@@ -177,21 +191,33 @@ export default function OrderDetailScreen() {
           </View>
         ) : null}
       </View>
+      </Reveal>
 
       {isPending ? (
-        <Pressable style={[styles.primaryButton, paying && styles.disabledButton]} onPress={() => void startPayment()} disabled={paying}>
+        <Pressable
+          style={({ pressed }) => [styles.primaryButton, paying && styles.disabledButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={() => void startPayment()}
+          disabled={paying}
+        >
           <Text style={styles.primaryButtonText}>{paying ? "Yönlendiriliyor..." : "Ödemeyi tamamla"}</Text>
         </Pressable>
       ) : null}
 
       {isPending ? (
-        <Pressable style={[styles.secondaryButton, cancelling && styles.disabledButton]} onPress={() => void cancelOrder()} disabled={cancelling}>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, cancelling && styles.disabledButton, pressed && { opacity: 0.9 }]}
+          onPress={() => void cancelOrder()}
+          disabled={cancelling}
+        >
           <Text style={styles.secondaryButtonText}>{cancelling ? "İptal ediliyor..." : "Siparişi iptal et"}</Text>
         </Pressable>
       ) : null}
 
       {isPaid ? (
-        <Pressable style={styles.primaryButton} onPress={() => router.replace("/my-tickets" as never)}>
+        <Pressable
+          style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={() => router.replace("/my-tickets" as never)}
+        >
           <Text style={styles.primaryButtonText}>Biletlerimi gör</Text>
         </Pressable>
       ) : null}

@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { api } from "../../src/lib/api";
@@ -115,8 +117,20 @@ export default function AdvantageDetailScreen() {
     await Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`);
   };
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.accent} /></View>;
-  if (!venue) return <View style={styles.center}><Text style={styles.error}>{error ?? "Kurum bulunamadı."}</Text></View>;
+  if (loading) return (
+    <View style={styles.center}>
+      <View style={{ width: "100%", gap: 12 }}>
+        <Skeleton height={210} borderRadius={20} />
+        <Skeleton height={28} width="60%" />
+        <Skeleton height={90} borderRadius={21} />
+      </View>
+    </View>
+  );
+  if (!venue) return (
+    <View style={styles.center}>
+      <FeedbackState kind="empty" title="Kurum bulunamadı" message={error ?? "Bu avantaj kaydı şu anda görüntülenemiyor."} />
+    </View>
+  );
 
   const qrValue = redemption ? `bialem://advantage/redeem?token=${redemption.redemption_token}` : "";
 
@@ -124,10 +138,13 @@ export default function AdvantageDetailScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: venue.name }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+        <Reveal>
         {venue.cover_image_url && !coverFailed ? <Image source={{ uri: venue.cover_image_url }} style={styles.cover} onError={() => setCoverFailed(true)} /> : (
           <View style={styles.coverFallback}><Ionicons name="storefront" size={58} color="#fff" /></View>
         )}
+        </Reveal>
 
+        <Reveal index={1}>
         <View style={styles.identity}>
           {venue.logo_url ? <Image source={{ uri: venue.logo_url }} style={styles.logo} /> : null}
           <View style={styles.identityCopy}>
@@ -136,10 +153,19 @@ export default function AdvantageDetailScreen() {
           </View>
           {offer ? <Text style={styles.discount}>%{Number(offer.discount_percent).toLocaleString("tr-TR")}</Text> : null}
         </View>
+        </Reveal>
 
-        {venue.description ? <Text style={styles.description}>{venue.description}</Text> : null}
+        {venue.description ? (
+          <Reveal index={2}>
+          <Text style={styles.description}>{venue.description}</Text>
+          </Reveal>
+        ) : null}
 
-        <Pressable onPress={() => void openMap()} style={styles.locationCard}>
+        <Reveal index={3}>
+        <Pressable
+          onPress={() => void openMap()}
+          style={({ pressed }) => [styles.locationCard, pressed && { opacity: 0.94 }]}
+        >
           <View style={styles.locationIcon}><Ionicons name="location" size={22} color={colors.ink} /></View>
           <View style={styles.locationCopy}>
             <Text style={styles.locationTitle}>{venue.city}</Text>
@@ -147,8 +173,10 @@ export default function AdvantageDetailScreen() {
           </View>
           <Ionicons name="open-outline" size={20} color={colors.accent} />
         </Pressable>
+        </Reveal>
 
         {offer ? (
+          <Reveal index={4}>
           <View style={styles.offerCard}>
             <Text style={styles.kicker}>SANA ÖZEL AVANTAJ</Text>
             <Text style={styles.offerTitle}>{offer.title}</Text>
@@ -167,12 +195,17 @@ export default function AdvantageDetailScreen() {
                 <Text style={styles.memberQrText}>Kasaya geldiğinde aşağıdaki düğmeye dokun ve oluşan kodu görevliye göster.</Text>
               </View>
             </View>
-            <Pressable disabled={issuing} onPress={() => void issueCode()} style={[styles.useButton, issuing && styles.disabled]}>
+            <Pressable
+              disabled={issuing}
+              onPress={() => void issueCode()}
+              style={({ pressed }) => [styles.useButton, issuing && styles.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            >
               {issuing ? <ActivityIndicator color={colors.ink} /> : <Ionicons name="qr-code" size={23} color={colors.ink} />}
               <Text style={styles.useButtonText}>QR kodumu oluştur</Text>
             </Pressable>
             <Text style={styles.securityNote}>Kod kasada oluşturulmalı ve 60 saniye içinde kullanılmalıdır.</Text>
           </View>
+          </Reveal>
         ) : (
           <View style={styles.offerCard}><Text style={styles.offerTitle}>Bu kurumun yeni kampanyası yakında.</Text></View>
         )}

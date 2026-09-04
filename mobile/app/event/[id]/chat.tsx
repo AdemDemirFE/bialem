@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Reveal } from "../../../src/animations";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BackButton, IconButton } from "../../../src/components/IconButton";
 import { TeamIdentityBadge } from "../../../src/components/TeamIdentityBadge";
@@ -114,6 +115,7 @@ export default function EventChatScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <Reveal duration={160}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <BackButton onPress={() => router.back()} />
         <View style={styles.headerCopy}>
@@ -122,6 +124,7 @@ export default function EventChatScreen() {
         </View>
         <View style={styles.liveDot} />
       </View>
+      </Reveal>
 
       {loading ? (
         <View style={styles.center}><ActivityIndicator color={colors.accent} /><Text style={styles.muted}>Sohbet açılıyor...</Text></View>

@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, usePressAnimation } from "../../src/animations";
 import { CityDiscovery } from "../../src/components/CityDiscovery";
 import { NotificationButton } from "../../src/components/NotificationButton";
 import { BialemMascot } from "../../src/experiences/BialemMascot";
@@ -155,6 +156,7 @@ export default function FeedScreen() {
       contentContainerStyle={styles.page}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadFeed("refresh")} tintColor={colors.accent} />}
     >
+      <Reveal>
       <View style={styles.brandHero}>
         <View style={styles.brandRow}>
           <View style={styles.logoFrame}><Image source={imageSources.logo} style={styles.logo} /></View>
@@ -182,9 +184,13 @@ export default function FeedScreen() {
         </View>
         <Text style={styles.heroDescription}>Bugünün planını bul, topluluğuna katıl ve deneyimi birlikte yaşa.</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <Stories stories={stories} currentUserId={user?.id} />
+      </Reveal>
 
+      <Reveal index={2}>
       <Link href={"/advantages" as never} asChild>
         <Pressable style={styles.advantageCard}>
           <View style={styles.advantageIcon}>
@@ -198,7 +204,9 @@ export default function FeedScreen() {
           <Ionicons name="arrow-forward-circle" size={33} color={colors.action} />
         </Pressable>
       </Link>
+      </Reveal>
 
+      <Reveal index={3}>
       <View style={styles.nowSection}>
         <View style={styles.sectionHeading}>
           <View style={styles.sectionHeadingCopy}>
@@ -210,9 +218,11 @@ export default function FeedScreen() {
         </View>
         {loading ? <Loading label="Yakındaki planlar aranıyor..." /> : nowEvents.length === 0 ? (
           <View style={styles.emptyBox}><Text style={styles.emptyTitle}>Şu an için hızlı plan bulunamadı.</Text><Text style={styles.emptyText}>Şehir Radarı ve bu haftanın topluluk etkinliklerine göz atabilirsin.</Text></View>
-        ) : <View style={styles.stack}>{nowEvents.map((event) => <CompactEventCard key={event.id} event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} />)}</View>}
+        ) : <View style={styles.stack}>{nowEvents.map((event, i) => <Reveal key={event.id} index={i}><CompactEventCard event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} /></Reveal>)}</View>}
       </View>
+      </Reveal>
 
+      <Reveal index={4}>
       <CityDiscovery city={city}>
         <View style={styles.section}>
           <View style={styles.sectionHeading}>
@@ -240,11 +250,13 @@ export default function FeedScreen() {
           </ScrollView>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {loading ? <Loading label="Topluluk planları yükleniyor..." /> : communityEvents.length === 0 ? <Text style={styles.emptyText}>Bu filtreye uygun etkinlik bulunamadı.</Text> : (
-            <View style={styles.stack}>{communityEvents.map((event) => <EventCard key={event.id} event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} />)}</View>
+            <View style={styles.stack}>{communityEvents.map((event, i) => <Reveal key={event.id} index={i}><EventCard event={event} followed={followedIds.includes(String(event.createdBy?.id ?? ""))} /></Reveal>)}</View>
           )}
         </View>
       </CityDiscovery>
+      </Reveal>
 
+      <Reveal index={5}>
       <View style={styles.section}>
         <View style={styles.sectionHeadingCopy}>
           <Text style={styles.kicker}>TOPLULUK PAYLAŞIMLARI</Text>
@@ -252,9 +264,10 @@ export default function FeedScreen() {
           <Text style={styles.sectionSubtitle}>Fotoğraflar, notlar ve etkinliklerden kalan güzel anlar.</Text>
         </View>
         {loading ? <Loading label="Paylaşımlar yükleniyor..." /> : posts.length === 0 ? <Text style={styles.emptyText}>Henüz paylaşım yok. İlk güzel anı sen paylaşabilirsin.</Text> : (
-          <View style={styles.stack}>{posts.map((post) => <PostCard key={post.id} post={post} />)}</View>
+          <View style={styles.stack}>{posts.map((post, i) => <Reveal key={post.id} index={i}><PostCard post={post} /></Reveal>)}</View>
         )}
       </View>
+      </Reveal>
     </ScrollView>
   );
 }
@@ -297,9 +310,10 @@ function Stories({ stories, currentUserId }: { stories: StoryGroupItem[]; curren
 }
 
 function EventCard({ event, followed }: { event: EventItem; followed: boolean }) {
+  const { scale, pressIn, pressOut } = usePressAnimation();
   return (
     <Link href={{ pathname: "/event/[id]", params: { id: event.id } }} asChild>
-      <Pressable style={styles.eventCard}>
+      <Pressable style={[styles.eventCard, { transform: [{ scale }] }]} onPressIn={pressIn} onPressOut={pressOut}>
         {event.coverImageUrl ? <Image source={{ uri: event.coverImageUrl }} style={styles.eventImage} resizeMode="cover" /> : null}
         <View style={styles.eventBody}>
           <View style={styles.tagRow}>{followed ? <Text style={styles.followTag}>Takip ettiğin kişiden</Text> : null}<Text style={styles.communityTag}>{event.community?.name || "Topluluk"}</Text></View>
@@ -314,9 +328,10 @@ function EventCard({ event, followed }: { event: EventItem; followed: boolean })
 }
 
 function CompactEventCard({ event, followed }: { event: EventItem; followed: boolean }) {
+  const { scale, pressIn, pressOut } = usePressAnimation();
   return (
     <Link href={{ pathname: "/event/[id]", params: { id: event.id } }} asChild>
-      <Pressable style={styles.compactCard}>
+      <Pressable style={[styles.compactCard, { transform: [{ scale }] }]} onPressIn={pressIn} onPressOut={pressOut}>
         <View style={styles.timeBlock}><Text style={styles.timeText}>{new Date(event.startsAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text><Text style={styles.dayText}>BUGÜN</Text></View>
         <View style={styles.compactCopy}><Text style={styles.compactTitle} numberOfLines={1}>{event.title}</Text><Text style={styles.eventMeta} numberOfLines={1}>{event.locationName || event.community?.name}{followed ? " · Takipten" : ""}</Text></View>
         <Ionicons name="arrow-forward" size={19} color={colors.accent} />
@@ -326,9 +341,10 @@ function CompactEventCard({ event, followed }: { event: EventItem; followed: boo
 }
 
 function PostCard({ post }: { post: PostItem }) {
+  const { scale, pressIn, pressOut } = usePressAnimation();
   return (
     <Link href={{ pathname: "/post/[id]", params: { id: String(post.id) } }} asChild>
-      <Pressable style={styles.postCard}>
+      <Pressable style={[styles.postCard, { transform: [{ scale }] }]} onPressIn={pressIn} onPressOut={pressOut}>
         <Text style={styles.postMeta}>{post.community?.name || "Topluluk"} · {formatDate(post.createdAt ?? "")}</Text>
         <Text style={styles.postBody}>{post.body || "Yeni bir topluluk anı paylaşıldı."}</Text>
         {post.media?.[0] ? <Image source={{ uri: post.media[0].storagePath }} style={styles.postImage} resizeMode="cover" /> : null}

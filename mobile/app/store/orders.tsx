@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { storeApi, type StoreOrder, type StoreOrderItem } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
@@ -40,15 +41,25 @@ export default function OrdersScreen() {
   return (
     <View style={s.screen}>
       <Stack.Screen options={{ title: "Siparişlerim" }} />
+      <Reveal>
       <View style={s.tabs}>
         {TABS.map((t) => (
-          <Pressable key={t.key} onPress={() => setActiveTab(t.key)} style={[s.tab, activeTab === t.key && s.tabActive]}>
+          <Pressable
+            key={t.key}
+            onPress={() => setActiveTab(t.key)}
+            style={({ pressed }) => [s.tab, activeTab === t.key && s.tabActive, pressed && { opacity: 0.92 }]}
+          >
             <Text style={[s.tabText, activeTab === t.key && s.tabTextActive]}>{t.label}</Text>
           </Pressable>
         ))}
       </View>
+      </Reveal>
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={120} borderRadius={16} />
+          <Skeleton height={120} borderRadius={16} />
+          <Skeleton height={120} borderRadius={16} />
+        </View>
       ) : orders.length === 0 ? (
         <View style={s.empty}>
           <Ionicons name="cube-outline" size={48} color={colors.muted} />
@@ -62,7 +73,11 @@ export default function OrdersScreen() {
           renderItem={(info: any) => {
             const item = info.item as StoreOrder;
             return (
-              <Pressable style={s.card} onPress={() => router.push(`/store/orders/${item.id}` as never)}>
+              <Reveal index={Math.min(info.index ?? 0, 6)}>
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && { opacity: 0.94, transform: [{ scale: 0.99 }] }]}
+                onPress={() => router.push(`/store/orders/${item.id}` as never)}
+              >
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <Text style={s.orderNo}>{item.orderNumber}</Text>
                   <StatusBadge status={item.orderStatus || ""} />
@@ -73,6 +88,7 @@ export default function OrdersScreen() {
                   <Text key={i.id} style={s.itemName}>{i.productName} x{i.quantity}</Text>
                 ))}
               </Pressable>
+              </Reveal>
             );
           }}
         />

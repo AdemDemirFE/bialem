@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View
 } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppAlert } from "../../../src/components/AppAlert";
 import { useAuth } from "../../../src/lib/auth";
 import { api } from "../../../src/lib/api";
@@ -103,20 +103,27 @@ export default function EventTicketSelectionScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <View style={{ width: "100%", padding: 24, gap: 12 }}>
+          <Skeleton height={120} borderRadius={16} />
+          <Skeleton height={120} borderRadius={16} />
+        </View>
       </View>
     );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.page}>
+      <Reveal>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={18} color={colors.ink} />
         <Text style={styles.backText}>Etkinliğe dön</Text>
       </Pressable>
+      </Reveal>
 
+      <Reveal index={1}>
       <Text style={styles.title}>{eventTitle || "Etkinlik Biletleri"}</Text>
       <Text style={styles.subtitle}>Satın almak istediğiniz bilet tipini ve adedini seçin.</Text>
+      </Reveal>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -125,8 +132,9 @@ export default function EventTicketSelectionScreen() {
           <Text style={styles.emptyText}>Bu etkinlik için henüz bilet satışı başlamamış.</Text>
         </View>
       ) : (
-        tickets.map((ticket) => (
-          <View key={ticket.id} style={styles.card}>
+        tickets.map((ticket, i) => (
+          <Reveal key={ticket.id} index={Math.min(i, 4)}>
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View>
                 <Text style={styles.ticketName}>{ticket.name}</Text>
@@ -140,19 +148,29 @@ export default function EventTicketSelectionScreen() {
               {ticket.available_quantity} adet kaldı
             </Text>
             <View style={styles.quantityRow}>
-              <Pressable style={styles.qtyButton} onPress={() => adjust(ticket.id, -1)} disabled={(quantities[ticket.id] ?? 0) === 0}>
+              <Pressable
+                style={({ pressed }) => [styles.qtyButton, pressed && { opacity: 0.85, transform: [{ scale: 0.94 }] }]}
+                onPress={() => adjust(ticket.id, -1)}
+                disabled={(quantities[ticket.id] ?? 0) === 0}
+              >
                 <Ionicons name="remove" size={18} color={colors.ink} />
               </Pressable>
               <Text style={styles.qtyValue}>{quantities[ticket.id] ?? 0}</Text>
-              <Pressable style={styles.qtyButton} onPress={() => adjust(ticket.id, 1)} disabled={(quantities[ticket.id] ?? 0) >= ticket.available_quantity}>
+              <Pressable
+                style={({ pressed }) => [styles.qtyButton, pressed && { opacity: 0.85, transform: [{ scale: 0.94 }] }]}
+                onPress={() => adjust(ticket.id, 1)}
+                disabled={(quantities[ticket.id] ?? 0) >= ticket.available_quantity}
+              >
                 <Ionicons name="add" size={18} color={colors.ink} />
               </Pressable>
             </View>
           </View>
+          </Reveal>
         ))
       )}
 
       {tickets.length > 0 ? (
+        <Reveal index={2}>
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Toplam</Text>
@@ -160,10 +178,15 @@ export default function EventTicketSelectionScreen() {
               {total.toFixed(2)} {tickets[0]?.currency}
             </Text>
           </View>
-          <Pressable style={[styles.primaryButton, (creating || selectedItems.length === 0) && styles.disabledButton]} onPress={() => void createOrder()} disabled={creating || selectedItems.length === 0}>
+          <Pressable
+            style={({ pressed }) => [styles.primaryButton, (creating || selectedItems.length === 0) && styles.disabledButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            onPress={() => void createOrder()}
+            disabled={creating || selectedItems.length === 0}
+          >
             <Text style={styles.primaryButtonText}>{creating ? "Oluşturuluyor..." : "Siparişe geç"}</Text>
           </Pressable>
         </View>
+        </Reveal>
       ) : null}
     </ScrollView>
   );

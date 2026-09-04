@@ -24,6 +24,8 @@ import {
 import { colors } from "../../src/theme/colors";
 import { SkeletonList } from "../../src/components/SkeletonList";
 import { BackButton } from "../../src/components/IconButton";
+import { Reveal } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { decrementUnreadCount, refreshUnreadCount, setUnreadCount } from "../../src/lib/notificationUnreadStore";
 
 const PAGE_SIZE = 20;
@@ -137,11 +139,12 @@ export default function NotificationsScreen() {
     );
   }, [items, searchQuery]);
 
-  const renderItem = ({ item }: { item: AppNotification }) => {
+  const renderItem = ({ item, index }: { item: AppNotification; index: number }) => {
     const hasTarget = Boolean(item.route);
     return (
+      <Reveal index={Math.min(index ?? 0, 6)}>
       <Pressable
-        style={[styles.card, !item.read && styles.unreadCard]}
+        style={({ pressed }) => [styles.card, !item.read && styles.unreadCard, pressed && { opacity: 0.94 }]}
         onPress={() => void openNotification(item)}
       >
         <View style={[styles.typeMark, !item.read && styles.unreadMark]}>
@@ -158,14 +161,18 @@ export default function NotificationsScreen() {
           </Text>
         </View>
       </Pressable>
+      </Reveal>
     );
   };
 
   const ListHeader = () => (
     <>
+      <Reveal>
       <View style={styles.navigationRow}>
         <BackButton onPress={() => router.back()} />
       </View>
+      </Reveal>
+      <Reveal index={1}>
       <View style={styles.hero}>
         <View style={styles.headingRow}>
           <View style={styles.heroText}>
@@ -194,19 +201,33 @@ export default function NotificationsScreen() {
           ) : null}
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.filters}>
         {notificationFilters.map((item) => {
           const selected = filter === item.value;
           return (
-            <Pressable key={item.value} style={[styles.filter, selected && styles.filterActive]} onPress={() => setFilter(item.value)}>
+            <Pressable
+              key={item.value}
+              style={({ pressed }) => [styles.filter, selected && styles.filterActive, pressed && { opacity: 0.92 }]}
+              onPress={() => setFilter(item.value)}
+            >
               <Text style={[styles.filterText, selected && styles.filterTextActive]}>{item.label}</Text>
             </Pressable>
           );
         })}
       </View>
+      </Reveal>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Bildirimler yüklenemedi"
+          message={error}
+          onRetry={() => void loadNotifications(true, 0)}
+        />
+      ) : null}
     </>
   );
 

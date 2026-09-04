@@ -3,6 +3,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal } from "../../src/animations";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
 
@@ -49,7 +50,10 @@ export default function AdvantageRedeemScreen() {
       <View style={styles.center}>
         <Ionicons name="camera-outline" size={54} color={colors.accent} />
         <Text style={styles.title}>QR doğrulama için kamera izni gerekli.</Text>
-        <Pressable onPress={() => void requestPermission()} style={styles.button}>
+        <Pressable
+          onPress={() => void requestPermission()}
+          style={({ pressed }) => [styles.button, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+        >
           <Text style={styles.buttonText}>Kamera izni ver</Text>
         </Pressable>
       </View>
@@ -78,13 +82,18 @@ export default function AdvantageRedeemScreen() {
 
         {loading ? <ActivityIndicator size="large" color={colors.accent} /> : null}
         {result ? (
+          <Reveal>
           <View style={styles.success}>
             <Ionicons name="checkmark-circle" size={42} color="#0d9b6b" />
             <Text style={styles.successTitle}>Avantaj doğrulandı</Text>
             <Text style={styles.successText}>{result.member_name} · %{result.discount_percent} indirim</Text>
             <Text style={styles.successText}>{result.venue_name} · {result.offer_title}</Text>
-            <Pressable onPress={reset} style={styles.button}><Text style={styles.buttonText}>Yeni kod okut</Text></Pressable>
+            <Pressable
+              onPress={reset}
+              style={({ pressed }) => [styles.button, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+            ><Text style={styles.buttonText}>Yeni kod okut</Text></Pressable>
           </View>
+          </Reveal>
         ) : null}
         {error ? (
           <View style={styles.errorCard}>

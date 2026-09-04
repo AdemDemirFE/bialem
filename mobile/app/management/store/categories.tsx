@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementCategory } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -49,7 +50,11 @@ export default function StoreCategoriesManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Kategori Yönetimi" }} />
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 8 }}>
+          <Skeleton height={72} borderRadius={16} />
+          <Skeleton height={72} borderRadius={16} />
+          <Skeleton height={72} borderRadius={16} />
+        </View>
       ) : (
         <FlatList
           data={flatItems}
@@ -64,7 +69,11 @@ export default function StoreCategoriesManagementScreen() {
           }
           renderItem={(info: any) => {
             const item: StoreManagementCategory = info.item;
-            return renderCategory(item, item.parentId ? 1 : 0);
+            return (
+              <Reveal index={Math.min(info.index ?? 0, 8)}>
+                {renderCategory(item, item.parentId ? 1 : 0)}
+              </Reveal>
+            );
           }}
         />
       )}

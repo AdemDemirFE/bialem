@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../animations";
 import { showAppError } from "./AppAlert";
 import { notifyCartUpdated } from "../lib/cart-events";
 import { storeApi, type StoreCartItem, type StoreCartSummary } from "../lib/store-api";
@@ -51,7 +52,11 @@ export function CartScreenContent() {
   return (
     <View style={s.screen}>
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={104} borderRadius={16} />
+          <Skeleton height={104} borderRadius={16} />
+          <Skeleton height={104} borderRadius={16} />
+        </View>
       ) : !cart || cart.items.length === 0 ? (
         <View style={s.empty}>
           <Ionicons name="cart-outline" size={48} color={colors.muted} />
@@ -69,6 +74,7 @@ export function CartScreenContent() {
             renderItem={(info: any) => {
               const item = info.item as StoreCartItem;
               return (
+                <Reveal index={Math.min(info.index ?? 0, 6)}>
                 <View style={s.item}>
                   {item.productImage ? <Image source={{ uri: item.productImage }} style={s.itemImg} /> : <View style={s.itemImg} />}
                   <View style={s.itemInfo}>
@@ -85,6 +91,7 @@ export function CartScreenContent() {
                     <Ionicons name="trash-outline" size={20} color={colors.danger} />
                   </Pressable>
                 </View>
+                </Reveal>
               );
             }}
           />
@@ -101,7 +108,10 @@ export function CartScreenContent() {
               <Text style={s.totalLabel}>Toplam</Text>
               <Text style={s.totalValue}>{formatPrice(cart.totalAmount)}</Text>
             </View>
-            <Pressable style={s.checkoutBtn} onPress={() => router.push("/store/checkout")}>
+            <Pressable
+              style={({ pressed }) => [s.checkoutBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+              onPress={() => router.push("/store/checkout")}
+            >
               <Text style={s.checkoutBtnText}>Ödemeye Geç</Text>
             </Pressable>
           </View>

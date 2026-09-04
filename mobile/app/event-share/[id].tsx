@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
 import { eventDeepLink } from "../../src/lib/links";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -48,11 +49,17 @@ export default function PublicEventShareScreen() {
           <Text style={styles.brand}>BIALEM</Text>
         </View>
 
-        {loading ? <ActivityIndicator color={colors.accent} size="large" /> : null}
+        {loading ? (
+          <View style={{ gap: 12 }}>
+            <Skeleton height={300} borderRadius={30} />
+            <Skeleton height={150} borderRadius={26} />
+          </View>
+        ) : null}
         {error ? <View style={styles.card}><Text style={styles.error}>{error}</Text></View> : null}
 
         {event ? (
           <>
+            <Reveal>
             <View style={styles.hero}>
               {event.cover_image_url ? <Image source={{ uri: event.cover_image_url }} style={styles.cover} /> : <View style={styles.coverFallback}><View style={styles.orbOne} /><View style={styles.orbTwo} /><Ionicons name="sparkles" size={42} color="#ffffff" /></View>}
               <View style={styles.heroCopy}>
@@ -61,18 +68,26 @@ export default function PublicEventShareScreen() {
                 <Text style={styles.description}>{event.description || "Yeni insanlarla tanış, birlikte deneyimle."}</Text>
               </View>
             </View>
+            </Reveal>
 
+            <Reveal index={1}>
             <View style={styles.card}>
               <Info icon="calendar" value={formatDate(event.starts_at)} />
               <Info icon="location" value={[event.location_name, event.address_text].filter(Boolean).join(" - ") || "Mekân yakında"} />
               <Info icon="people" value={`${event.approved_count} onaylı katılımcı${event.capacity ? ` / ${event.capacity} kontenjan` : ""}`} />
               <Info icon="person-circle" value={`Organizatör: ${event.organizer_display_name}`} />
             </View>
+            </Reveal>
 
-            <Pressable style={styles.primaryButton} onPress={() => void Linking.openURL(eventDeepLink(event.event_id))}>
+            <Reveal index={2}>
+            <Pressable
+              style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
+              onPress={() => void Linking.openURL(eventDeepLink(event.event_id))}
+            >
               <Text style={styles.primaryText}>Bialem'da aç ve katıl</Text>
               <Ionicons name="arrow-forward" size={20} color={colors.actionText} />
             </Pressable>
+            </Reveal>
             <Link href="/" asChild>
               <Pressable style={styles.secondaryButton}><Text style={styles.secondaryText}>Bialem'yı keşfet</Text></Pressable>
             </Link>

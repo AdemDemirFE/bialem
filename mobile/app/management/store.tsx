@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementDashboard } from "../../src/lib/store-management-api";
 import { colors } from "../../src/theme/colors";
@@ -29,15 +30,21 @@ export default function StoreManagementScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: "Mağaza Yönetimi" }} />
       <ScrollView style={s.screen} contentContainerStyle={s.page}>
+        <Reveal>
         <View style={s.hero}>
           <Text style={s.kicker}>MAĞAZA</Text>
           <Text style={s.title}>Yönetim Merkezi</Text>
           <Text style={s.subtitle}>Ürün, sipariş, kargo ve müşteri süreçlerini yönetin.</Text>
         </View>
+        </Reveal>
 
         {loading ? (
-          <ActivityIndicator color={colors.accent} />
+          <View style={{ gap: 10 }}>
+            <Skeleton height={110} borderRadius={18} />
+            <Skeleton height={200} borderRadius={20} />
+          </View>
         ) : dashboard ? (
+          <Reveal index={1}>
           <View style={s.statsGrid}>
             <Stat value={dashboard.productCount} label="Ürün" icon="cube-outline" href="/management/store/products" />
             <Stat value={dashboard.categoryCount} label="Kategori" icon="list-outline" href="/management/store/categories" />
@@ -48,9 +55,11 @@ export default function StoreManagementScreen() {
             <Stat value={dashboard.addressCount} label="Adres" icon="location-outline" href="/management/store/addresses" />
             <Stat value={dashboard.reviewCount} label="Yorum" icon="chatbubble-outline" href="/management/store/reviews" />
           </View>
+          </Reveal>
         ) : null}
 
         <Text style={s.section}>SÜREÇLER</Text>
+        <Reveal index={2}>
         <View style={s.menu}>
           <MenuItem href="/management/store/products" icon="cube-outline" title="Ürünler" subtitle="Ürün listesi, ekleme, düzenleme ve silme" />
           <MenuItem href="/management/store/categories" icon="list-outline" title="Kategoriler" subtitle="Kategori hiyerarşisi yönetimi" />
@@ -60,6 +69,7 @@ export default function StoreManagementScreen() {
           <MenuItem href="/management/store/addresses" icon="location-outline" title="Adresler" subtitle="Kayıtlı kullanıcı adresleri" />
           <MenuItem href="/management/store/reviews" icon="chatbubble-outline" title="Yorumlar" subtitle="Ürün değerlendirmeleri moderasyonu" />
         </View>
+        </Reveal>
       </ScrollView>
     </>
   );

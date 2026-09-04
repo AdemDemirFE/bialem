@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { storeApi, type StoreAddress, type StoreCartSummary } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
@@ -39,7 +40,13 @@ export default function CheckoutScreen() {
     return (
       <View style={s.screen}>
         <Stack.Screen options={{ title: "Ödeme" }} />
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={22} width="45%" />
+          <Skeleton height={96} borderRadius={16} />
+          <Skeleton height={96} borderRadius={16} />
+          <Skeleton height={22} width="35%" />
+          <Skeleton height={80} borderRadius={14} />
+        </View>
       </View>
     );
   }
@@ -48,9 +55,14 @@ export default function CheckoutScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ title: "Ödeme" }} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160 + insets.bottom }}>
+        <Reveal>
         <Text style={s.sectionTitle}>Teslimat Adresi</Text>
-        {addresses.map((a) => (
-          <Pressable key={a.id} onPress={() => setSelectedAddress(a.id!)} style={[s.addressCard, selectedAddress === a.id && s.addressCardActive]}>
+        {addresses.map((a, i) => (
+          <Reveal key={a.id} index={Math.min(i, 4)}>
+          <Pressable
+            onPress={() => setSelectedAddress(a.id!)}
+            style={({ pressed }) => [s.addressCard, selectedAddress === a.id && s.addressCardActive, pressed && { opacity: 0.92 }]}
+          >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <Ionicons name={selectedAddress === a.id ? "radio-button-on" : "radio-button-off"} size={22} color={colors.action} />
               <View style={{ flex: 1 }}>
@@ -61,12 +73,15 @@ export default function CheckoutScreen() {
               </View>
             </View>
           </Pressable>
+          </Reveal>
         ))}
         <Pressable style={s.addAddress} onPress={() => router.push("/store/addresses")}>
           <Ionicons name="add" size={20} color={colors.action} />
           <Text style={s.addAddressText}>Yeni Adres Ekle / Yönet</Text>
         </Pressable>
+        </Reveal>
 
+        <Reveal index={1}>
         <Text style={s.sectionTitle}>Sipariş Notu</Text>
         <TextInput
           style={s.noteInput}
@@ -76,7 +91,9 @@ export default function CheckoutScreen() {
           value={note}
           onChangeText={setNote}
         />
+        </Reveal>
 
+        <Reveal index={2}>
         <Text style={s.sectionTitle}>Sipariş Özeti</Text>
         {cart?.items.map((item) => (
           <View key={item.id} style={s.summaryRow}>
@@ -88,12 +105,13 @@ export default function CheckoutScreen() {
           <Text style={s.totalLabel}>Toplam</Text>
           <Text style={s.totalValue}>{formatPrice(cart?.totalAmount || 0)}</Text>
         </View>
+        </Reveal>
       </ScrollView>
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <Pressable
           disabled={creating || !selectedAddress || !cart || cart.items.length === 0}
-          style={[s.payBtn, (creating || !selectedAddress || !cart || cart.items.length === 0) && s.disabled]}
+          style={({ pressed }) => [s.payBtn, (creating || !selectedAddress || !cart || cart.items.length === 0) && s.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
           onPress={async () => {
             if (!selectedAddress) return;
             setCreating(true);

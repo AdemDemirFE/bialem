@@ -54,7 +54,10 @@ export default function CategoryScreen() {
           renderItem={(info: any) => {
             const item = info.item as StoreProductListItem;
             return (
-              <Pressable style={s.card} onPress={() => router.push(`/store/product/${item.slug}` as never)}>
+              <Pressable
+                style={({ pressed }) => [s.card, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push(`/store/product/${item.slug}` as never)}
+              >
                 <View style={s.imgWrap}>
                   {item.primaryImageUrl ? <Image source={{ uri: item.primaryImageUrl }} style={s.img} /> : null}
                 </View>

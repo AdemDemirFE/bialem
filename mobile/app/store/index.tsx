@@ -3,6 +3,7 @@ import { Link, Stack, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -15,8 +16,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, usePressAnimation } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { SkeletonList } from "../../src/components/SkeletonList";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { CART_REFRESH_EVENT } from "../../src/lib/cart-events";
 import { storeApi, type StoreCategory, type StoreProductListItem } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
@@ -36,6 +39,7 @@ export default function StoreScreen() {
   const [discounts, setDiscounts] = useState<StoreProductListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [cartCount, setCartCount] = useState(0);
+  const [loadError, setLoadError] = useState(false);
 
   const refreshCartCount = useCallback(async () => {
     try {
@@ -62,6 +66,7 @@ export default function StoreScreen() {
   }, [refreshCartCount]);
 
   const load = useCallback(async () => {
+    setLoadError(false);
     try {
       const [catRes, featRes, newRes, bestRes, discRes] = await Promise.all([
         storeApi.categories(),
@@ -76,6 +81,7 @@ export default function StoreScreen() {
       setBestSellers(bestRes);
       setDiscounts(discRes);
     } catch (e) {
+      setLoadError(true);
       showAppError(e instanceof Error ? e.message : "Mağaza yüklenemedi");
     } finally {
       setLoading(false);
@@ -101,6 +107,13 @@ export default function StoreScreen() {
       </View>
     );
   }
+
+  const isEmpty =
+    categories.length === 0 &&
+    featured.length === 0 &&
+    newArrivals.length === 0 &&
+    bestSellers.length === 0 &&
+    discounts.length === 0;
 
   return (
     <View style={s.screen}>
@@ -133,43 +146,58 @@ export default function StoreScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />}
         contentContainerStyle={[s.page, { paddingBottom: 24 + insets.bottom }]}
       >
-        <View style={s.searchBox}>
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            style={s.searchInput}
-            placeholder="Ürün, kategori veya marka ara..."
-            placeholderTextColor={colors.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={onSearch}
-            returnKeyType="search"
+        <Reveal>
+          <View style={s.searchBox}>
+            <Ionicons name="search" size={18} color={colors.muted} />
+            <TextInput
+              style={s.searchInput}
+              placeholder="Ürün, kategori veya marka ara..."
+              placeholderTextColor={colors.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={onSearch}
+              returnKeyType="search"
+            />
+          </View>
+        </Reveal>
+
+        {loadError && isEmpty ? (
+          <FeedbackState
+            kind="error"
+            title="Mağaza yüklenemedi"
+            message="Bağlantını kontrol edip tekrar dene."
+            onRetry={() => void load()}
           />
-        </View>
+        ) : (
+          <>
+            <Reveal index={1}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoryRow}>
+                {categories.map((c) => (
+                  <Link key={c.id} href={`/store/category/${c.slug}` as never} asChild>
+                    <Pressable style={s.categoryChip}>
+                      {c.imageUrl ? <Image source={{ uri: c.imageUrl }} style={s.categoryImg} /> : null}
+                      <Text style={s.categoryText}>{c.name}</Text>
+                    </Pressable>
+                  </Link>
+                ))}
+              </ScrollView>
+            </Reveal>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.categoryRow}>
-          {categories.map((c) => (
-            <Link key={c.id} href={`/store/category/${c.slug}` as never} asChild>
-              <Pressable style={s.categoryChip}>
-                {c.imageUrl ? <Image source={{ uri: c.imageUrl }} style={s.categoryImg} /> : null}
-                <Text style={s.categoryText}>{c.name}</Text>
-              </Pressable>
-            </Link>
-          ))}
-        </ScrollView>
-
-        <Section title="Öne Çıkanlar" data={featured} />
-        <Section title="Çok Satanlar" data={bestSellers} />
-        <Section title="Yeni Gelenler" data={newArrivals} />
-        <Section title="İndirimli Ürünler" data={discounts} />
+            <Section title="Öne Çıkanlar" data={featured} index={2} />
+            <Section title="Çok Satanlar" data={bestSellers} index={3} />
+            <Section title="Yeni Gelenler" data={newArrivals} index={4} />
+            <Section title="İndirimli Ürünler" data={discounts} index={5} />
+          </>
+        )}
       </ScrollView>
     </View>
   );
 }
 
-function Section({ title, data }: { title: string; data: StoreProductListItem[] }) {
+function Section({ title, data, index = 0 }: { title: string; data: StoreProductListItem[]; index?: number }) {
   if (!data.length) return null;
   return (
-    <View style={s.section}>
+    <Reveal index={index} style={s.section}>
       <Text style={s.sectionTitle}>{title}</Text>
       <FlatList
         horizontal
@@ -182,16 +210,23 @@ function Section({ title, data }: { title: string; data: StoreProductListItem[] 
         }}
         contentContainerStyle={s.productRow}
       />
-    </View>
+    </Reveal>
   );
 }
 
 function ProductCard({ item }: { item: StoreProductListItem }) {
   const router = useRouter();
+  const { scale, pressIn, pressOut } = usePressAnimation();
   const hasDiscount = item.discountedPrice && item.discountedPrice > 0 && item.discountedPrice < item.price;
   const discountPercent = hasDiscount ? Math.round(((item.price - item.discountedPrice!) / item.price) * 100) : 0;
   return (
-    <Pressable style={s.card} onPress={() => router.push(`/store/product/${item.slug}` as never)}>
+    <Pressable
+      style={s.card}
+      onPress={() => router.push(`/store/product/${item.slug}` as never)}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
+    >
+      <Animated.View style={{ transform: [{ scale }], gap: 6 }}>
       <View style={s.imgWrap}>
         {item.primaryImageUrl ? (
           <Image source={{ uri: item.primaryImageUrl }} style={s.img} />
@@ -213,6 +248,7 @@ function ProductCard({ item }: { item: StoreProductListItem }) {
           <Text style={s.ratingText}>{item.ratingAverage.toFixed(1)} ({item.reviewCount || 0})</Text>
         </View>
       ) : null}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -251,7 +287,7 @@ const s = StyleSheet.create({
   section: { gap: 10 },
   sectionTitle: { fontSize: 18, fontWeight: "900", color: colors.ink },
   productRow: { gap: 12, paddingRight: 16 },
-  card: { width: CARD_WIDTH, gap: 6 },
+  card: { width: CARD_WIDTH },
   imgWrap: { width: CARD_WIDTH, height: CARD_WIDTH, borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface },
   img: { width: "100%", height: "100%" },
   imgPlaceholder: { flex: 1, alignItems: "center", justifyContent: "center" },

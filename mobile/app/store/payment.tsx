@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppAlert, showAppConfirm, showAppError } from "../../src/components/AppAlert";
 import { notifyCartUpdated } from "../../src/lib/cart-events";
 import { storeApi, type StoreAddress, type StoreCartSummary, type StoreOrder, type StorePaymentInitiateResponse } from "../../src/lib/store-api";
@@ -150,7 +151,13 @@ export default function PaymentScreen() {
     return (
       <View style={s.screen}>
         <Stack.Screen options={{ title: "Ödeme" }} />
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={76} borderRadius={18} />
+          <Skeleton height={22} width="40%" />
+          <Skeleton height={56} borderRadius={14} />
+          <Skeleton height={50} borderRadius={14} />
+          <Skeleton height={50} borderRadius={14} />
+        </View>
       </View>
     );
   }
@@ -159,6 +166,7 @@ export default function PaymentScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ title: "Ödeme" }} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 220 + insets.bottom }}>
+        <Reveal>
         <View style={s.card}>
           <Ionicons name="shield-checkmark-outline" size={28} color={colors.accent} />
           <View style={{ flex: 1 }}>
@@ -166,19 +174,29 @@ export default function PaymentScreen() {
             <Text style={s.cardMeta}>Kart bilgileriniz sunucularımızda saklanmaz.</Text>
           </View>
         </View>
+        </Reveal>
 
+        <Reveal index={1}>
         <Text style={s.sectionTitle}>Ödeme Yöntemi</Text>
         <View style={s.methodRow}>
-          <Pressable style={[s.methodCard, method === "CREDIT_CARD" && s.methodCardActive]} onPress={() => setMethod("CREDIT_CARD")}>
+          <Pressable
+            style={({ pressed }) => [s.methodCard, method === "CREDIT_CARD" && s.methodCardActive, pressed && { opacity: 0.92 }]}
+            onPress={() => setMethod("CREDIT_CARD")}
+          >
             <Ionicons name="card-outline" size={22} color={method === "CREDIT_CARD" ? colors.action : colors.muted} />
             <Text style={[s.methodText, method === "CREDIT_CARD" && s.methodTextActive]}>Kredi/Banka Kartı</Text>
           </Pressable>
-          <Pressable style={[s.methodCard, method === "BANK_TRANSFER" && s.methodCardActive]} onPress={() => setMethod("BANK_TRANSFER")}>
+          <Pressable
+            style={({ pressed }) => [s.methodCard, method === "BANK_TRANSFER" && s.methodCardActive, pressed && { opacity: 0.92 }]}
+            onPress={() => setMethod("BANK_TRANSFER")}
+          >
             <Ionicons name="cash-outline" size={22} color={method === "BANK_TRANSFER" ? colors.action : colors.muted} />
             <Text style={[s.methodText, method === "BANK_TRANSFER" && s.methodTextActive]}>Havale/EFT</Text>
           </Pressable>
         </View>
+        </Reveal>
 
+        <Reveal index={2}>
         <Text style={s.sectionTitle}>Teslimat Adresi</Text>
         {address ? (
           <View style={s.addressBox}>
@@ -190,8 +208,10 @@ export default function PaymentScreen() {
         ) : (
           <Text style={s.warning}>Adres bulunamadı. Lütfen önce teslimat adresi seçin.</Text>
         )}
+        </Reveal>
 
         {method === "CREDIT_CARD" ? (
+          <Reveal index={3}>
           <>
             <Text style={s.sectionTitle}>Kart Bilgileri</Text>
             <TextInput style={s.input} placeholder="Kart üzerindeki isim" placeholderTextColor={colors.muted} value={cardName} onChangeText={setCardName} />
@@ -210,7 +230,9 @@ export default function PaymentScreen() {
             </View>
             <Text style={s.hint}>Test için kart numarası 4 ile başlayınca başarısız, diğerleri başarılı simülasyonu çalışır.</Text>
           </>
+          </Reveal>
         ) : (
+          <Reveal index={3}>
           <>
             <Text style={s.sectionTitle}>Havale/EFT Bilgileri</Text>
             <View style={s.addressBox}>
@@ -223,7 +245,11 @@ export default function PaymentScreen() {
             </View>
             <TextInput style={s.input} placeholder="Dekont linki (PDF/JPG/PNG)" placeholderTextColor={colors.muted} value={receiptUrl} onChangeText={setReceiptUrl} />
           </>
+          </Reveal>
         )}
+
+        <Reveal index={4}>
+        <Text style={s.sectionTitle}>Sipariş Özeti</Text>
 
         <Text style={s.sectionTitle}>Sipariş Özeti</Text>
         {(order?.items ?? cart?.items ?? []).map((item: any) => (
@@ -236,10 +262,15 @@ export default function PaymentScreen() {
           <Text style={s.totalLabel}>Toplam</Text>
           <Text style={s.totalValue}>{formatPrice(totalAmount)}</Text>
         </View>
+        </Reveal>
       </ScrollView>
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Pressable disabled={processing || !address} style={[s.payBtn, (processing || !address) && s.disabled]} onPress={pay}>
+        <Pressable
+          disabled={processing || !address}
+          style={({ pressed }) => [s.payBtn, (processing || !address) && s.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={pay}
+        >
           <Text style={s.payBtnText}>{processing ? "İşleniyor..." : method === "BANK_TRANSFER" ? "Havale Bildirimi Gönder" : `Öde ${formatPrice(totalAmount)}`}</Text>
         </Pressable>
       </View>

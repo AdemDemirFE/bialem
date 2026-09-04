@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ImageBackground, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { showAppAlert, showAppConfirm, showAppError, showJoinCommunityResult } from "../../src/components/AppAlert";
 import { ImagePickerField } from "../../src/components/ImagePickerField";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useAuth } from "../../src/lib/auth";
 import { removeUploadedImage, uploadCommunityCover, type PickedImage } from "../../src/lib/storage";
 import { api } from "../../src/lib/api";
@@ -341,11 +343,20 @@ export default function CommunityDetailScreen() {
       >
 
       {loading ? (
-        <View style={styles.loadingBox}><ActivityIndicator color={colors.accent} size="large" /></View>
+        <View style={styles.loadingBox}>
+          <Skeleton height={200} borderRadius={20} />
+          <Skeleton height={120} borderRadius={18} />
+        </View>
       ) : !community ? (
-        <View style={styles.panel}><Text style={styles.panelTitle}>Topluluk bulunamadı</Text><Text style={styles.body}>{error}</Text></View>
+        <FeedbackState
+          kind="empty"
+          title="Topluluk bulunamadı"
+          message={error || "Bu topluluk kaydı şu anda görüntülenemiyor."}
+          onRetry={() => void loadCommunity("refresh")}
+        />
       ) : (
         <>
+          <Reveal>
           <View style={styles.hero}>
             <Text style={styles.kicker}>{community.community_type === "partner_hub" ? "PARTNER TOPLULUK" : "BİALEM İLGİ ALANI"}</Text>
             <Text style={styles.title}>{community.name}</Text>
@@ -390,17 +401,23 @@ export default function CommunityDetailScreen() {
               </Pressable>
             ) : null}
             {canLeaveCommunity ? (
-              <Pressable style={styles.heroOutlineButton} disabled={busy} onPress={confirmLeaveCommunity}>
+              <Pressable
+                style={({ pressed }) => [styles.heroOutlineButton, pressed && { opacity: 0.85 }]}
+                disabled={busy}
+                onPress={confirmLeaveCommunity}
+              >
                 <Ionicons name="exit-outline" size={18} color={colors.onBrand} />
                 <Text style={styles.heroOutlineButtonText}>Topluluktan ayrıl</Text>
               </Pressable>
             ) : null}
           </View>
+          </Reveal>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
           {notice ? <Text style={styles.noticeText}>{notice}</Text> : null}
 
           {!hasCommunityAccess ? (
+            <Reveal index={1}>
             <View style={styles.joinPanel}>
               <Ionicons name="lock-closed" size={29} color={colors.accent} />
               <Text style={styles.panelTitle}>Gruplar üyelere açık</Text>
@@ -423,11 +440,16 @@ export default function CommunityDetailScreen() {
                 </Pressable>
               ) : null}
               {requestPending ? (
-                <Pressable style={styles.outlineButton} disabled={busy} onPress={() => void cancelMembershipRequest(id)}>
+                <Pressable
+                  style={({ pressed }) => [styles.outlineButton, pressed && { opacity: 0.9 }]}
+                  disabled={busy}
+                  onPress={() => void cancelMembershipRequest(id)}
+                >
                   <Text style={styles.outlineButtonText}>Katılım isteğini geri çek</Text>
                 </Pressable>
               ) : null}
             </View>
+            </Reveal>
           ) : (
             <>
               {canReviewMemberships ? (

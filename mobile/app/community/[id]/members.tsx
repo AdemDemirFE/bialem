@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { Reveal } from "../../../src/animations";
+import { FeedbackState } from "../../../src/components/ui/FeedbackState";
 import { BackButton } from "../../../src/components/IconButton";
 import { api } from "../../../src/lib/api";
 import { colors } from "../../../src/theme/colors";
@@ -104,6 +106,7 @@ export default function CommunityMembersScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadMembers("refresh")} tintColor={colors.accent} />}
         ListHeaderComponent={(
           <View style={styles.headerStack}>
+            <Reveal>
             <View style={styles.header}>
               <BackButton onPress={() => router.back()} />
               <View style={styles.headerCopy}>
@@ -112,7 +115,9 @@ export default function CommunityMembersScreen() {
               </View>
               <View style={styles.countBadge}><Text style={styles.countText}>{totalCount}</Text></View>
             </View>
+            </Reveal>
 
+            <Reveal index={1}>
             <View style={styles.searchCard}>
               <View style={styles.searchInputRow}>
                 <Ionicons name="search" size={20} color={colors.muted} />
@@ -132,18 +137,32 @@ export default function CommunityMembersScreen() {
                   </Pressable>
                 ) : null}
               </View>
-              <Pressable style={styles.searchButton} onPress={submitSearch}>
+              <Pressable
+                style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                onPress={submitSearch}
+              >
                 <Text style={styles.searchButtonText}>Üyelerde ara</Text>
               </Pressable>
             </View>
+            </Reveal>
 
             {activeQuery ? <Text style={styles.resultText}>“{activeQuery}” için {totalCount} sonuç</Text> : null}
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+              <FeedbackState
+                kind="error"
+                title="Üyeler yüklenemedi"
+                message={error}
+                onRetry={() => void loadMembers("refresh")}
+              />
+            ) : null}
           </View>
         )}
-        renderItem={({ item }: { item: CommunityMember }) => (
+        renderItem={({ item, index }: { item: CommunityMember; index: number }) => (
+          <Reveal index={Math.min(index ?? 0, 6)}>
           <Link href={{ pathname: "/user/[id]", params: { id: item.user_id } }} asChild>
-            <Pressable style={styles.memberCard}>
+            <Pressable
+              style={({ pressed }) => [styles.memberCard, pressed && { opacity: 0.94 }]}
+            >
               <View style={styles.avatar}>
                 {item.avatar_url ? (
                   <Image source={{ uri: item.avatar_url }} style={styles.avatarImage} />
@@ -162,6 +181,7 @@ export default function CommunityMembersScreen() {
               <Ionicons name="chevron-forward" size={20} color={colors.muted} />
             </Pressable>
           </Link>
+          </Reveal>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={loading ? (

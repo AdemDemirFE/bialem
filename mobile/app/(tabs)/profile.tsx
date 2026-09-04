@@ -6,6 +6,7 @@ import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
 import { ImageViewerModal } from "../../src/components/ImageViewerModal";
 import { NotificationButton } from "../../src/components/NotificationButton";
+import { Reveal } from "../../src/animations";
 import { useAuth } from "../../src/lib/auth";
 import { pickImageFromLibrary, requestMediaLibraryPermission, uploadProfileAvatar } from "../../src/lib/storage";
 import { profileStatusLabel } from "../../src/lib/profile-status";
@@ -241,6 +242,7 @@ export default function ProfileScreen() {
         onEdit={() => void changeProfilePhoto()}
       />
 
+      <Reveal>
       <View style={styles.hero}>
         <View style={styles.profileIdentity}>
           <Pressable style={styles.avatarButton} onPress={() => setViewerVisible(true)}>
@@ -265,7 +267,9 @@ export default function ProfileScreen() {
           Burada hesabınızın güven sinyallerini, ürettiğiniz içerikleri ve topluluk içindeki hareketinizi görürsünüz.
         </Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.socialPanel}>
         <View style={styles.sectionTitleRow}>
           <View style={styles.sectionTitleCopy}>
@@ -315,7 +319,9 @@ export default function ProfileScreen() {
           </Pressable>
         </Link>
       </View>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.panel}>
         <View style={styles.sectionTitleRow}>
           <Text style={styles.panelTitle}>Hesap özeti</Text>
@@ -332,7 +338,9 @@ export default function ProfileScreen() {
         <ProfileRow label="Durum" value={profileStatusLabel(profile?.status)} />
         <ProfileRow label="Doğrulama" value={profile?.is_verified ? "Doğrulanmış" : "Beklemede"} />
       </View>
+      </Reveal>
 
+      <Reveal index={3}>
       <View style={styles.panel}>
         <View style={styles.appearanceHeader}>
           <View style={styles.appearanceIcon}>
@@ -359,7 +367,9 @@ export default function ProfileScreen() {
           })}
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={4}>
       <View style={styles.panel}>
         <View style={styles.appearanceHeader}>
           <View style={[styles.appearanceIcon, { backgroundColor: colors.accentSoft }]}>
@@ -376,16 +386,22 @@ export default function ProfileScreen() {
           </Pressable>
         </Link>
       </View>
+      </Reveal>
 
+      <Reveal index={5}>
       <View style={styles.statsGrid}>
         <StatCard label="Topluluk" value={String(stats.communities)} />
         <StatCard label="Etkinlik" value={String(stats.events)} />
         <StatCard label="Paylaşım" value={String(stats.posts)} />
         <StatCard label="Yorum" value={String(stats.comments)} />
       </View>
+      </Reveal>
 
+      <Reveal index={6}>
       <HonorBadges badges={honorBadges} />
+      </Reveal>
 
+      <Reveal index={7}>
       <View style={styles.profileTabs}>
         {([
           ["plans", "Planlarım", "calendar-outline"],
@@ -397,10 +413,11 @@ export default function ProfileScreen() {
             <Pressable key={value} style={[styles.profileTab, selected && styles.profileTabActive]} onPress={() => setActiveTab(value)}>
               <Ionicons name={icon} size={18} color={selected ? colors.actionText : colors.muted} />
               <Text style={[styles.profileTabText, selected && styles.profileTabTextActive]}>{label}</Text>
-            </Pressable>
-          );
-        })}
+              </Pressable>
+            );
+          })}
       </View>
+      </Reveal>
 
       {activeTab === "plans" ? (
         <View style={styles.panel}>

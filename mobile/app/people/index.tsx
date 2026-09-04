@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { PeopleListItem, type PublicPerson } from "../../src/components/PeopleListItem";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useAuth } from "../../src/lib/auth";
 import { getRequestedProfileIds, setProfileFollow } from "../../src/lib/follows";
 import { api } from "../../src/lib/api";
@@ -76,6 +78,7 @@ export default function PeopleDiscoveryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <Reveal>
       <View style={styles.header}>
         <BackButton size={44} onPress={() => router.back()} backgroundColor={colors.surface as string} />
         <View style={styles.headerCopy}>
@@ -83,9 +86,13 @@ export default function PeopleDiscoveryScreen() {
           <Text style={styles.title}>Kişi bul</Text>
         </View>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <Text style={styles.description}>Ad, kullanıcı adı veya şehirle ara; ilham aldığın kişileri takip et.</Text>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.searchPanel}>
         <View style={styles.inputWrap}>
           <Ionicons name="search" size={20} color={colors.muted} />
@@ -107,32 +114,45 @@ export default function PeopleDiscoveryScreen() {
             }} />
           ) : null}
         </View>
-        <Pressable style={styles.searchButton} onPress={() => void searchPeople()}>
+        <Pressable
+          style={({ pressed }) => [styles.searchButton, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={() => void searchPeople()}
+        >
           <Text style={styles.searchButtonText}>Ara</Text>
         </Pressable>
       </View>
+      </Reveal>
 
       <View style={styles.sectionTitleRow}>
         <Text style={styles.sectionTitle}>{query.trim() ? "Arama sonuçları" : "Keşfedebileceğin kişiler"}</Text>
         <Text style={styles.resultCount}>{people.length}</Text>
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Arama yapılamadı"
+          message={error}
+          onRetry={() => void searchPeople()}
+        />
+      ) : null}
       {loading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.muted}>Kişiler yükleniyor...</Text>
+        <View style={{ gap: 10 }}>
+          <Skeleton height={76} borderRadius={16} />
+          <Skeleton height={76} borderRadius={16} />
+          <Skeleton height={76} borderRadius={16} />
         </View>
       ) : people.length ? (
         <View style={styles.list}>
-          {people.map((person) => (
+          {people.map((person, i) => (
+            <Reveal key={person.user_id} index={Math.min(i, 7)}>
             <PeopleListItem
-              key={person.user_id}
               person={person}
               currentUserId={user?.id}
               busy={busyUserId === person.user_id}
               onToggleFollow={(item) => void toggleFollow(item)}
             />
+            </Reveal>
           ))}
         </View>
       ) : (

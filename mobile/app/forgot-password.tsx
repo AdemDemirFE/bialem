@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { Reveal } from "../src/animations";
 import { colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/theme";
 
@@ -81,6 +82,7 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={[styles.page, { backgroundColor: palette.page }]}
           keyboardShouldPersistTaps="handled"
         >
+          <Reveal>
           <View style={[styles.icon, { backgroundColor: palette.accentSoft }]}>
             <Ionicons name="mail-outline" size={28} color={palette.accent} />
           </View>
@@ -88,7 +90,9 @@ export default function ForgotPasswordScreen() {
           <Text style={[styles.description, { color: palette.muted }]}>
             Kayıtlı e-posta adresinizi yazın. Geçerli bir hesap varsa 8 haneli sıfırlama kodu gönderilir.
           </Text>
+          </Reveal>
 
+          <Reveal index={1}>
           <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border }]}>
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             {localNotice || notice ? (
@@ -112,7 +116,7 @@ export default function ForgotPasswordScreen() {
             />
 
             <Pressable
-              style={[styles.primaryButton, (sending || cooldown > 0) && styles.primaryButtonDisabled]}
+              style={({ pressed }) => [styles.primaryButton, (sending || cooldown > 0) && styles.primaryButtonDisabled, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
               disabled={sending || cooldown > 0}
               onPress={() => void submit()}
             >
@@ -129,6 +133,7 @@ export default function ForgotPasswordScreen() {
               <Text style={[styles.linkText, { color: palette.accent }]}>Giriş ekranına dön</Text>
             </Pressable>
           </View>
+          </Reveal>
         </ScrollView>
       </KeyboardAvoidingView>
     </>

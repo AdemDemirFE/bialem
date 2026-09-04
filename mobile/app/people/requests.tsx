@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackButton } from "../../src/components/IconButton";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -72,6 +74,7 @@ export default function FollowRequestsScreen() {
       contentContainerStyle={styles.page}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadRequests(true)} tintColor={colors.accent as string} />}
     >
+      <Reveal>
       <View style={styles.header}>
         <BackButton onPress={() => router.back()} />
         <View style={styles.headerCopy}>
@@ -80,21 +83,32 @@ export default function FollowRequestsScreen() {
         </View>
         <Text style={styles.count}>{requests.length}</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <Text style={styles.description}>Profilini kimlerin takip edebileceğine sen karar verirsin.</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      </Reveal>
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="İstekler yüklenemedi"
+          message={error}
+          onRetry={() => void loadRequests()}
+        />
+      ) : null}
 
       {loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.muted}>İstekler yükleniyor...</Text>
+        <View style={{ gap: 12 }}>
+          <Skeleton height={150} borderRadius={17} />
+          <Skeleton height={150} borderRadius={17} />
         </View>
       ) : requests.length ? (
         <View style={styles.list}>
-          {requests.map((request) => {
+          {requests.map((request, i) => {
             const busy = busyRequestId === request.request_id;
             return (
-              <View key={request.request_id} style={styles.card}>
+              <Reveal key={request.request_id} index={Math.min(i, 5)}>
+              <View style={styles.card}>
                 <Link href={{ pathname: "/user/[id]", params: { id: request.user_id } }} asChild>
                   <Pressable style={styles.personRow}>
                     <View style={styles.avatar}>
@@ -117,14 +131,23 @@ export default function FollowRequestsScreen() {
                 </Link>
 
                 <View style={styles.actions}>
-                  <Pressable disabled={busy} style={[styles.secondaryButton, busy && styles.buttonDisabled]} onPress={() => void reviewRequest(request.request_id, false)}>
+                  <Pressable
+                    disabled={busy}
+                    style={({ pressed }) => [styles.secondaryButton, busy && styles.buttonDisabled, pressed && { opacity: 0.9 }]}
+                    onPress={() => void reviewRequest(request.request_id, false)}
+                  >
                     <Text style={styles.secondaryButtonText}>Reddet</Text>
                   </Pressable>
-                  <Pressable disabled={busy} style={[styles.primaryButton, busy && styles.buttonDisabled]} onPress={() => void reviewRequest(request.request_id, true)}>
+                  <Pressable
+                    disabled={busy}
+                    style={({ pressed }) => [styles.primaryButton, busy && styles.buttonDisabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                    onPress={() => void reviewRequest(request.request_id, true)}
+                  >
                     <Text style={styles.primaryButtonText}>{busy ? "İşleniyor..." : "Onayla"}</Text>
                   </Pressable>
                 </View>
               </View>
+              </Reveal>
             );
           })}
         </View>

@@ -13,6 +13,7 @@ import {
   View
 } from "react-native";
 import { api } from "../src/lib/api";
+import { Reveal } from "../src/animations";
 import { colors } from "../src/theme/colors";
 
 const PASSWORD_HINT = "En az 8 karakter, 1 büyük harf, 1 küçük harf ve 1 rakam";
@@ -117,6 +118,7 @@ export default function ResetPasswordScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+          <Reveal>
           <View style={styles.icon}>
             <Ionicons name="key" size={30} color={colors.accent} />
           </View>
@@ -126,8 +128,10 @@ export default function ResetPasswordScreen() {
               ? "Giriş ekranına yönlendiriliyorsunuz..."
               : "E-postadaki 8 haneli kodu yazın, ardından yeni şifrenizi belirleyin."}
           </Text>
+          </Reveal>
 
           {!success ? (
+            <Reveal index={1}>
             <View style={styles.form}>
               {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -162,7 +166,7 @@ export default function ResetPasswordScreen() {
 
               <Pressable
                 disabled={saving}
-                style={[styles.button, saving && styles.buttonDisabled]}
+                style={({ pressed }) => [styles.button, saving && styles.buttonDisabled, pressed && { opacity: 0.92, transform: [{ scale: 0.98 }] }]}
                 onPress={() => void savePassword()}
               >
                 <Text style={styles.buttonText}>{saving ? "Kaydediliyor..." : "Şifremi Güncelle"}</Text>
@@ -175,6 +179,7 @@ export default function ResetPasswordScreen() {
                 <Text style={styles.secondaryLinkText}>Giriş ekranına dön</Text>
               </Pressable>
             </View>
+            </Reveal>
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { api } from "../src/lib/api";
 import { useAuth } from "../src/lib/auth";
+import { Reveal } from "../src/animations";
 import { colors } from "../src/theme/colors";
 
 const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL;
@@ -84,13 +85,16 @@ export default function AccountScreen() {
   return (
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
       <Stack.Screen options={{ headerShown: true, title: "Hesap ve yasal" }} />
+      <Reveal>
       <View style={styles.hero}>
         <View style={styles.iconBadge}><Ionicons name="shield-checkmark" size={28} color={colors.accent} /></View>
         <Text style={styles.kicker}>GÜVEN MERKEZI</Text>
         <Text style={styles.title}>Hesabın ve haklarin senin kontrolünde.</Text>
         <Text style={styles.description}>Hukuki metinleri inceleyebilir, destek isteyebilir veya hesabını kalıcı olarak silebilirsin.</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Gizlilik ve güvenlik</Text>
         <Pressable style={styles.linkRow} onPress={() => { setPasswordOpen((v) => !v); setPasswordSuccess(false); setError(null); }}>
@@ -147,7 +151,9 @@ export default function AccountScreen() {
           </Pressable>
         </Link>
         <Link href="/blocked-users" asChild>
-          <Pressable style={styles.linkRow}>
+          <Pressable
+            style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.85 }]}
+          >
             <Ionicons name="person-remove-outline" size={21} color={colors.accent} />
             <View style={styles.linkCopy}>
               <Text style={styles.linkText}>Engellenen kullanıcılar</Text>
@@ -157,34 +163,41 @@ export default function AccountScreen() {
           </Pressable>
         </Link>
       </View>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Hukuki metinler</Text>
-        {legalLinks.map((item) => (
+        {legalLinks.map((item, i) => (
+          <Reveal key={item.key} index={Math.min(i, 3)}>
           <Pressable
-            key={item.key}
-            style={styles.linkRow}
+            style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.85 }]}
             onPress={() => router.push({ pathname: "/legal/[document]", params: { document: item.key } })}
           >
             <Ionicons name={item.icon} size={21} color={colors.accent} />
             <Text style={styles.linkText}>{item.title}</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
+          </Reveal>
         ))}
       </View>
+      </Reveal>
 
+      <Reveal index={3}>
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Destek ve KVKK başvurusu</Text>
         <Text style={styles.description}>Hesabın, bir şikâyet veya kişisel verilerin hakkında destek ekibine e-posta gönderebilirsin.</Text>
         <Pressable
           disabled={!SUPPORT_EMAIL}
-          style={[styles.secondaryButton, !SUPPORT_EMAIL && styles.disabledButton]}
+          style={({ pressed }) => [styles.secondaryButton, !SUPPORT_EMAIL && styles.disabledButton, pressed && { opacity: 0.9 }]}
           onPress={() => SUPPORT_EMAIL && void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Bialem%20Destek%20Talebi`)}
         >
           <Text style={styles.secondaryButtonText}>{SUPPORT_EMAIL ? `Destek: ${SUPPORT_EMAIL}` : "Destek e-postası yayın öncesi tanımlanacak"}</Text>
         </Pressable>
       </View>
+      </Reveal>
 
+      <Reveal index={4}>
       <View style={styles.dangerPanel}>
         <Text style={styles.dangerTitle}>Hesabı kalıcı olarak sil</Text>
         <Text style={styles.description}>
@@ -221,6 +234,7 @@ export default function AccountScreen() {
           </View>
         )}
       </View>
+      </Reveal>
     </ScrollView>
   );
 }

@@ -3,6 +3,8 @@ import { Link, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useAuth } from "../src/lib/auth";
+import { Reveal, Skeleton } from "../src/animations";
+import { FeedbackState } from "../src/components/ui/FeedbackState";
 import { api } from "../src/lib/api";
 import { getAppEnv, getAppVersion, getAppVersionCode } from "../src/lib/backend-config";
 import { colors } from "../src/theme/colors";
@@ -83,6 +85,7 @@ export default function SettingsScreen() {
     <>
       <Stack.Screen options={{ headerShown: true, title: "Gizlilik ve bildirimler" }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+        <Reveal>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <Ionicons name="options" size={27} color={colors.actionText} />
@@ -93,16 +96,24 @@ export default function SettingsScreen() {
             E-posta ve telefon numaran hiçbir zaman herkese açık profil bilgisi olarak gösterilmez.
           </Text>
         </View>
+        </Reveal>
 
         {loading ? (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.description}>Ayarların yükleniyor...</Text>
+          <View style={{ gap: 12 }}>
+            <Skeleton height={200} borderRadius={18} />
+            <Skeleton height={160} borderRadius={18} />
           </View>
         ) : (
           <>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+              <FeedbackState
+                kind="error"
+                title="Ayarlar yüklenemedi"
+                message={error}
+              />
+            ) : null}
 
+            <Reveal index={1}>
             <View style={styles.panel}>
               <SectionHeader icon="shield-checkmark-outline" title="Gizlilik" subtitle="Diğer üyelerin seni nasıl keşfedeceğini belirle." />
               <SettingSwitch
@@ -147,7 +158,9 @@ export default function SettingsScreen() {
                 </Pressable>
               </Link>
             </View>
+            </Reveal>
 
+            <Reveal index={2}>
             <View style={styles.panel}>
               <SectionHeader icon="chatbubble-ellipses-outline" title="Mesaj izinleri" subtitle="Mesajlaşma açıldığında bu tercih uygulanacak." />
               <View style={styles.segmented}>
@@ -169,7 +182,9 @@ export default function SettingsScreen() {
                 })}
               </View>
             </View>
+            </Reveal>
 
+            <Reveal index={3}>
             <View style={styles.panel}>
               <SectionHeader icon="notifications-outline" title="Push bildirimleri" subtitle="Uygulama içi bildirim geçmişin korunur; yalnızca cihaz uyarıları yönetilir." />
               <SettingSwitch title="Etkinlikler ve katılım" description="Onaylar, iptaller, bekleme listesi ve katılım güncellemeleri." value={preferences.notify_events} onValueChange={(value) => void save({ notify_events: value })} />
@@ -178,6 +193,7 @@ export default function SettingsScreen() {
               <SettingSwitch title="Bialem Avantaj" description="Yeni anlaşmalı kurumlar ve avantaj duyuruları." value={preferences.notify_advantages} onValueChange={(value) => void save({ notify_advantages: value })} />
               <SettingSwitch title="Güvenlik ve sistem" description="Hesabınla ilgili önemli güvenlik ve hizmet duyuruları." value={preferences.notify_system} onValueChange={(value) => void save({ notify_system: value })} last />
             </View>
+            </Reveal>
           </>
         )}
 

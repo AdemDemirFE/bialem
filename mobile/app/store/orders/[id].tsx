@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../../src/animations";
+import { FeedbackState } from "../../../src/components/ui/FeedbackState";
 import { showAppConfirm, showAppError } from "../../../src/components/AppAlert";
 import { storeApi, type StoreOrder, type StoreOrderStatusHistory } from "../../../src/lib/store-api";
 import { colors } from "../../../src/theme/colors";
@@ -26,12 +28,16 @@ export default function OrderDetailScreen() {
   const insets = useSafeAreaInsets();
   const [order, setOrder] = useState<StoreOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+      setLoadError(false);
       try {
         setOrder(await storeApi.order(Number(id)));
       } catch (e) {
+        setLoadError(true);
         showAppError(e instanceof Error ? e.message : "Sipariş yüklenemedi");
       } finally {
         setLoading(false);
@@ -50,11 +56,31 @@ export default function OrderDetailScreen() {
     }
   };
 
-  if (loading || !order) {
+  if (loading) {
     return (
       <View style={s.screen}>
         <Stack.Screen options={{ title: "Sipariş Detayı" }} />
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={92} borderRadius={16} />
+          <Skeleton height={220} borderRadius={16} />
+          <Skeleton height={140} borderRadius={16} />
+        </View>
+      </View>
+    );
+  }
+
+  if (loadError || !order) {
+    return (
+      <View style={s.screen}>
+        <Stack.Screen options={{ title: "Sipariş Detayı" }} />
+        <View style={{ padding: 16, marginTop: 60 }}>
+          <FeedbackState
+            kind="error"
+            title="Sipariş yüklenemedi"
+            message="Bağlantını kontrol edip tekrar dene."
+            onRetry={() => router.replace(`/store/orders/${id}` as never)}
+          />
+        </View>
       </View>
     );
   }
@@ -65,6 +91,7 @@ export default function OrderDetailScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ title: `Sipariş #${order.orderNumber}` }} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 + insets.bottom }}>
+        <Reveal>
         <View style={s.card}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Text style={s.orderNo}>{order.orderNumber}</Text>
@@ -72,7 +99,9 @@ export default function OrderDetailScreen() {
           </View>
           <Text style={s.date}>{new Date(order.createdAt).toLocaleString("tr-TR")}</Text>
         </View>
+        </Reveal>
 
+        <Reveal index={1}>
         <View style={s.card}>
           <Text style={s.sectionTitle}>Sipariş Durumu</Text>
           {STATUS_ORDER.map((status, idx) => {
@@ -85,16 +114,20 @@ export default function OrderDetailScreen() {
             );
           })}
         </View>
+        </Reveal>
 
         {order.shipping ? (
+          <Reveal index={2}>
           <View style={s.card}>
             <Text style={s.sectionTitle}>Kargo Takibi</Text>
             <Text style={s.text}>Kargo Firması: {order.shipping.carrier}</Text>
             <Text style={s.text}>Takip No: {order.shipping.trackingNumber}</Text>
             <Text style={s.text}>Durum: {statusLabel(order.shipping.shippingStatus || "")}</Text>
           </View>
+          </Reveal>
         ) : null}
 
+        <Reveal index={3}>
         <View style={s.card}>
           <Text style={s.sectionTitle}>Ürünler</Text>
           {order.items.map((item) => (
@@ -112,10 +145,11 @@ export default function OrderDetailScreen() {
             <Text style={s.totalValue}>{formatPrice(order.totalAmount)}</Text>
           </View>
         </View>
+        </Reveal>
 
         {order.orderStatus === "DELIVERED" && order.items.some((i) => i.productId) ? (
           <Pressable
-            style={s.reviewBtn}
+            style={({ pressed }) => [s.reviewBtn, pressed && { opacity: 0.9 }]}
             onPress={() => router.push(`/store/product/${order.items[0].productId}?review=${order.items[0].id}` as never)}
           >
             <Text style={s.reviewBtnText}>Ürünü Değerlendir</Text>
@@ -123,7 +157,10 @@ export default function OrderDetailScreen() {
         ) : null}
 
         {(order.orderStatus === "PENDING_PAYMENT" || order.orderStatus === "PAID" || order.orderStatus === "WAITING_ADMIN_APPROVAL" || order.orderStatus === "APPROVED" || order.orderStatus === "PREPARING") ? (
-          <Pressable style={s.cancelBtn} onPress={cancel}>
+          <Pressable
+            style={({ pressed }) => [s.cancelBtn, pressed && { opacity: 0.9 }]}
+            onPress={cancel}
+          >
             <Text style={s.cancelBtnText}>Siparişi İptal Et</Text>
           </Pressable>
         ) : null}

@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -13,6 +12,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../../src/animations";
+import { FeedbackState } from "../../../src/components/ui/FeedbackState";
 import { showAppAlert, showAppError } from "../../../src/components/AppAlert";
 import { notifyCartUpdated } from "../../../src/lib/cart-events";
 import { api } from "../../../src/lib/api";
@@ -32,24 +33,29 @@ export default function ProductDetailScreen() {
   const [reviews, setReviews] = useState<StoreReview[]>([]);
   const [summary, setSummary] = useState<StoreReviewSummary | null>(null);
   const [wishlisted, setWishlisted] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const p = await storeApi.productBySlug(slug);
+      setProduct(p);
+      const [rev, summaryResult, wishlistedResult] = await Promise.all([storeApi.reviews(p.id), storeApi.reviewSummary(p.id), storeApi.isWishlisted(p.id)]);
+      setReviews(rev.content);
+      setSummary(summaryResult);
+      setWishlisted(Boolean(wishlistedResult));
+    } catch (e) {
+      setLoadError(true);
+      showAppError(e instanceof Error ? e.message : "Ürün yüklenemedi");
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const p = await storeApi.productBySlug(slug);
-        setProduct(p);
-        const [rev, summaryResult, wishlistedResult] = await Promise.all([storeApi.reviews(p.id), storeApi.reviewSummary(p.id), storeApi.isWishlisted(p.id)]);
-        setReviews(rev.content);
-        setSummary(summaryResult);
-        setWishlisted(Boolean(wishlistedResult));
-      } catch (e) {
-        showAppError(e instanceof Error ? e.message : "Ürün yüklenemedi");
-      } finally {
-        setLoading(false);
-      }
-    };
     void load();
-  }, [slug]);
+  }, [load]);
 
   const addToCart = async () => {
     if (!product) return;
@@ -84,11 +90,32 @@ export default function ProductDetailScreen() {
     }
   };
 
-  if (loading || !product) {
+  if (loading) {
     return (
       <View style={s.screen}>
         <Stack.Screen options={{ title: "Ürün" }} />
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ width, height: width, backgroundColor: colors.accentSoft }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={26} width="70%" />
+          <Skeleton height={16} width="40%" />
+          <Skeleton height={60} width="100%" />
+        </View>
+      </View>
+    );
+  }
+
+  if (loadError || !product) {
+    return (
+      <View style={s.screen}>
+        <Stack.Screen options={{ title: "Ürün" }} />
+        <View style={{ padding: 16, marginTop: 60 }}>
+          <FeedbackState
+            kind="error"
+            title="Ürün yüklenemedi"
+            message="Bağlantını kontrol edip tekrar dene."
+            onRetry={() => void load()}
+          />
+        </View>
       </View>
     );
   }
@@ -118,6 +145,7 @@ export default function ProductDetailScreen() {
         />
 
         <View style={s.body}>
+          <Reveal index={0}>
           <View style={s.headerRow}>
             <View style={{ flex: 1 }}>
               <Text style={s.name}>{product.name}</Text>
@@ -143,8 +171,10 @@ export default function ProductDetailScreen() {
             {hasDiscount ? <Text style={s.oldPrice}>{formatPrice(product.price)}</Text> : null}
             {hasDiscount ? <View style={s.badge}><Text style={s.badgeText}>%{discountPercent}</Text></View> : null}
           </View>
+          </Reveal>
 
           {product.variants.length > 0 ? (
+            <Reveal index={1}>
             <View style={s.section}>
               <Text style={s.sectionTitle}>Varyant</Text>
               <View style={s.variantRow}>
@@ -159,8 +189,10 @@ export default function ProductDetailScreen() {
                 ))}
               </View>
             </View>
+          </Reveal>
           ) : null}
 
+          <Reveal index={2}>
           <View style={s.section}>
             <Text style={s.sectionTitle}>Adet</Text>
             <View style={s.qtyRow}>
@@ -169,13 +201,17 @@ export default function ProductDetailScreen() {
               <Pressable onPress={() => setQuantity(quantity + 1)} style={s.qtyBtn}><Text style={s.qtyBtnText}>+</Text></Pressable>
             </View>
           </View>
+          </Reveal>
 
+          <Reveal index={3}>
           <View style={s.section}>
             <Text style={s.sectionTitle}>Açıklama</Text>
             <Text style={s.desc}>{product.description || product.shortDescription || "Açıklama bulunmuyor."}</Text>
           </View>
+          </Reveal>
 
           {product.attributes.length > 0 ? (
+            <Reveal index={4}>
             <View style={s.section}>
               <Text style={s.sectionTitle}>Teknik Özellikler</Text>
               {product.attributes.map((attr) => (
@@ -185,8 +221,10 @@ export default function ProductDetailScreen() {
                 </View>
               ))}
             </View>
+          </Reveal>
           ) : null}
 
+          <Reveal index={5}>
           <View style={s.section}>
             <Text style={s.sectionTitle}>Değerlendirmeler</Text>
             {summarySource ? (
@@ -209,11 +247,15 @@ export default function ProductDetailScreen() {
               ))
             )}
           </View>
+          </Reveal>
         </View>
       </ScrollView>
 
       <View style={[s.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Pressable style={s.cartBtn} onPress={addToCart}>
+        <Pressable
+          style={({ pressed }) => [s.cartBtn, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+          onPress={addToCart}
+        >
           <Ionicons name="cart" size={20} color="#fff" />
           <Text style={s.cartBtnText}>Sepete Ekle</Text>
         </Pressable>

@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppConfirm, showAppError } from "../../src/components/AppAlert";
 import { managementApi, type Community, type CommunityMemberStats } from "../../src/lib/management-api";
 import { colors } from "../../src/theme/colors";
@@ -40,10 +41,18 @@ export default function ManagementCommunities() {
   return <>
     <Stack.Screen options={{ headerShown: true, title: "Topluluk Yönetimi" }}/>
     <ScrollView style={styles.screen} contentContainerStyle={styles.page}>
+      <Reveal>
       <View style={styles.head}><View><Text style={styles.title}>Topluluklar</Text>{pendingTotal > 0 && <Text style={styles.pendingTotal}>{pendingTotal} yeni istek</Text>}</View><View style={styles.actions}><Link href="/management/communities/new" asChild><Pressable style={styles.add}><Ionicons name="add" size={19} color={colors.actionText}/><Text style={styles.addText}>Yeni</Text></Pressable></Link><Pressable style={styles.refresh} onPress={() => void load()}><Ionicons name="refresh" size={20} color={colors.accent}/></Pressable></View></View>
-      {loading ? <ActivityIndicator color={colors.accent}/> : items.map(item => {
+      </Reveal>
+      {loading ? (
+        <View style={{ gap: 10 }}>
+          <Skeleton height={110} borderRadius={18} />
+          <Skeleton height={110} borderRadius={18} />
+        </View>
+      ) : items.map((item, i) => {
         const count = item.id ? stats[item.id] : undefined;
-        return <View key={item.id} style={styles.card}>
+        return <Reveal key={item.id} index={Math.min(i, 6)}>
+        <View style={styles.card}>
           <Pressable style={styles.copy} onPress={() => router.push(`/management/communities/${item.id}` as never)}>
             <Text style={styles.name}>{item.name}</Text><Text style={styles.muted}>{item.slug} · {item.visibility} · {item.communityType}</Text>
             <Text style={styles.muted}>{count?.approved ?? 0} Üye</Text>
@@ -52,7 +61,7 @@ export default function ManagementCommunities() {
           </Pressable>
           <Pressable accessibilityLabel="Pasife al" style={styles.icon} onPress={() => void deactivate(item)}><Ionicons name="pause-circle-outline" size={22} color={colors.muted}/></Pressable>
           <Pressable accessibilityLabel="Sil" style={styles.icon} onPress={() => void remove(item)}><Ionicons name="trash-outline" size={21} color={colors.danger}/></Pressable>
-        </View>;
+        </View></Reveal>;
       })}
     </ScrollView>
   </>;

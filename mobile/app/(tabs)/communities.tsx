@@ -13,6 +13,8 @@ import {
   View
 } from "react-native";
 import { showAppAlert, showAppError, showJoinCommunityResult } from "../../src/components/AppAlert";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
+import { Reveal } from "../../src/animations";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -310,7 +312,8 @@ export default function CommunitiesScreen() {
     );
 
     return (
-      <View key={community.id} style={styles.card}>
+      <Reveal key={community.id} index={Math.min(index, 5)}>
+      <View style={styles.card}>
         <Pressable onPress={() => canInspect && router.push({ pathname: "/community/[id]", params: { id: community.id } })}>
           {coverSource ? (
             <ImageBackground
@@ -392,6 +395,7 @@ export default function CommunitiesScreen() {
           )}
         </View>
       </View>
+      </Reveal>
     );
   };
 
@@ -401,13 +405,16 @@ export default function CommunitiesScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadCommunities("refresh")} tintColor={colors.accent} />}
       keyboardShouldPersistTaps="handled"
     >
+      <Reveal>
       <View style={styles.hero}>
         <View style={styles.heroIcon}><Ionicons name="people" size={25} color={colors.accent} /></View>
         <Text style={styles.kicker}>TOPLULUKLAR</Text>
         <Text style={styles.title}>Topluluğunu bul, birlikte harekete geç.</Text>
         <Text style={styles.description}>Resmi ilgi alanlarını, yerel ekipleri ve üyesi olduğun toplulukları ayrı ayrı keşfet.</Text>
       </View>
+      </Reveal>
 
+      <Reveal index={1}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.viewTabs}>
         {viewOptions.map((option) => {
           const active = activeView === option.id;
@@ -422,12 +429,15 @@ export default function CommunitiesScreen() {
           );
         })}
       </ScrollView>
+      </Reveal>
 
+      <Reveal index={2}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionKicker}>{sectionCopy.kicker}</Text>
         <Text style={styles.sectionTitle}>{sectionCopy.title}</Text>
         <Text style={styles.sectionDescription}>{sectionCopy.description}</Text>
       </View>
+      </Reveal>
 
       {activeView !== "official" ? (
         <View style={styles.searchPanel}>
@@ -463,7 +473,14 @@ export default function CommunitiesScreen() {
         </View>
       ) : null}
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Topluluklar yüklenemedi"
+          message={error}
+          onRetry={() => void loadCommunities("refresh")}
+        />
+      ) : null}
 
       {loading ? (
         <View style={styles.loadingBox}>

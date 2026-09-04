@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../src/animations";
+import { FeedbackState } from "../src/components/ui/FeedbackState";
 import { api } from "../src/lib/api";
 import { colors } from "../src/theme/colors";
 
@@ -51,7 +53,10 @@ export default function MyTicketsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <View style={{ width: "100%", padding: 24, gap: 12 }}>
+          <Skeleton height={150} borderRadius={24} />
+          <Skeleton height={150} borderRadius={24} />
+        </View>
       </View>
     );
   }
@@ -61,14 +66,25 @@ export default function MyTicketsScreen() {
       contentContainerStyle={styles.page}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadTickets("refresh")} tintColor={colors.accent} />}
     >
+      <Reveal>
       <Pressable style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={18} color={colors.ink} />
         <Text style={styles.backText}>Geri</Text>
       </Pressable>
+      </Reveal>
 
+      <Reveal index={1}>
       <Text style={styles.title}>Biletlerim</Text>
+      </Reveal>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <FeedbackState
+          kind="error"
+          title="Biletler yüklenemedi"
+          message={error}
+          onRetry={() => void loadTickets()}
+        />
+      ) : null}
 
       {tickets.length === 0 ? (
         <View style={styles.emptyCard}>
@@ -78,8 +94,12 @@ export default function MyTicketsScreen() {
           </Pressable>
         </View>
       ) : (
-        tickets.map((ticket) => (
-          <Pressable key={ticket.id} style={styles.card} onPress={() => router.push(`/ticket/${ticket.id}` as never)}>
+        tickets.map((ticket, i) => (
+          <Reveal key={ticket.id} index={Math.min(i, 5)}>
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.94, transform: [{ scale: 0.99 }] }]}
+            onPress={() => router.push(`/ticket/${ticket.id}` as never)}
+          >
             <View style={styles.cardHeader}>
               <Text style={styles.eventTitle}>{ticket.event.title}</Text>
               <Text style={[styles.status, (styles as Record<string, any>)[ticket.status]]}>{ticket.status.toUpperCase()}</Text>
@@ -92,6 +112,7 @@ export default function MyTicketsScreen() {
               <Text style={styles.code}>{ticket.ticket_code}</Text>
             </View>
           </Pressable>
+          </Reveal>
         ))
       )}
     </ScrollView>

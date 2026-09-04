@@ -1,7 +1,6 @@
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,7 @@ import {
   View
 } from "react-native";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
+import { Reveal, Skeleton } from "../../src/animations";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { getPlatformTeamIdentityMap, type PlatformTeamRole } from "../../src/lib/team-identities";
@@ -226,8 +226,9 @@ export default function PostDetailScreen() {
 
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={styles.loadingText}>Paylaşım yükleniyor...</Text>
+            <Skeleton height={22} width="50%" />
+            <Skeleton height={90} width="100%" />
+            <Skeleton height={140} width="100%" />
           </View>
         ) : !post ? (
           <View style={styles.panel}>
@@ -236,12 +237,15 @@ export default function PostDetailScreen() {
           </View>
         ) : (
           <>
+            <Reveal>
             <View style={styles.hero}>
               <Text style={styles.kicker}>Paylaşım Detayı</Text>
               <Text style={styles.title}>{community?.name ?? "Topluluk paylaşımı"}</Text>
               <Text style={styles.description}>Altta yorum yazabilir, etkinlik sonrası deneyimleri konuşabilirsiniz.</Text>
             </View>
+            </Reveal>
 
+            <Reveal index={1}>
             <View style={styles.panel}>
               <Text style={styles.panelTitle}>Paylaşım</Text>
               <Text style={styles.metaText}>
@@ -264,7 +268,9 @@ export default function PostDetailScreen() {
                 <Text style={styles.reportButtonText}>{reportingTarget === String(post.id) ? "Raporlanıyor..." : "Paylaşımı rapor et"}</Text>
               </Pressable>
             </View>
+            </Reveal>
 
+            <Reveal index={2}>
             <View style={styles.panel}>
               <View style={styles.commentsHeader}>
                 <Text style={styles.panelTitle}>Yorumlar</Text>
@@ -276,8 +282,9 @@ export default function PostDetailScreen() {
                 <Text style={styles.emptyText}>Henüz yorum yok. İlk yorumu sen bırakabilirsin.</Text>
               ) : (
                 <View style={styles.stack}>
-                  {comments.map((comment) => (
-                    <View key={comment.id} style={styles.commentCard}>
+                  {comments.map((comment, i) => (
+                    <Reveal key={comment.id} index={Math.min(i, 6)}>
+                    <View style={styles.commentCard}>
                       <View style={styles.commentIdentity}>
                         <Text style={styles.commentAuthor}>{comment.profiles?.display_name || maskUser(comment.author_id)}</Text>
                         {comment.author_id ? <TeamIdentityBadge role={commentTeamRoles.get(comment.author_id)} compact /> : null}
@@ -300,10 +307,12 @@ export default function PostDetailScreen() {
                         </Text>
                       </Pressable>
                     </View>
+                    </Reveal>
                   ))}
                 </View>
               )}
             </View>
+            </Reveal>
           </>
         )}
       </ScrollView>

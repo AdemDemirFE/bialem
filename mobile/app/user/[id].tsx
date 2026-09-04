@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { HonorBadges, type HonorBadge } from "../../src/components/HonorBadges";
 import { TeamIdentityBadge } from "../../src/components/TeamIdentityBadge";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { showAppConfirm } from "../../src/components/AppAlert";
 import { useAuth } from "../../src/lib/auth";
 import { getProfileFollowState, setProfileFollow, type FollowState } from "../../src/lib/follows";
@@ -259,16 +261,19 @@ export default function UserProfileDetailScreen() {
 
       {loading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator color={colors.accent} />
-          <Text style={styles.loadingText}>Kullanıcı profili yükleniyor...</Text>
+          <Skeleton height={200} borderRadius={20} />
+          <Skeleton height={130} borderRadius={18} />
         </View>
       ) : !profileCard ? (
-        <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Kullanıcı bulunamadı</Text>
-          <Text style={styles.emptyText}>{error || "Bu kullanıcı profili şu anda görüntülenemiyor."}</Text>
-        </View>
+        <FeedbackState
+          kind="empty"
+          title="Kullanıcı bulunamadı"
+          message={error || "Bu kullanıcı profili şu anda görüntülenemiyor."}
+          onRetry={() => void loadUserProfile("refresh")}
+        />
       ) : (
         <>
+          <Reveal>
           <View style={styles.hero}>
             <View style={styles.publicAvatar}>
               {profileCard.avatar_url ? (
@@ -286,18 +291,26 @@ export default function UserProfileDetailScreen() {
             </Text>
             {!isOwnProfile ? (
               <View style={styles.profileActions}>
-                <Pressable style={[styles.followButton, followState !== "none" && styles.followButtonActive]} onPress={() => void toggleFollow()}>
+                <Pressable
+                  style={({ pressed }) => [styles.followButton, followState !== "none" && styles.followButtonActive, pressed && { opacity: 0.9 }]}
+                  onPress={() => void toggleFollow()}
+                >
                   <Text style={[styles.followButtonText, followState !== "none" && styles.followButtonTextActive]}>
                     {followingBusy ? "İşleniyor..." : followState === "following" ? "Takibi bırak" : followState === "requested" ? "İsteği geri çek" : "Takip et"}
                   </Text>
                 </Pressable>
-                <Pressable style={styles.blockButton} onPress={blockProfile}>
+                <Pressable
+                  style={({ pressed }) => [styles.blockButton, pressed && { opacity: 0.9 }]}
+                  onPress={blockProfile}
+                >
                   <Text style={styles.blockButtonText}>Engelle</Text>
                 </Pressable>
               </View>
             ) : null}
           </View>
+          </Reveal>
 
+          <Reveal index={1}>
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Profil özeti</Text>
             <ProfileRow label="Doğrulama" value={profileCard.is_verified ? "Doğrulanmış" : "Doğrulama bekliyor"} />
@@ -305,7 +318,9 @@ export default function UserProfileDetailScreen() {
             <ProfileRow label="Kayıt tarihi" value={formatDate(profileCard.created_at)} />
             <Text style={styles.bioText}>{profileCard.bio || "Bu kullanıcı henüz kısa biyografi eklememiş."}</Text>
           </View>
+          </Reveal>
 
+          <Reveal index={2}>
           <View style={styles.followStatsRow}>
             <Link href={{ pathname: "/people/connections" as never, params: { userId: id, tab: "followers" } }} asChild>
               <Pressable style={styles.followStat}>
@@ -320,13 +335,18 @@ export default function UserProfileDetailScreen() {
               </Pressable>
             </Link>
           </View>
+          </Reveal>
 
+          <Reveal index={3}>
           <View style={styles.statsRow}>
             <StatCard label="Ortalama" value={averageRating ? `${averageRating}/5` : "-"} />
             <StatCard label="Güven" value={reliability?.reliability_score == null ? "Yeni" : `%${reliability.reliability_score}`} />
           </View>
+          </Reveal>
 
+          <Reveal index={4}>
           <HonorBadges badges={honorBadges} />
+          </Reveal>
 
           <View style={styles.panel}>
             <Text style={styles.panelTitle}>Yildiz ve yorum bırak</Text>

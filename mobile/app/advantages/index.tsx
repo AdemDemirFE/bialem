@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Reveal, Skeleton } from "../../src/animations";
+import { FeedbackState } from "../../src/components/ui/FeedbackState";
 import { useAuth } from "../../src/lib/auth";
 import { api } from "../../src/lib/api";
 import { colors } from "../../src/theme/colors";
@@ -122,6 +124,7 @@ export default function AdvantagesScreen() {
         contentContainerStyle={styles.page}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
       >
+        <Reveal>
         <View style={styles.hero}>
           <View style={styles.heroBadge}>
             <Ionicons name="diamond" size={21} color={colors.ink} />
@@ -133,10 +136,14 @@ export default function AdvantagesScreen() {
           </Text>
           <Text style={styles.hello}>Merhaba {profile?.display_name?.split(" ")[0] || "Bialemlı"}, avantajın hazır.</Text>
         </View>
+        </Reveal>
 
         {canRedeem ? (
+          <Reveal index={1}>
           <Link href={"/advantages/redeem" as never} asChild>
-            <Pressable style={styles.staffButton}>
+            <Pressable
+              style={({ pressed }) => [styles.staffButton, pressed && { opacity: 0.92 }]}
+            >
               <Ionicons name="scan" size={22} color="#fff" />
               <View style={styles.staffCopy}>
                 <Text style={styles.staffTitle}>İşletme doğrulama ekranı</Text>
@@ -145,8 +152,10 @@ export default function AdvantagesScreen() {
               <Ionicons name="chevron-forward" size={21} color="#fff" />
             </Pressable>
           </Link>
+          </Reveal>
         ) : null}
 
+        <Reveal index={2}>
         <View style={styles.searchBox}>
           <Ionicons name="search" size={20} color={colors.muted} />
           <TextInput
@@ -164,13 +173,21 @@ export default function AdvantagesScreen() {
             </Pressable>
           ) : null}
         </View>
+        </Reveal>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          <Pressable onPress={() => setCategory("all")} style={[styles.filter, category === "all" && styles.filterActive]}>
+          <Pressable
+            onPress={() => setCategory("all")}
+            style={({ pressed }) => [styles.filter, category === "all" && styles.filterActive, pressed && { opacity: 0.92 }]}
+          >
             <Text style={[styles.filterText, category === "all" && styles.filterTextActive]}>Tümü</Text>
           </Pressable>
           {categories.map((item) => (
-            <Pressable key={item} onPress={() => setCategory(item)} style={[styles.filter, category === item && styles.filterActive]}>
+            <Pressable
+              key={item}
+              onPress={() => setCategory(item)}
+              style={({ pressed }) => [styles.filter, category === item && styles.filterActive, pressed && { opacity: 0.92 }]}
+            >
               <Text style={[styles.filterText, category === item && styles.filterTextActive]}>{categoryLabels[item] ?? item}</Text>
             </Pressable>
           ))}
@@ -183,8 +200,20 @@ export default function AdvantagesScreen() {
           </View>
         ) : null}
 
-        {loading ? <ActivityIndicator color={colors.accent} size="large" /> : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {loading ? (
+          <View style={{ gap: 12 }}>
+            <Skeleton height={300} borderRadius={19} />
+            <Skeleton height={300} borderRadius={19} />
+          </View>
+        ) : null}
+        {error ? (
+          <FeedbackState
+            kind="error"
+            title="Avantajlar yüklenemedi"
+            message={error}
+            onRetry={() => void load()}
+          />
+        ) : null}
         {!loading && !error && visibleVenues.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="storefront-outline" size={36} color={colors.accent} />
@@ -194,15 +223,17 @@ export default function AdvantagesScreen() {
         ) : null}
 
         <View style={styles.list}>
-          {visibleVenues.map((venue) => {
+          {visibleVenues.map((venue, i) => {
             const offer = venue.partner_offers?.[0];
             return (
+              <Reveal key={venue.id} index={Math.min(i, 6)}>
               <Link
-                key={venue.id}
                 href={{ pathname: "/advantages/[id]", params: { id: venue.id } } as never}
                 asChild
               >
-                <Pressable style={styles.card}>
+                <Pressable
+                  style={({ pressed }) => [styles.card, pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] }]}
+                >
                   {venue.cover_image_url && !failedImages.has(venue.id) ? (
                     <Image
                       source={{ uri: venue.cover_image_url }}
@@ -247,6 +278,7 @@ export default function AdvantagesScreen() {
                   </View>
                 </Pressable>
               </Link>
+              </Reveal>
             );
           })}
         </View>

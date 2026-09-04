@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Reveal, Skeleton } from "../../../src/animations";
 import { showAppError } from "../../../src/components/AppAlert";
 import { storeManagementApi, type StoreManagementAddress } from "../../../src/lib/store-management-api";
 import { colors } from "../../../src/theme/colors";
@@ -36,7 +37,11 @@ export default function StoreAddressesManagementScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ headerShown: true, title: "Adres Yönetimi" }} />
       {loading && items.length === 0 ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 40 }} />
+        <View style={{ padding: 16, gap: 10 }}>
+          <Skeleton height={110} borderRadius={18} />
+          <Skeleton height={110} borderRadius={18} />
+          <Skeleton height={110} borderRadius={18} />
+        </View>
       ) : (
         <FlatList
           data={items}
@@ -52,6 +57,7 @@ export default function StoreAddressesManagementScreen() {
           renderItem={(info: any) => {
             const item: StoreManagementAddress = info.item;
             return (
+              <Reveal index={Math.min(info.index ?? 0, 8)}>
               <View style={s.card}>
                 <View style={s.iconShell}>
                   <Ionicons name="location" size={22} color={colors.accent} />
@@ -64,6 +70,7 @@ export default function StoreAddressesManagementScreen() {
                   <Text style={s.address} numberOfLines={2}>{item.addressLine}</Text>
                 </View>
               </View>
+              </Reveal>
             );
           }}
         />

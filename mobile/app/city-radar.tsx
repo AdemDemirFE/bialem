@@ -3,6 +3,8 @@ import { Link, Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { CityRadarEvent } from "../src/components/CityDiscovery";
+import { Reveal, Skeleton } from "../src/animations";
+import { FeedbackState } from "../src/components/ui/FeedbackState";
 import { useAuth } from "../src/lib/auth";
 import { api } from "../src/lib/api";
 import { normalizeImageUrl } from "../src/lib/media-url";
@@ -53,6 +55,7 @@ export default function CityRadarScreen() {
         contentContainerStyle={styles.page}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.accent} />}
       >
+        <Reveal>
         <View style={styles.hero}>
           <View style={styles.radarIcon}><Ionicons name="radio" size={28} color="#fff" /></View>
           <Text style={styles.kicker}>ŞEHRİ KAÇIRMA</Text>
@@ -69,18 +72,26 @@ export default function CityRadarScreen() {
             />
           </View>
         </View>
+        </Reveal>
 
+        <Reveal index={1}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
           {categories.map((item) => {
             const selected = item === category;
             return (
-              <Pressable key={item} onPress={() => setCategory(item)} style={[styles.filter, selected && styles.filterActive]}>
+              <Pressable
+                key={item}
+                onPress={() => setCategory(item)}
+                style={({ pressed }) => [styles.filter, selected && styles.filterActive, pressed && { opacity: 0.92 }]}
+              >
                 <Text style={[styles.filterText, selected && styles.filterTextActive]}>{item}</Text>
               </Pressable>
             );
           })}
         </ScrollView>
+        </Reveal>
 
+        <Reveal index={2}>
         <View style={styles.resultHeader}>
           <View>
             <Text style={styles.resultKicker}>{category.toLocaleUpperCase("tr-TR")}</Text>
@@ -88,9 +99,22 @@ export default function CityRadarScreen() {
           </View>
           <Text style={styles.resultCount}>{visibleEvents.length} etkinlik</Text>
         </View>
+        </Reveal>
 
-        {loading ? <ActivityIndicator size="large" color={colors.accent} /> : null}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {loading ? (
+          <View style={{ gap: 12 }}>
+            <Skeleton height={280} borderRadius={19} />
+            <Skeleton height={280} borderRadius={19} />
+          </View>
+        ) : null}
+        {error ? (
+          <FeedbackState
+            kind="error"
+            title="Radar güncellenemedi"
+            message={error}
+            onRetry={() => void load()}
+          />
+        ) : null}
         {!loading && !error && visibleEvents.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="calendar-outline" size={38} color={colors.accent} />
@@ -100,11 +124,14 @@ export default function CityRadarScreen() {
         ) : null}
 
         <View style={styles.list}>
-          {visibleEvents.map((event) => {
+          {visibleEvents.map((event, i) => {
             const normalizedCategory = normalizeCategory(event.category);
             return (
-              <Link key={event.event_id} href={{ pathname: "/city-event/[id]", params: { id: event.event_id } }} asChild>
-                <Pressable style={styles.card}>
+              <Reveal key={event.event_id} index={Math.min(i, 6)}>
+              <Link href={{ pathname: "/city-event/[id]", params: { id: event.event_id } }} asChild>
+                <Pressable
+                  style={({ pressed }) => [styles.card, pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] }]}
+                >
                   <View style={[styles.cover, { backgroundColor: categoryColor(normalizedCategory) }]}>
                     <View style={styles.fallback}>
                       <Ionicons name={categoryIcon(normalizedCategory)} size={44} color="rgba(255,255,255,0.86)" />
@@ -140,6 +167,7 @@ export default function CityRadarScreen() {
                   </View>
                 </Pressable>
               </Link>
+              </Reveal>
             );
           })}
         </View>

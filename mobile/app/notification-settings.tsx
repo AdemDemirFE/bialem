@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { BackButton } from "../src/components/IconButton";
+import { Reveal, Skeleton } from "../src/animations";
 import { getNotificationPreferences, updateNotificationPreferences, type NotificationPreference } from "../src/lib/notificationApi";
 import { colors } from "../src/theme/colors";
 
@@ -61,14 +62,18 @@ export default function NotificationSettingsScreen() {
   const setGroup = (group: Group, value: boolean) => { const types = new Set(group.items.map(i => i.type)); setSaved(false); setPrefs(old => old.map(p => types.has(p.notificationType) && !p.mandatory ? { ...p, inAppEnabled: value, pushEnabled: value } : p)); };
   const save = async () => { setSaving(true); setError(null); try { setPrefs(merge(await updateNotificationPreferences(prefs))); setSaved(true); } catch (e) { setError(e instanceof Error ? e.message : "Tercihler kaydedilemedi"); } finally { setSaving(false); } };
   return <ScrollView contentContainerStyle={s.page}>
+    <Reveal>
     <View style={s.top}><BackButton onPress={() => router.back()} /><View style={s.topCopy}><Text style={s.kicker}>BİLDİRİM YÖNETİMİ</Text><Text style={s.title}>Nelerden haberdar olacağını seç</Text></View></View>
+    </Reveal>
+    <Reveal index={1}>
     <View style={s.hero}><View style={s.heroIcon}><Ionicons name="notifications-outline" size={23} color={colors.actionText} /></View><View style={s.copy}><Text style={s.heroTitle}>Kontrol tamamen sende</Text><Text style={s.heroText}>Uygulama içi ve cihaz push bildirimlerini ayrı ayrı yönet.</Text></View></View>
+    </Reveal>
     <View style={s.legend}><Text style={s.legendTitle}>Bildirim türü</Text><Text style={s.channel}>Uygulama</Text><Text style={s.channel}>Push</Text></View>
     {error ? <View style={s.errorBox}><Ionicons name="alert-circle-outline" size={18} color={colors.danger} /><Text style={s.error}>{error}</Text></View> : null}
-    {loading ? <View style={s.state}><ActivityIndicator color={colors.accent} /><Text style={s.muted}>Tercihlerin hazırlanıyor...</Text></View> : GROUPS.map(group => { const gp = group.items.map(i => map.get(i.type)).filter(Boolean) as NotificationPreference[]; const enabled = gp.every(p => p.inAppEnabled && p.pushEnabled); return <View key={group.title} style={s.card}>
+    {loading ? <View style={{ gap: 12 }}><Skeleton height={220} borderRadius={19} /><Skeleton height={220} borderRadius={19} /></View> : GROUPS.map((group, gi) => { const gp = group.items.map(i => map.get(i.type)).filter(Boolean) as NotificationPreference[]; const enabled = gp.every(p => p.inAppEnabled && p.pushEnabled); return <Reveal key={group.title} index={Math.min(gi + 2, 6)}><View style={s.card}>
       <View style={s.groupHead}><View style={s.groupIcon}><Ionicons name={group.icon as keyof typeof Ionicons.glyphMap} size={20} color={colors.accent} /></View><View style={s.copy}><Text style={s.groupTitle}>{group.title}</Text><Text style={s.groupDetail}>{group.detail}</Text></View><Switch value={enabled} onValueChange={v => setGroup(group, v)} trackColor={{ false: colors.border, true: colors.action }} thumbColor={colors.surface} /></View>
       {group.items.map((item, index) => { const p = map.get(item.type); return p ? <View key={item.type} style={[s.row, index === 0 && s.first]}><View style={s.itemIcon}><Ionicons name={item.icon as keyof typeof Ionicons.glyphMap} size={17} color={colors.ink} /></View><View style={s.copy}><Text style={s.itemTitle}>{item.label}</Text><Text style={s.itemDetail}>{item.detail}</Text></View><Switch value={p.inAppEnabled} disabled={p.mandatory} onValueChange={v => change(item.type, "inAppEnabled", v)} trackColor={{ false: colors.border, true: colors.action }} thumbColor={colors.surface} /><Switch value={p.pushEnabled} disabled={p.mandatory} onValueChange={v => change(item.type, "pushEnabled", v)} trackColor={{ false: colors.border, true: colors.action }} thumbColor={colors.surface} /></View> : null; })}
-    </View>; })}
+    </View></Reveal>; })}
     {!loading ? <Pressable disabled={saving} onPress={() => void save()} style={({ pressed }) => [s.save, (pressed || saving) && s.pressed]}>{saving ? <ActivityIndicator color={colors.actionText} /> : <><Ionicons name={saved ? "checkmark-circle" : "save-outline"} size={19} color={colors.actionText} /><Text style={s.saveText}>{saved ? "Tercihler kaydedildi" : "Tercihleri kaydet"}</Text></>}</Pressable> : null}
   </ScrollView>;
 }

@@ -20,7 +20,7 @@ textarea, input { pointer-events: auto; }
   --ui-radius-md: 14px;
   --ui-radius-lg: 18px;
   --ui-shadow: 0 8px 24px var(--bialem-shadow);
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans, "Gilroy", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   background: var(--bialem-page);
   color: var(--bialem-ink);
   -webkit-font-smoothing: antialiased;

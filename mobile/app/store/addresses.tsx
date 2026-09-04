@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Reveal, Skeleton } from "../../src/animations";
 import { showAppError } from "../../src/components/AppAlert";
 import { storeApi, type StoreAddress } from "../../src/lib/store-api";
 import { colors } from "../../src/theme/colors";
@@ -61,7 +62,11 @@ export default function AddressesScreen() {
     <View style={s.screen}>
       <Stack.Screen options={{ title: "Adreslerim" }} />
       {loading ? (
-        <ActivityIndicator color={colors.accent} style={{ marginTop: 60 }} />
+        <View style={{ padding: 16, gap: 12 }}>
+          <Skeleton height={300} borderRadius={16} />
+          <Skeleton height={92} borderRadius={14} />
+          <Skeleton height={92} borderRadius={14} />
+        </View>
       ) : (
         <FlatList
           data={addresses as StoreAddress[]}
@@ -70,6 +75,7 @@ export default function AddressesScreen() {
           renderItem={(info: any) => {
             const item = info.item as StoreAddress;
             return (
+              <Reveal index={Math.min(info.index ?? 0, 5)}>
               <View style={s.card}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                   <Text style={s.cardTitle}>{item.title}{item.isDefault ? " (Varsayılan)" : ""}</Text>
@@ -79,9 +85,11 @@ export default function AddressesScreen() {
                 <Text style={s.cardText}>{item.city}, {item.district}</Text>
                 <Text style={s.cardText}>{item.addressLine}</Text>
               </View>
+              </Reveal>
             );
           }}
           ListHeaderComponent={
+            <Reveal>
             <View style={{ gap: 10 }}>
               <Text style={s.sectionTitle}>Yeni Adres</Text>
               <TextInput style={s.input} placeholder="Adres başlığı (Ev, İş...)" placeholderTextColor={colors.muted} value={form.title} onChangeText={(t) => setForm({ ...form, title: t })} />
@@ -99,11 +107,16 @@ export default function AddressesScreen() {
                 <Ionicons name={form.isDefault ? "checkbox" : "square-outline"} size={22} color={colors.action} />
                 <Text style={{ color: colors.ink, fontWeight: "800" }}>Varsayılan adres olarak kaydet</Text>
               </Pressable>
-              <Pressable disabled={saving} style={[s.saveBtn, saving && s.disabled]} onPress={save}>
+              <Pressable
+                disabled={saving}
+                style={({ pressed }) => [s.saveBtn, saving && s.disabled, pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
+                onPress={save}
+              >
                 <Text style={s.saveBtnText}>{saving ? "Kaydediliyor..." : "Adresi Kaydet"}</Text>
               </Pressable>
               <Text style={s.sectionTitle}>Kayıtlı Adresler</Text>
             </View>
+            </Reveal>
           }
         />
       )}
