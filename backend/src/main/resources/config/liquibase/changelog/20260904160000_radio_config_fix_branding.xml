@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Fix radio_config seed data: Karasu → BiAlem -->
+    <changeSet id="20260904160000-1" author="bialem">
+        <update tableName="radio_config">
+            <column name="radio_name" value="BiAlem Radyo"/>
+            <column name="slogan" value="BiAlem'in Sesi"/>
+            <column name="updated_at" valueComputed="current_timestamp"/>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

@@ -117,4 +117,7 @@
     <include file="config/liquibase/changelog/20260903000000_schema_align_prod.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260903100000_entity_schema_gaps.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260904100000_fix_order_status_processing.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260904150000_radio_module.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260905090000_image_registry.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260904160000_radio_config_fix_branding.xml" relativeToChangelogFile="false"/>
 </databaseChangeLog>

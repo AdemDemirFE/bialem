@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- Radio Content table -->
+    <changeSet id="20260904150000-1" author="bialem">
+        <createTable tableName="radio_content">
+            <column autoIncrement="true" name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="content_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_url" type="varchar(2048)"/>
+            <column name="audio_file" type="varchar(2048)"/>
+            <column name="thumbnail" type="varchar(2048)"/>
+            <column name="artist" type="varchar(200)"/>
+            <column name="album" type="varchar(200)"/>
+            <column name="duration" type="int"/>
+            <column name="category" type="varchar(100)"/>
+            <column name="program_name" type="varchar(200)"/>
+            <column name="presenter" type="varchar(200)"/>
+            <column name="publish_date" type="timestamp"/>
+            <column name="start_date" type="timestamp"/>
+            <column name="end_date" type="timestamp"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_featured" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="int" defaultValueNumeric="0"/>
+            <column name="play_count" type="bigint" defaultValueNumeric="0"/>
+            <column name="created_at" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_radio_content_active" tableName="radio_content">
+            <column name="is_active"/>
+        </createIndex>
+        <createIndex indexName="idx_radio_content_featured" tableName="radio_content">
+            <column name="is_featured"/>
+        </createIndex>
+        <createIndex indexName="idx_radio_content_category" tableName="radio_content">
+            <column name="category"/>
+        </createIndex>
+        <createIndex indexName="idx_radio_content_content_type" tableName="radio_content">
+            <column name="content_type"/>
+        </createIndex>
+        <createIndex indexName="idx_radio_content_sort_order" tableName="radio_content">
+            <column name="sort_order"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Radio Config table -->
+    <changeSet id="20260904150000-2" author="bialem">
+        <createTable tableName="radio_config">
+            <column autoIncrement="true" name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="radio_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="slogan" type="varchar(500)"/>
+            <column name="logo" type="varchar(2048)"/>
+            <column name="cover" type="varchar(2048)"/>
+            <column name="live_stream_url" type="varchar(2048)"/>
+            <column name="is_live" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_program" type="varchar(200)"/>
+            <column name="current_track" type="varchar(200)"/>
+            <column name="website_url" type="varchar(2048)"/>
+            <column name="facebook_url" type="varchar(2048)"/>
+            <column name="twitter_url" type="varchar(2048)"/>
+            <column name="instagram_url" type="varchar(2048)"/>
+            <column name="youtube_url" type="varchar(2048)"/>
+            <column name="metadata_json" type="varchar(1000)"/>
+            <column name="created_at" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="current_timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Seed data: default RadioConfig for BiAlem Radio -->
+    <changeSet id="20260904150000-3" author="bialem">
+        <insert tableName="radio_config">
+            <column name="id" valueNumeric="1"/>
+            <column name="radio_name" value="BiAlem Radyo"/>
+            <column name="slogan" value="BiAlem'in Sesi"/>
+            <column name="is_live" valueBoolean="false"/>
+            <column name="created_at" valueComputed="current_timestamp"/>
+            <column name="updated_at" valueComputed="current_timestamp"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
