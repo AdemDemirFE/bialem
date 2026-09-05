@@ -20,7 +20,6 @@ function TabIcon({ name, focused, color, size }: { name: string; focused: boolea
 
 export default function TabsLayout() {
   const { user, profile, permissions, loading } = useAuth();
-  console.log("[TabsLayout] loading=", loading, "user=", user, "profile=", profile);
   const management = canSeeManagement(permissions);
   const insets = useSafeAreaInsets();
   const { resolvedTheme } = useTheme();
@@ -57,19 +56,19 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 70 + insets.bottom,
-          paddingHorizontal: 8,
-          paddingBottom: Math.max(insets.bottom, 8),
-          paddingTop: 7,
-          shadowColor: colors.brandInk,
-          shadowOffset: { width: 0, height: -5 },
-          shadowOpacity: 0.08,
-          shadowRadius: 14,
-          elevation: 16
+          height: 72 + insets.bottom,
+          paddingHorizontal: 10,
+          paddingBottom: Math.max(insets.bottom, 10),
+          paddingTop: 8,
+          shadowColor: "#0a1833",
+          shadowOffset: { width: 0, height: -8 },
+          shadowOpacity: 0.12,
+          shadowRadius: 20,
+          elevation: 20
         },
-        tabBarActiveTintColor: (resolvedTheme === "dark" ? colors.onBrand : colors.brandInk) as string,
+        tabBarActiveTintColor: (resolvedTheme === "dark" ? colors.accent : colors.action) as string,
         tabBarInactiveTintColor: colors.muted as string,
-        tabBarActiveBackgroundColor: (resolvedTheme === "dark" ? colors.brandInk : colors.accentSoft) as string,
+        tabBarActiveBackgroundColor: (resolvedTheme === "dark" ? colors.accentSoft : colors.accentSoft) as string,
         tabBarLabelStyle: {
           fontWeight: "800",
           fontSize: 10,
@@ -148,5 +147,5 @@ const styles = StyleSheet.create({
   loadingText: { color: colors.muted, fontSize: 13, fontWeight: "700" },
   iconShell: { width: 30, height: 27, alignItems: "center", justifyContent: "center" },
   iconShellActive: { transform: [{ translateY: -1 }] },
-  activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.action }
+  activeDot: { position: "absolute", bottom: -3, width: 4, height: 4, borderRadius: 2, backgroundColor: colors.accent }
 });

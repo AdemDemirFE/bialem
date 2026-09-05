@@ -171,6 +171,45 @@ input:focus-visible, textarea:focus-visible {
   }
 }
 
+/* ── Premium polish pass (2026): page enter, pressable cards, skeleton ── */
+#root > * {
+  animation: bialem-page-in 260ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes bialem-page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Pressable brand buttons: lift + glow */
+[role="button"][style*="background-color: var(--bialem-action)"],
+[role="button"][style*="background-color:var(--bialem-action)"] {
+  box-shadow: 0 8px 18px rgba(246, 165, 28, 0.32);
+}
+[role="button"][style*="background-color: var(--bialem-accent)"],
+[role="button"][style*="background-color:var(--bialem-accent)"] {
+  box-shadow: 0 8px 18px rgba(112, 71, 215, 0.28);
+}
+
+/* Skeleton shimmer for loading rows */
+.bialem-skeleton {
+  border-radius: 12px;
+  background: linear-gradient(100deg, var(--bialem-surface-strong) 30%, color-mix(in srgb, var(--bialem-aqua) 12%, var(--bialem-surface)) 50%, var(--bialem-surface-strong) 70%);
+  background-size: 220% 100%;
+  animation: bialem-shimmer 1.2s linear infinite;
+}
+@keyframes bialem-shimmer { to { background-position: -220% 0; } }
+
+/* Glass header support */
+.bialem-glass-header {
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+/* Premium image treatment */
+img {
+  background-color: var(--bialem-surface-strong);
+}
+
 /* Premium FullCalendar agenda */
 .planner-page { position: relative; isolation: isolate; width: 100%; min-height: 100%; display: flex; flex-direction: column; background: var(--bialem-page); padding: 14px; gap: 14px; overflow-x: hidden; overflow-y: auto; }
 .planner-page h1,.planner-page h2,.planner-page h3,.planner-page p,.agenda-shell h2,.agenda-shell h3 { margin: 0; }
