@@ -127,6 +127,33 @@
   --dur-fast: 120ms;
   --dur: 200ms;
   --dur-slow: 320ms;
+
+  /* ── Legacy aliases (inline-style pages use --line / --muted) ── */
+  --line: var(--border);
+  --line-subtle: var(--border-subtle);
+  --muted: var(--ink-muted);
+
+  /* ── Premium surfaces ── */
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --brand-gradient: linear-gradient(135deg, #ffa20f 0%, #7b35ff 52%, #19c8ee 100%);
+  --brand-gradient-soft: linear-gradient(135deg, rgba(255,162,15,.14) 0%, rgba(123,53,255,.10) 48%, rgba(25,200,238,.14) 100%);
+  --ring: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #070b18;
+    --bg-subtle: #0c1326;
+    --surface: rgba(17, 26, 43, 0.96);
+    --surface-raised: #182236;
+    --surface-strong: #1e2a45;
+    --border: #2a3750;
+    --border-subtle: #1e2a45;
+    --ink: #f4f7fc;
+    --ink-secondary: #c3cee3;
+    --ink-muted: #8b96b3;
+    --surface-glass: rgba(17, 26, 43, 0.72);
+  }
 }
 
 /* ─── Reset & Base ────────────────────────────────────────────────────────── */
@@ -234,6 +261,42 @@ tbody tr:nth-child(n+6) { animation-delay: 200ms; }
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ─── Premium form controls ─────────────────────────────────────────────── */
+input[type="text"], input[type="email"], input[type="password"],
+input[type="search"], input[type="number"], textarea, select {
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+input[type="search"]:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: var(--ring);
+  background: #fff;
+}
+
+button[type="submit"] {
+  box-shadow: var(--shadow-sm);
+  letter-spacing: -0.01em;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.99);
+  box-shadow: var(--shadow-md);
+}
+
+/* Premium stat cards: subtle lift on hover */
+[class*="card"]:hover, [class*="Card"]:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Responsive admin density */
+@media (max-width: 720px) {
+  main { padding: 20px 14px 48px !important; }
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
